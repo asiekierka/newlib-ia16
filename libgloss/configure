@@ -710,6 +710,7 @@ arm
 spu
 tic6x
 iq2000
+ia16
 or1k
 pru
 nios2
@@ -2599,6 +2600,10 @@ case "${target}" in
 	;;
   nios2-*-*)
 	subdirs="$subdirs nios2"
+
+	;;
+  ia16-*-*)
+	subdirs="$subdirs ia16"
 
 	;;
 esac

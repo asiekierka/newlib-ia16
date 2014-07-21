@@ -927,7 +927,7 @@ EOF
 	# We use `pc' rather than `unknown'
 	# because (1) that's what they normally are, and
 	# (2) the word "unknown" tends to confuse beginning users.
-	i*86 | x86_64)
+	i*86 | ia16 | x86_64)
 		cpu=$basic_machine
 		vendor=pc
 		;;
