@@ -710,10 +710,10 @@ arm
 spu
 tic6x
 iq2000
-ia16
 or1k
 pru
 nios2
+ia16
 libnosys'
 
 # Initialize some variables set by options.
