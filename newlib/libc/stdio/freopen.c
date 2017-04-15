@@ -159,7 +159,7 @@ _freopen_r (struct _reent *ptr,
       f = -1;
 #endif
 
-#ifdef __SCLE
+#if defined(__SCLE) && defined(O_BINARY) && defined(O_TEXT)
       /*
        * F_SETFL doesn't change textmode.  Don't mess with modes of ttys.
        */
