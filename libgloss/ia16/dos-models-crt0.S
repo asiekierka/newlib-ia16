@@ -12,6 +12,20 @@
 	.section .startupA
 	.global _start
 _start:
+	# Sanity check for DOS version >= 2
+	mov	$0x30,	%ah
+	int	$0x21
+	cmp	$2,	%al
+	jnb	.Ldos_ok
+#ifdef TINY
+	ret
+#else
+	pushw	%ds			# return to the `int $0x20' command
+	xorw	%ax,	%ax		# at the PSP start --- we cannot do
+	pushw	%ax			# `int $0x20' here as %cs is wrong
+	lretw
+#endif
+.Ldos_ok:
 #ifndef TINY
 	pushw	%ss
 	popw	%es
