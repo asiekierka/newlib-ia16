@@ -251,7 +251,7 @@ _exit:
 
 	.section .startupC
 
-	movw	%sp,	%bp
-	movw	2(%bp),	%ax
+	popw	%bx
+	popw	%ax
 	movb	$0x4c,	%ah
 	int	$0x21
