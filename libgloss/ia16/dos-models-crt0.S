@@ -6,7 +6,11 @@
 #error "no memory model defined -- please use either -DTINY or -DSMALL"
 #endif
 
+#ifdef __IA16_FEATURE_PUSH_IMM
+	.arch i186
+#else
 	.arch i8086
+#endif
 	.code16
 
 	.section .startupA
@@ -20,9 +24,15 @@ _start:
 #ifdef TINY
 	ret
 #else
-	pushw	%ds			# return to the `int $0x20' command
-	xorw	%ax,	%ax		# at the PSP start --- we cannot do
-	pushw	%ax			# `int $0x20' here as %cs is wrong
+/* Return to the `int $0x20' command at the PSP start --- we cannot just
+   say `int $0x20' here, as %cs is wrong.  */
+	pushw	%ds
+#ifdef __IA16_FEATURE_PUSH_IMM
+	pushw	$0
+#else
+	xorw	%ax,	%ax
+	pushw	%ax
+#endif
 	lretw
 #endif
 .Ldos_ok:
