@@ -57,7 +57,8 @@ ELKS_CRT0	= crt0.o
 
 DOS_TINY_OBJS	= dos-chdir.o dos-close.o dos-fstat.o dos-getcwd.o \
 		dos-isatty.o dos-lseek.o dos-mkdir.o dos-open.o dos-read.o \
-		dos-rename.o dos-rmdir.o dos-sbrk.o dos-unlink.o dos-write.o
+		dos-rename.o dos-rmdir.o dos-sbrk.o dos-unlink.o dos-write.o \
+		dos-gettimeofday.o
 DOS_TINY_CFLAGS	= -mseparate-code-segment -g -Os
 DOS_TINY_ASFLAGS =
 DOS_TINY_SCRIPTS = dos-com.ld
