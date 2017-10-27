@@ -218,7 +218,11 @@ _dtoa_r (struct _reent *ptr,
 	*/
 
   int bbits, b2, b5, be, dig, i, ieps, ilim, ilim0, ilim1, j, j1, k, k0,
-    k_check, leftright, m2, m5, s2, s5, spec_case, try_quick;
+    k_check, leftright, m2, m5, s2, s5, spec_case;
+  /* Disable fast estimate if space saving is requested.  -- tkchia 20171027 */
+#if !defined PREFER_SIZE_OVER_SPEED && !defined __OPTIMIZE_SIZE__
+  int try_quick;
+#endif
   union double_union d, d2, eps;
   __Long L;
 #ifndef Sudden_Underflow
@@ -386,11 +390,15 @@ _dtoa_r (struct _reent *ptr,
     }
   if (mode < 0 || mode > 9)
     mode = 0;
+#if !defined PREFER_SIZE_OVER_SPEED && !defined __OPTIMIZE_SIZE__
   try_quick = 1;
+#endif
   if (mode > 5)
     {
       mode -= 4;
+#if !defined PREFER_SIZE_OVER_SPEED && !defined __OPTIMIZE_SIZE__
       try_quick = 0;
+#endif
     }
   leftright = 1;
   ilim = ilim1 = -1;
@@ -426,6 +434,7 @@ _dtoa_r (struct _reent *ptr,
   _REENT_MP_RESULT(ptr) = eBalloc (ptr, _REENT_MP_RESULT_K(ptr));
   s = s0 = (char *) _REENT_MP_RESULT(ptr);
 
+#if !defined PREFER_SIZE_OVER_SPEED && !defined __OPTIMIZE_SIZE__
   if (ilim >= 0 && ilim <= Quick_max && try_quick)
     {
       /* Try to get by with floating-point arithmetic. */
@@ -539,6 +548,7 @@ _dtoa_r (struct _reent *ptr,
       k = k0;
       ilim = ilim0;
     }
+#endif
 
   /* Do we have a "small" integer? */
 
