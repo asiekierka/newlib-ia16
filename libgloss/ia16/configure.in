@@ -17,7 +17,7 @@ fi
 
 AC_PROG_INSTALL
 
-AC_PROG_CC
+LIB_AC_PROG_CC
 AS=${AS-as}
 AC_SUBST(AS)
 AR=${AR-ar}
