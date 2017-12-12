@@ -173,6 +173,20 @@ $(DOS_SMALL_CRT0) : dos-models-crt0.S
 	$(CC) $(CFLAGS_FOR_TARGET) -UTINY -DSMALL \
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
+dos-chdir.o: dos-chdir.S call-cvt.h
+dos-close.o: dos-close.S call-cvt.h
+dos-com-write.o: dos-com-write.S call-cvt.h
+dos-fstat.o: dos-fstat.S call-cvt.h
+dos-getcwd.o: dos-getcwd.S call-cvt.h
+dos-isatty.o: dos-isatty.S call-cvt.h
+dos-lseek.o: dos-lseek.S call-cvt.h
+dos-mkdir.o: dos-mkdir.S call-cvt.h
+dos-read.o: dos-read.S call-cvt.h
+dos-rename.o: dos-rename.S call-cvt.h
+dos-rmdir.o: dos-rmdir.S call-cvt.h
+dos-unlink.o: dos-unlink.S call-cvt.h
+dos-write.o: dos-write.S call-cvt.h
+
 # We need a link to libnosys.a in this directory, since this is the
 # directory used when test-compiling for configuration for other parts and
 # when running the testsuite.  By using a symbolic link, it does not

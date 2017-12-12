@@ -1,3 +1,5 @@
+#include "call-cvt.h"
+
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
@@ -18,10 +20,10 @@ _rename:
 	xorw	%ax,	%ax
 	popw	%di
 	popw	%es
-	ret
+	RET_(4)
 .error:
 	movw	%ax,	errno
 	movw	$-1,	%ax
 	popw	%di
 	popw	%es
-	ret
+	RET_(4)

@@ -176,7 +176,14 @@ _start:
 	pushw	%ax		# argp
 	pushw	%dx		# argc
 	call	main
+#ifdef __IA16_CALLCVT_CDECL
 	addw	$6,	%sp
+#else
+	# We do not know whether main (...) pops no arguments, two
+	# arguments (argc, argv), or three arguments (argc, argv, envp).  So
+	# pop nothing here; it should be safe to call exit (.) with extra
+	# stuff on the stack.
+#endif
 	pushw	%ax
 	call	exit
 

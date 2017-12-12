@@ -1,5 +1,7 @@
 # Stub write() implementation for a DOS .com file.
 
+#include "call-cvt.h"
+
 	.arch i8086
 	.code16
 
@@ -21,4 +23,4 @@ writeLoop:
 	movw	8(%bp), %ax
 	popw	%si
 	popw	%bp
-	ret
+	RET_(6)

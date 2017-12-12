@@ -1,3 +1,5 @@
+#include "call-cvt.h"
+
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
@@ -11,8 +13,8 @@ _close:
 	int	$0x21
 	jc	.error
 	xorw	%ax,	%ax
-	ret
+	RET_(2)
 .error:
 	movw	%ax,	errno
 	movw	$-1,	%ax
-	ret
+	RET_(2)

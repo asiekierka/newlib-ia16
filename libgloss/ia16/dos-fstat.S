@@ -1,3 +1,5 @@
+#include "call-cvt.h"
+
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
@@ -27,9 +29,9 @@ _fstat:
 	movw	%dx,	(%bx)  # st_dev
 	xorw	%ax,	%ax
 	popw	%bp
-	ret
+	RET_(4)
 .error:
 	movw	%ax,	errno
 	movw	$-1,	%ax
 	popw	%bp
-	ret
+	RET_(4)
