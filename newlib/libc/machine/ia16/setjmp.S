@@ -12,6 +12,8 @@
 # es		0x10
 # ip            0x12
 	
+#include "call-cvt.h"
+
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
@@ -49,7 +51,7 @@ setjmp:
 	xorw	%ax,	%ax
 	popw	%bp
 	popw	%bx
-	ret
+	RET_(2)
 
 #ifdef __ELKS__
 	.global _longjmp
@@ -77,4 +79,4 @@ longjmp:
 
 	cmpw	$1,	%ax
 	adcw	$0,	%ax
-	ret
+	RET_(2)

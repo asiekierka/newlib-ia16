@@ -1,3 +1,5 @@
+#include "call-cvt.h"
+
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
@@ -18,4 +20,4 @@ rawmemchr:
 	decw	%ax
 	popw	%es
 	popw	%di
-	ret
+	RET_(4)

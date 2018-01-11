@@ -1,3 +1,5 @@
+#include "call-cvt.h"
+
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
@@ -27,7 +29,7 @@ memcmp:
 	popw	%es
 	popw	%di
 	popw	%si
-	ret
+	RET_(6)
 .L3:
 	movb	-1(%si),	%al
 	xorb	%ah,	%ah
@@ -37,7 +39,7 @@ memcmp:
 	popw	%es
 	popw	%di
 	popw	%si
-	ret
+	RET_(6)
 .L1:
 	movw	-2(%si),	%ax
 	movw	-2(%di),	%dx
@@ -49,7 +51,7 @@ memcmp:
 	popw	%es
 	popw	%di
 	popw	%si
-	ret
+	RET_(6)
 .L4:
 	movb	%ah,	%al
 	movb	%dh,	%dl
@@ -59,4 +61,4 @@ memcmp:
 	popw	%es
 	popw	%di
 	popw	%si
-	ret
+	RET_(6)

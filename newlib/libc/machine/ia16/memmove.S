@@ -1,3 +1,5 @@
+#include "call-cvt.h"
+
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
@@ -31,7 +33,7 @@ memmove:
 	popw	%es
 	popw	%di
 	popw	%si
-	ret
+	RET_(6)
 .L2:
 	# dest > src + 1 => copy backwards two bytes at a time
 	decw	%di
@@ -48,7 +50,7 @@ memmove:
 	popw	%es
 	popw	%di
 	popw	%si
-	ret
+	RET_(6)
 .L1:
 	# dest < src => copy forwards
 	incw	%di
@@ -60,7 +62,7 @@ memmove:
 	popw	%es
 	popw	%di
 	popw	%si
-	ret
+	RET_(6)
 .L4:
 	# dest < src - 1 => copy forwards two bytes at a time
 	decw	%di
@@ -71,4 +73,4 @@ memmove:
 	popw	%es
 	popw	%di
 	popw	%si
-	ret
+	RET_(6)

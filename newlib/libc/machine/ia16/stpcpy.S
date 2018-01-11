@@ -1,3 +1,5 @@
+#include "call-cvt.h"
+
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
@@ -24,4 +26,4 @@ stpcpy:
 	popw	%es
 	popw	%di
 	popw	%si
-	ret
+	RET_(4)

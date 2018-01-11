@@ -1,3 +1,5 @@
+#include "call-cvt.h"
+
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
@@ -18,9 +20,9 @@ strchr:
 
 	xorw	%ax,	%ax
 	popw	%si
-	ret
+	RET_(4)
 .L2:
 	movw	%si,	%ax
 	decw	%ax
 	popw	%si
-	ret
+	RET_(4)

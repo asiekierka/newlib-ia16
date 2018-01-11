@@ -1,3 +1,5 @@
+#include "call-cvt.h"
+
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
@@ -21,4 +23,4 @@ memset:
 	movw	2(%bx),	%ax
 	popw	%es
 	popw	%di
-	ret
+	RET_(6)
