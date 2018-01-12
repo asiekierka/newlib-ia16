@@ -188,7 +188,11 @@ _start:
 	call	exit
 
 .Linside_backslash_other:
+#ifdef TINY
 	movb	$'\\',	(%di)
+#else
+	movb	$'\\',	%es:(%di)
+#endif
 	incw	%di
 .Linside_other:
 	stosb
@@ -227,13 +231,17 @@ _start:
 	cmpb	$'\\',	%al
 	je	.Loutside_backslash_backslash
 .Loutside_backslash_other:
+#ifdef TINY
 	movb	$'\\',	(%di)
+#else
+	movb	$'\\',	%es:(%di)
+#endif
 	incw	%di
 	jmp	.Loutside_other
 
 .Loutside_backslash_space:
-	movb	$'\\',	(%di)
-	incw	%di
+	movb	$'\\',	%al
+	stosb
 .Lend_argument:
 	movb	$0,	%al
 	stosb
