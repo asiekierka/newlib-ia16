@@ -100,7 +100,9 @@ SECTIONS
 		*(.data) *(.data.*)
 		*(.gcc_except_table)
 		__edata = .;
+	} >dsegvma AT >bseglma
 
+    .bss (NOLOAD) : {
     	 	 __sbss = .;
                 *(.bss) *(.bss.*)
                 *(COMMON)
