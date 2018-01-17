@@ -545,7 +545,7 @@ void nano_malloc_stats(RONEARG)
 malloc_size_t nano_malloc_usable_size(RARG void * ptr)
 {
     chunk * c = (chunk *)((char *)ptr - CHUNK_OFFSET);
-    int size_or_offset = c->size;
+    long size_or_offset = c->size;
 
     if (size_or_offset < 0)
     {
