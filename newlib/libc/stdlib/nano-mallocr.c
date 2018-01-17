@@ -113,7 +113,7 @@
 
 /* Alignment of allocated block */
 #define MALLOC_ALIGN (8U)
-#define CHUNK_ALIGN (sizeof(void*))
+#define CHUNK_ALIGN (MAX(sizeof(void*), sizeof(long)))
 #define MALLOC_PADDING ((MAX(MALLOC_ALIGN, CHUNK_ALIGN)) - CHUNK_ALIGN)
 
 /* as well as the minimal allocation size
