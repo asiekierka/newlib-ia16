@@ -14,7 +14,7 @@ strlen:
 	movw    %ax,    %es
 	movw    4(%bx), %di
 	movw	%di,	%bx
-	xorb	%ax,	%ax
+	xorb	%al,	%al
 	movw    $-1,    %cx
 	repne   scasb
 	movw    %di,    %ax
