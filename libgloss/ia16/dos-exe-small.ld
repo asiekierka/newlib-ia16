@@ -57,7 +57,7 @@ SECTIONS
 
 		/* Relocations.  */
 		HIDDEN (__msdos_mz_rel_start = .);
-		*(.rel.msdos_mz)
+		*(.msdos_mz_reloc)
 		HIDDEN (__msdos_mz_rel_end = .);
 		HIDDEN (__msdos_mz_rels = (. - __msdos_mz_rel_start) / 4);
 
@@ -70,6 +70,8 @@ SECTIONS
 		ASSERT (__msdos_mz_rels <= 0xffff,
 		    "Error: too many MZ relocations");
 	} >hdrvma AT>bseglma
+
+    HIDDEN (__msdos_mz_load_para_text = . / 16 - __msdos_mz_hdr_paras);
 
     /* Target text sections.  */
     .text : {
@@ -92,6 +94,8 @@ SECTIONS
 	} >csegvma AT >bseglma
 	__ltext = __etext - __stext;
 	__ltext_padded = __etext_padded - __stext;
+
+    HIDDEN (__msdos_mz_load_para_data = . / 16 - __msdos_mz_hdr_paras);
 
     /* Target data sections.  */
     .data : {
