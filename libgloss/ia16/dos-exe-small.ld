@@ -20,7 +20,7 @@ SECTIONS
        "i386msdos" back-end which produces an "MZ" exe header, it cannot do
        certain things (yet).  In particular, we would like to use the .exe
        header to point %ss to the separate data segment right at startup.  */
-    .hdr : {
+    .msdos_mz_hdr : {
 		/* Signature.  */
 		SHORT (0x5a4d)
 		/* Bytes in last 512-byte page.  */
