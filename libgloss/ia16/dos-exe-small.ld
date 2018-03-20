@@ -19,7 +19,13 @@ SECTIONS
     /* Fabricate a .exe header here.  Although libbfd does have an
        "i386msdos" back-end which produces an "MZ" exe header, it cannot do
        certain things (yet).  In particular, we would like to use the .exe
-       header to point %ss to the separate data segment right at startup.  */
+       header to point %ss to the separate data segment right at startup.
+
+       Note: The section names .msdos_mz_hdr and .msdos_mz_reloc are
+       special!  I have hacked (my fork) libbfd to use the LMA + size of
+       .msdos_mz_hdr when computing paragraph counts at link time; I also
+       intend to hack GNU as and/or libbfd to output MZ relocations into
+       .msdos_mz_relocs at assembly time.  -- tkchia  */
     .msdos_mz_hdr : {
 		/* Signature.  */
 		SHORT (0x5a4d)
