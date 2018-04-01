@@ -21,12 +21,16 @@ SECTIONS
        certain things (yet).  In particular, we would like to use the .exe
        header to point %ss to the separate data segment right at startup.
 
-       Note: The section names .msdos_mz_hdr and .msdos_mz_reloc are
-       special!  I have hacked (my fork) libbfd to use the LMA + size of
-       .msdos_mz_hdr when computing paragraph counts at link time; I also
-       intend to hack GNU as and/or libbfd to output MZ relocations into
-       .msdos_mz_relocs at assembly time.  -- tkchia  */
+       Note: The section names .msdos_mz_hdr, .msdos_mz_hdr.*,
+       .msdos_mz_reloc, and .msdos_mz_reloc.* are special!  I have hacked (my
+       fork of) libbfd to use the LMA + size of .msdos_mz_hdr when computing
+       paragraph counts at link time; I also intend to hack GNU as and/or
+       libbfd to output MZ relocations into .msdos_mz_reloc and
+       .msdos_mz_reloc.* at assembly time.  -- tkchia  */
+
     .msdos_mz_hdr : {
+		HIDDEN (__msdos_mz_hdr_start = .);
+
 		/* Signature.  */
 		SHORT (0x5a4d)
 		/* Bytes in last 512-byte page.  */
@@ -57,18 +61,20 @@ SECTIONS
 		SHORT (LOADADDR (.text) / 16 - __msdos_mz_hdr_paras
 		    - ADDR (.text) / 16 + 0x10000)
 		/* Relocation table offset.  */
-		SHORT (0x1c)
+		SHORT (__msdos_mz_rel_start - __msdos_mz_hdr_start)
 		/* Overlay number.  */
 		SHORT (0)
+		*(.msdos_mz_hdr) *(.msdos_mz_hdr.*)
 
 		/* Relocations.  */
 		HIDDEN (__msdos_mz_rel_start = .);
-		*(.msdos_mz_reloc)
+		*(.msdos_mz_reloc) *(.msdos_mz_reloc.*)
 		HIDDEN (__msdos_mz_rel_end = .);
 		HIDDEN (__msdos_mz_rels = (. - __msdos_mz_rel_start) / 4);
 
 		/* Padding.  */
-		HIDDEN (__msdos_mz_hdr_paras = (7 + __msdos_mz_rels + 3) / 4);
+		HIDDEN (__msdos_mz_hdr_paras
+			    = (. - __msdos_mz_hdr_start + 15) / 16);
 		. = ALIGN (16);
 
 		ASSERT ((__msdos_mz_rel_end - __msdos_mz_rel_start) % 4 == 0,
