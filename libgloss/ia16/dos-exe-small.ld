@@ -8,10 +8,26 @@ GROUP(-lc -lgcc -ldos-exe-small -lm)
 
 MEMORY
   {
-    bseglma (wx) : ORIGIN = 0x00000, LENGTH = 0x60020
-    hdrvma  (wx) : ORIGIN = 0x00000, LENGTH = 0x40020
-    csegvma (wx) : ORIGIN = 0x00020, LENGTH = 0x10000
-    dsegvma (wx) : ORIGIN = 0x00020, LENGTH = 0x10000
+    bseglma	(wx) : ORIGIN = 0x00000, LENGTH = 0xa0000
+    hdrvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x40020
+    csegvma	(wx) : ORIGIN = 0x00020, LENGTH = 0x10000
+    fr0segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fr1segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fr2segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fr3segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fr4segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fr5segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fr6segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fr7segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fd0segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fd1segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fd2segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fd3segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fd4segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fd5segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fd6segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    fd7segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    dsegvma	(wx) : ORIGIN = 0x00020, LENGTH = 0x10000
   }
 
 SECTIONS
@@ -64,11 +80,11 @@ SECTIONS
 		SHORT (__msdos_mz_rel_start - __msdos_mz_hdr_start)
 		/* Overlay number.  */
 		SHORT (0)
-		*(.msdos_mz_hdr) *(.msdos_mz_hdr.*)
+		*(.msdos_mz_hdr .msdos_mz_hdr.*)
 
 		/* Relocations.  */
 		HIDDEN (__msdos_mz_rel_start = .);
-		*(.msdos_mz_reloc) *(.msdos_mz_reloc.*)
+		*(.msdos_mz_reloc .msdos_mz_reloc.*)
 		HIDDEN (__msdos_mz_rel_end = .);
 		HIDDEN (__msdos_mz_rels = (. - __msdos_mz_rel_start) / 4);
 
@@ -83,8 +99,6 @@ SECTIONS
 		    "Error: too many MZ relocations");
 	} >hdrvma AT>bseglma
 
-    HIDDEN (__msdos_mz_load_para_text = . / 16 - __msdos_mz_hdr_paras);
-
     /* Target text sections.  */
     .text : {
 		__stext = .;
@@ -96,7 +110,7 @@ SECTIONS
 		*(.text) *(.text.*)
 		__etext = .;
 
-		/* Make the data segment start on a paragraph boundary.  */
+		/* Make the data segments start on a paragraph boundary.  */
 		. = ALIGN (16);
 		__etext_padded = .;
 
@@ -107,7 +121,41 @@ SECTIONS
 	__ltext = __etext - __stext;
 	__ltext_padded = __etext_padded - __stext;
 
-    HIDDEN (__msdos_mz_load_para_data = . / 16 - __msdos_mz_hdr_paras);
+    /* Target far data sections.  Place the far data sections _before_ the
+       near data section (and before near BSS).
+
+       It will be nice to be able to give each input .farrodata.* and
+       .fardata.* section its own output section, along with its own LMA and
+       VMA, but (as of writing --- Apr 2018) the linker script syntax does
+       not allow this.
+
+       So my work-around is to arrange for GCC to tack some sort of octal
+       hash value at the end of each .farrodata.* or .fardata.* section
+       name, and then arrange for this linker script to distribute the
+       sections into a fixed set of "bins", and hope that none of the bins
+       are too large (> 64KiB).  -- tkchia  */
+    .farrodata.0 : { *(.farrodata.*0) . = ALIGN (16); } >fr0segvma AT >bseglma
+    .farrodata.1 : { *(.farrodata.*1) . = ALIGN (16); } >fr1segvma AT >bseglma
+    .farrodata.2 : { *(.farrodata.*2) . = ALIGN (16); } >fr2segvma AT >bseglma
+    .farrodata.3 : { *(.farrodata.*3) . = ALIGN (16); } >fr3segvma AT >bseglma
+    .farrodata.4 : { *(.farrodata.*4) . = ALIGN (16); } >fr4segvma AT >bseglma
+    .farrodata.5 : { *(.farrodata.*5) . = ALIGN (16); } >fr5segvma AT >bseglma
+    .farrodata.6 : { *(.farrodata.*6) . = ALIGN (16); } >fr6segvma AT >bseglma
+    .farrodata.7 : {
+		*(.farrodata .farrodata.*)
+		. = ALIGN (16);
+	} >fr7segvma AT >bseglma
+    .fardata.0 : { *(.fardata.*0) . = ALIGN (16); } >fd0segvma AT >bseglma
+    .fardata.1 : { *(.fardata.*1) . = ALIGN (16); } >fd1segvma AT >bseglma
+    .fardata.2 : { *(.fardata.*2) . = ALIGN (16); } >fd2segvma AT >bseglma
+    .fardata.3 : { *(.fardata.*3) . = ALIGN (16); } >fd3segvma AT >bseglma
+    .fardata.4 : { *(.fardata.*4) . = ALIGN (16); } >fd4segvma AT >bseglma
+    .fardata.5 : { *(.fardata.*5) . = ALIGN (16); } >fd5segvma AT >bseglma
+    .fardata.6 : { *(.fardata.*6) . = ALIGN (16); } >fd6segvma AT >bseglma
+    .fardata.7 : {
+		*(.fardata .fardata.*)
+		. = ALIGN (16);
+	} >fd7segvma AT >bseglma
 
     /* Target data sections.  */
     .data : {
