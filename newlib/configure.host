@@ -794,6 +794,7 @@ newlib_cflags="${newlib_cflags} -DCLOCK_PROVIDED -DMALLOC_PROVIDED -DEXIT_PROVID
 	;;
   ia16-*-*)
 	syscall_dir=syscalls
+	newlib_cflags="${newlib_cflags} -D_COMPILING_NEWLIB"
 	;;
   iq2000*)
 	syscall_dir=syscalls

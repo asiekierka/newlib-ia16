@@ -153,7 +153,7 @@ NEWLIB_CFLAGS = `if [ -d ${objroot}/newlib ]; then echo -I${objroot}/newlib/targ
 CFLAGS_FOR_TARGET = ${MULTILIB} ${INCLUDES} ${NEWLIB_CFLAGS}
 
 .c.o:
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) $<
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $<
 
 $(ELKS_CRT0) : elks-crt0.s
 	$(CC) $< -c -o $@

@@ -8,7 +8,7 @@
 #include <sys/time.h>
 
 int
-_gettimeofday (struct timeval *tv, struct timezone *tz)
+_gettimeofday (struct timeval *tv, void *tzvp)
 {
   static volatile char tz_inited = 0;
   unsigned ax, bx, cx, dx, old_cx, old_dx;
@@ -62,8 +62,9 @@ _gettimeofday (struct timeval *tv, struct timezone *tz)
       tv->tv_usec = usec;
     }
 
-  if (tz)
+  if (tzvp)
     {
+      struct timezone *tz = tzvp;
       tz->tz_minuteswest = _timezone / 60;
       tz->tz_dsttime = _daylight;
     }
