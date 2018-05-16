@@ -76,6 +76,21 @@ static int dos_creat (const char *pathname, unsigned char attr)
   return ret;
 }
 
+static int
+dos_truncate_fd (int fd)
+{
+  int ret, carry;
+  asm volatile ("int $0x21; sbb %0, %0" :
+		"=r" (carry), "=a" (ret) :
+		"Rah" ((char)0x40), "b" (fd), "c" (0u) : "cc");
+  if (carry)
+    {
+      errno = ret;
+      return carry;
+    }
+  return ret;
+}
+
 int
 _open (const char *pathname, int flags, ...)
 {
@@ -121,7 +136,7 @@ _open (const char *pathname, int flags, ...)
     return fd;
   ret = 0;
   if (flags & O_TRUNC)
-    ret = _write(fd, NULL, 0);
+    ret = dos_truncate_fd (fd);
   else if (flags & O_APPEND)
     ret = _lseek(fd, 0, SEEK_END);
   if (ret == -1)
