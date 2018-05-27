@@ -40,8 +40,11 @@ _gettimeofday (struct timeval *tv, void *tzvp)
       tm.tm_sec = dx >> 8;
       usec = (dx & 0xff) * 10000ul;
 
-      /* Read the date again to check for midnight crossover.  If crossover
-	 happens, repeat until it stops.  */
+      if (tm.tm_hour != 0)
+	break;
+
+      /* If the time is close to midnight, read the date again to check for
+	 midnight crossover.  If crossover happens, repeat until it stops.  */
       __asm __volatile ("movb $0x2a, %%ah; int $0x21"
 	: "=&a" (ax), "=b" (bx), "=c" (cx), "=d" (dx) : : "cc", "memory");
     }
