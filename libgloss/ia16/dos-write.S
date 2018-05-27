@@ -14,7 +14,7 @@ _write:
 	 * the file to the current position (www.ctyme.com/intr/rb-2791.htm).
 	 *
 	 * This differs from POSIX semantics for write (fd, buf, 0), which
-	 * says that the function should only detect errors or do nothing.
+	 * say that the function should only detect errors or do nothing.
 	 *
 	 * Thus we need to check for the write (fd, buf, 0) case, and treat
 	 * it specially.
