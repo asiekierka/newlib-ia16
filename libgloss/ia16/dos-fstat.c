@@ -94,7 +94,7 @@ dos_get_fd_mtime (int fd)
   tm.tm_mday = dx & 0x1fu;
   tm.tm_hour = cx >> 11;
   tm.tm_min = (cx >> 5) & 0x3fu;
-  tm.tm_sec = cx & 0x1fu;
+  tm.tm_sec = (cx & 0x1fu) * 2;
   tm.tm_isdst = -1;
   return mktime (&tm);
 }
