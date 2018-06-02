@@ -172,6 +172,7 @@ _start:
 	loop	.Ldo_reverse
 .Lno_reverse:
 	movw	%sp,	%ax
+	movw	%bp,	environ
 	pushw	%bp		# envp
 	pushw	%ax		# argp
 	pushw	%dx		# argc
