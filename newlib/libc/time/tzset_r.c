@@ -13,6 +13,56 @@ static char __tzname_std[11];
 static char __tzname_dst[11];
 static char *prev_tzenv = NULL;
 
+static size_t
+scan_tzname (const char *tzenv, char *tzname)
+{
+  size_t n = strcspn (tzenv, "0123456789,+-");
+
+  if (n > 10)
+    return 0;
+
+  memcpy (tzname, tzenv, n);
+  tzname[n] = 0;
+
+  return n;
+}
+
+static size_t
+scan_tzoffset (const char *tzenv, char delim, unsigned short *pa,
+	       unsigned short *pb, unsigned short *pc)
+{
+  char *p;
+  size_t n;
+
+  *pb = *pc = 0;
+
+  *pa = strtoul (tzenv, &p, 10);
+  if (p == tzenv)
+    return 0;
+
+  n = p - tzenv;
+  tzenv = p;
+  if (*p != delim)
+    return n;
+
+  tzenv = p + 1;
+  *pb = strtoul (tzenv, &p, 10);
+  if (p == tzenv)
+    return n;
+
+  n += 1 + p - tzenv;
+  tzenv = p;
+  if (*p != delim)
+    return n;
+
+  tzenv = p + 1;
+  *pc = strtoul (tzenv, &p, 10);
+  if (p != tzenv)
+    n += 1 + p - tzenv;
+
+  return n;
+}
+
 void
 _tzset_unlocked_r (struct _reent *reent_ptr)
 {
@@ -45,7 +95,8 @@ _tzset_unlocked_r (struct _reent *reent_ptr)
   if (*tzenv == ':')
     ++tzenv;  
 
-  if (sscanf (tzenv, "%10[^0-9,+-]%n", __tzname_std, &n) <= 0)
+  n = scan_tzname (tzenv, __tzname_std);
+  if (! n)
     return;
  
   tzenv += n;
@@ -59,17 +110,16 @@ _tzset_unlocked_r (struct _reent *reent_ptr)
   else if (*tzenv == '+')
     ++tzenv;
 
-  mm = 0;
-  ss = 0;
- 
-  if (sscanf (tzenv, "%hu%n:%hu%n:%hu%n", &hh, &n, &mm, &n, &ss, &n) < 1)
+  n = scan_tzoffset (tzenv, ':', &hh, &mm, &ss);
+  if (! n)
     return;
   
   tz->__tzrule[0].offset = sign * (ss + SECSPERMIN * mm + SECSPERHOUR * hh);
   _tzname[0] = __tzname_std;
   tzenv += n;
-  
-  if (sscanf (tzenv, "%10[^0-9,+-]%n", __tzname_dst, &n) <= 0)
+
+  n = scan_tzname (tzenv, __tzname_dst);
+  if (! n)  
     { /* No dst */
       _tzname[1] = _tzname[0];
       _timezone = tz->__tzrule[0].offset;
@@ -91,12 +141,8 @@ _tzset_unlocked_r (struct _reent *reent_ptr)
   else if (*tzenv == '+')
     ++tzenv;
 
-  hh = 0;  
-  mm = 0;
-  ss = 0;
-  
-  n  = 0;
-  if (sscanf (tzenv, "%hu%n:%hu%n:%hu%n", &hh, &n, &mm, &n, &ss, &n) <= 0)
+  n = scan_tzoffset (tzenv, ':', &hh, &mm, &ss);
+  if (! n)
     tz->__tzrule[1].offset = tz->__tzrule[0].offset - 3600;
   else
     tz->__tzrule[1].offset = sign * (ss + SECSPERMIN * mm + SECSPERHOUR * hh);
@@ -110,8 +156,9 @@ _tzset_unlocked_r (struct _reent *reent_ptr)
 
       if (*tzenv == 'M')
 	{
-	  if (sscanf (tzenv, "M%hu%n.%hu%n.%hu%n", &m, &n, &w, &n, &d, &n) != 3 ||
-	      m < 1 || m > 12 || w < 1 || w > 5 || d > 6)
+	  ++tzenv;
+	  n = scan_tzoffset (tzenv, '.', &m, &w, &d);
+	  if (! n || m < 1 || m > 12 || w < 1 || w > 5 || d > 6)
 	    return;
 	  
 	  tz->__tzrule[i].ch = 'M';
@@ -170,7 +217,10 @@ _tzset_unlocked_r (struct _reent *reent_ptr)
       n = 0;
       
       if (*tzenv == '/')
-	sscanf (tzenv, "/%hu%n:%hu%n:%hu%n", &hh, &n, &mm, &n, &ss, &n);
+	{
+	  ++tzenv;
+	  n = scan_tzoffset (tzenv, ':', &hh, &mm, &ss);
+	}
 
       tz->__tzrule[i].s = ss + SECSPERMIN * mm + SECSPERHOUR  * hh;
       

@@ -74,9 +74,6 @@ dos_lseek (int fd, off_t offset, int whence, off_t *p_new_offset)
   return 0;
 }
 
-/* We do not really need this yet, and it breaks some regression test cases,
-   so leave this out for now.  -- tkchia  */
-#if 0
 static time_t
 dos_get_fd_mtime (int fd)
 {
@@ -101,7 +98,6 @@ dos_get_fd_mtime (int fd)
   tm.tm_isdst = -1;
   return mktime (&tm);
 }
-#endif
 
 int
 _fstat (int fd, struct stat * restrict buf)
@@ -135,9 +131,7 @@ _fstat (int fd, struct stat * restrict buf)
       buf->st_dev = diw & 0x3fu;
     }
 
-#if 0
   buf->st_mtime = buf->st_atime = buf->st_ctime = dos_get_fd_mtime (fd);
-#endif
   buf->st_nlink = 1;
   return 0;
 }
