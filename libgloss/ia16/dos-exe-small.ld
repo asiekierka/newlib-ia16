@@ -176,6 +176,11 @@ SECTIONS
 		*(.data) *(.data.*)
 		*(.gcc_except_table)
 		__edata = .;
+
+		/* ".../ia16-elf/bin/ld: a.out: R_386_RELSEG16 with
+		   unaligned section `.bss'" */
+		. = ALIGN (8);
+		__edata_padded = .;
 	} >dsegvma AT >bseglma
 
     .bss (NOLOAD) : {
