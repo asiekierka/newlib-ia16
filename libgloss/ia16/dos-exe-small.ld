@@ -11,6 +11,14 @@ MEMORY
     bseglma	(wx) : ORIGIN = 0x00000, LENGTH = 0xa0000
     hdrvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x40020
     csegvma	(wx) : ORIGIN = 0x00020, LENGTH = 0x10000
+    ft0segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    ft1segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    ft2segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    ft3segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    ft4segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    ft5segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    ft6segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+    ft7segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
     fr0segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
     fr1segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
     fr2segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
@@ -121,19 +129,34 @@ SECTIONS
 	__ltext = __etext - __stext;
 	__ltext_padded = __etext_padded - __stext;
 
-    /* Target far data sections.  Place the far data sections _before_ the
-       near data section (and before near BSS).
+    /* Target far text sections.  These section descriptions are here mainly
+       to prepare for adding medium model support (!) to the IA-16 toolchain
+       some time.
 
-       It will be nice to be able to give each input .farrodata.* and
-       .fardata.* section its own output section, along with its own LMA and
-       VMA, but (as of writing --- Apr 2018) the linker script syntax does
-       not allow this.
+       It will be nice to be able to give each input .fartext.*,
+       .farrodata.*, and .fardata.* section its own output section, along
+       with its own LMA and VMA, but (as of writing --- Jun 2018) the linker
+       script syntax does not allow this.
 
        So my work-around is to arrange for GCC to tack some sort of octal
-       hash value at the end of each .farrodata.* or .fardata.* section
-       name, and then arrange for this linker script to distribute the
-       sections into a fixed set of "bins", and hope that none of the bins
-       are too large (> 64KiB).  -- tkchia  */
+       hash value at the end of each .fartext.*, .farrodata.*, or .fardata.*
+       section name, and then arrange for this linker script to distribute
+       the sections into a fixed set of "bins", and hope that none of the
+       bins are too large (> 64KiB).  -- tkchia */
+    .fartext.0 : { *(.fartext.*0) . = ALIGN (16); } >ft0segvma AT >bseglma
+    .fartext.1 : { *(.fartext.*1) . = ALIGN (16); } >ft1segvma AT >bseglma
+    .fartext.2 : { *(.fartext.*2) . = ALIGN (16); } >ft2segvma AT >bseglma
+    .fartext.3 : { *(.fartext.*3) . = ALIGN (16); } >ft3segvma AT >bseglma
+    .fartext.4 : { *(.fartext.*4) . = ALIGN (16); } >ft4segvma AT >bseglma
+    .fartext.5 : { *(.fartext.*5) . = ALIGN (16); } >ft5segvma AT >bseglma
+    .fartext.6 : { *(.fartext.*6) . = ALIGN (16); } >ft6segvma AT >bseglma
+    .fartext.7 : {
+		*(.fartext .fartext.*)
+		. = ALIGN (16);
+	} >ft7segvma AT >bseglma
+
+    /* Target far data sections.  Place the far data sections _before_ the
+       near data section (and before near BSS).  -- tkchia  */
     .farrodata.0 : { *(.farrodata.*0) . = ALIGN (16); } >fr0segvma AT >bseglma
     .farrodata.1 : { *(.farrodata.*1) . = ALIGN (16); } >fr1segvma AT >bseglma
     .farrodata.2 : { *(.farrodata.*2) . = ALIGN (16); } >fr2segvma AT >bseglma
