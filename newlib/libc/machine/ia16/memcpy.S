@@ -7,16 +7,16 @@
 	.section	".text"
 	.global		memcpy
 memcpy:
-	movw	%sp,	%bx
+	ENTER_BX_
 	pushw	%si
 	pushw	%di
 	pushw	%es
-	movw	%ds,	%ax
-	movw	%ax,	%es
-	movw	2(%bx),	%di
-	movw	%di,	%ax
-	movw	4(%bx),	%si
-	movw	6(%bx),	%cx
+	movw	%ds,	%si
+	movw	%si,	%es
+	MOV_ARG0W_BX_(%ax)
+	movw	%ax,	%di
+	MOV_ARG2W_BX_(%si)
+	MOV_ARG4W_BX_(%cx)
 	shrw	$1,	%cx
 	rep	movsw
 	adcw	%cx,	%cx
