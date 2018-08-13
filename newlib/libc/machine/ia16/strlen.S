@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		strlen
 strlen:
-	ENTER_BX_
+	ENTER_BX_(2)
 	pushw   %di
 	pushw   %es
 	MOV_ARG0W_BX_(%di)

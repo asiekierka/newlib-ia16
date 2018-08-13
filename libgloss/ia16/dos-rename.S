@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		_rename
 _rename:
-	ENTER_BX_
+	ENTER_BX_(4)
 	pushw	%es
 	pushw	%di
 	movw	%ds,	%di

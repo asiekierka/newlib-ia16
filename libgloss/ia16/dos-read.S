@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		_read
 _read:
-	ENTER_BX_
+	ENTER_BX_(6)
 	MOV_ARG2W_BX_(%dx)
 	MOV_ARG4W_BX_(%cx)
 	MOV_ARG0W_BX_(%bx)

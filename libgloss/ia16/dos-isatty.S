@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		_isatty
 _isatty:
-	ENTER_BX_
+	ENTER_BX_(2)
 	MOV_ARG0W_BX_(%bx)
 	movw	$0x4400,	%ax
 	int	$0x21

@@ -19,11 +19,15 @@
  * `stdcall', `cdecl', and `regparmcall' calling conventions implemented in
  * ia16-elf-gcc.
  *
- * - ENTER_BX_ loads %sp into %bx to access stack arguments.  This should only
- *   be used in a function with no more than 8 bytes of arguments.
+ * - ENTER_BX_ (N) loads %sp into %bx to access stack arguments, if necessary.
+ *   N is the number of bytes of arguments passed to the function.
  *
- *   ENTER_BX_ should occur before any other pushes to save registers (e.g. 
- *   `pushw %si').
+ *   ENTER_BX_ (.) should occur before any other pushes to save registers
+ *   (e.g. `pushw %si').
+ *
+ * - ENTER4_BX_ (N) does the same as ENTER_BX_ (N), except that for the
+ *   `regparmcall' convention, it assuems that the function has N + 4 bytes
+ *   of arguments.
  *
  * - ARG0W_BX_, ARG2W_BX_, ARG4W_BX_, or ARG6W_BX_ refers respectively to the
  *   first, second, third, or fourth argument shortword.  Each of these
@@ -46,12 +50,13 @@
  * - RET_(N) emits an instruction to return from a function with N bytes of
  *   arguments.
  *
- * - RET2_(N) does the same as RET_(N), except that for the `regparmcall'
- *   convention, it assumes that the function has N + 2 bytes of arguments.
+ * - RET4_(N) does the same as RET_(N), except that for the `regparmcall'
+ *   convention, it assumes that the function has N + 4 bytes of arguments.
  */
 
 #if defined __IA16_CALLCVT_STDCALL
-# define ENTER_BX_		movw %sp, %bx
+# define ENTER_BX_(n)		movw %sp, %bx
+# define ENTER4_BX_(n)		movw %sp, %bx
 # define ARG0W_BX_		2(%bx)
 # define ARG2W_BX_		4(%bx)
 # define ARG4W_BX_		6(%bx)
@@ -65,44 +70,48 @@
 # define MOV_ARG4B_BX_(reg)	movb 6(%bx), reg
 # define MOV_ARG6B_BX_(reg)	movb 8(%bx), reg
 # define RET_(n)		ret $(n)
-# define RET2_(n)		ret $(n)
+# define RET4_(n)		ret $(n)
 #elif defined __IA16_CALLCVT_REGPARMCALL
-# define ENTER_BX_
+# if __IA16_FEATURE_ATTRIBUTE_REGPARMCALL != 20180813L
+#   warning "regparmcall convention is not 20180813L, output code may be bogus"
+# endif
+# define ENTER_BX_(n)		.if (n)>6; \
+				movw %sp, %bx; \
+				.endif
+# define ENTER4_BX_(n)		.if (n)+4>6; \
+				movw %sp, %bx; \
+				.endif
 # define ARG0W_BX_		%ax
 # define ARG2W_BX_		%dx
-# define ARG4W_BX_		%bx
-# define ARG6W_BX_		%cx
+# define ARG4W_BX_		%cx
+# define ARG6W_BX_		2(%bx)
 # define MOV_ARG0W_BX_(reg)	.ifnc %ax, reg; \
 				movw %ax, reg; \
 				.endif
 # define MOV_ARG2W_BX_(reg)	.ifnc %dx, reg; \
 				movw %dx, reg; \
 				.endif
-# define MOV_ARG4W_BX_(reg)	.ifnc %bx, reg; \
-				movw %bx, reg; \
-				.endif
-# define MOV_ARG6W_BX_(reg)	.ifnc %cx, reg; \
+# define MOV_ARG4W_BX_(reg)	.ifnc %cx, reg; \
 				movw %cx, reg; \
 				.endif
+# define MOV_ARG6W_BX_(reg)	movw 2(%bx), reg
 # define MOV_ARG0B_BX_(reg)	.ifnc %al, reg; \
 				movb %al, reg; \
 				.endif
 # define MOV_ARG2B_BX_(reg)	.ifnc %dl, reg; \
 				movb %dl, reg; \
 				.endif
-# define MOV_ARG4B_BX_(reg)	.ifnc %bl, reg; \
-				movb %bl, reg; \
-				.endif
-# define MOV_ARG6B_BX_(reg)	.ifnc %cl, reg; \
+# define MOV_ARG4B_BX_(reg)	.ifnc %cl, reg; \
 				movb %cl, reg; \
 				.endif
-# define RET_(n)		.if (n)>8; \
-				ret $((n)-8); \
+# define MOV_ARG6B_BX_(reg)	movb 2(%bx), reg
+# define RET_(n)		.if (n)>6; \
+				ret $((n)-6); \
 				.else; \
 				ret; \
 				.endif
-# define RET2_(n)		.if (n)+2>8; \
-				ret $((n)+2-8); \
+# define RET4_(n)		.if (n)+4>6; \
+				ret $((n)+4-6); \
 				.else; \
 				ret; \
 				.endif
@@ -110,7 +119,8 @@
 # ifndef __IA16_CALLCVT_CDECL
 #   warning "not sure which calling convention is in use; assuming cdecl"
 # endif
-# define ENTER_BX_		movw %sp, %bx
+# define ENTER_BX_(n)		movw %sp, %bx
+# define ENTER4_BX_(n)		movw %sp, %bx
 # define ARG0W_BX_		2(%bx)
 # define ARG2W_BX_		4(%bx)
 # define ARG4W_BX_		6(%bx)
@@ -124,5 +134,5 @@
 # define MOV_ARG4B_BX_(reg)	movb 6(%bx), reg
 # define MOV_ARG6B_BX_(reg)	movb 8(%bx), reg
 # define RET_(n)		ret
-# define RET2_(n)		ret
+# define RET4_(n)		ret
 #endif

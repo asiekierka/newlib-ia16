@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		_close
 _close:
-	ENTER_BX_
+	ENTER_BX_(2)
 	MOV_ARG0W_BX_(%bx)
 	movb	$0x3e,	%ah
 	int	$0x21

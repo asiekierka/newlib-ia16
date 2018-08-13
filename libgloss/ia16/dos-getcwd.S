@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		_getcwd
 _getcwd:
-	ENTER_BX_
+	ENTER_BX_(4)
 	pushw	%si
 	cmpw	$64,	ARG2W_BX_
 	movw	$0x101,	%ax  # ERANGE

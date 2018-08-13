@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		memcpy
 memcpy:
-	ENTER_BX_
+	ENTER_BX_(6)
 	pushw	%si
 	pushw	%di
 	pushw	%es

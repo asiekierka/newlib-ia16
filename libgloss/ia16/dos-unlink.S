@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		_unlink
 _unlink:
-	ENTER_BX_
+	ENTER_BX_(2)
 	MOV_ARG0W_BX_(%dx)
 	movb	$0x41,	%ah
 	int	$0x21

@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		strchr
 strchr:
-	ENTER_BX_
+	ENTER_BX_(4)
 	pushw	%si
 	MOV_ARG0W_BX_(%si)
 	MOV_ARG2B_BX_(%ah)

@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		_mkdir
 _mkdir:
-	ENTER_BX_
+	ENTER_BX_(4)
 	MOV_ARG0W_BX_(%dx)
 	movb	$0x39,	%ah
 	int	$0x21

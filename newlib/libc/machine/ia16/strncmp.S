@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		strncmp
 strncmp:
-	ENTER_BX_
+	ENTER_BX_(6)
 	pushw	%si
 	MOV_ARG0W_BX_(%si)
 	MOV_ARG4W_BX_(%cx)

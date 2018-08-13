@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		strcpy
 strcpy:
-	ENTER_BX_
+	ENTER_BX_(4)
 	pushw	%si
 	pushw	%di
 	pushw	%es

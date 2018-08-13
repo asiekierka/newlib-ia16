@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		dup2
 dup2:
-	ENTER_BX_
+	ENTER_BX_(4)
 	MOV_ARG2W_BX_(%cx)
 	MOV_ARG0W_BX_(%bx)
 	movb	$0x46,	%ah

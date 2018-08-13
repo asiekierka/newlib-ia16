@@ -179,7 +179,7 @@ _start:
 	pushw	%dx		# argc
 #else
 	xchgw	%ax,	%dx
-	movw	%bp,	%bx
+	movw	%bp,	%cx
 #endif
 	call	main
 #if defined __IA16_CALLCVT_CDECL

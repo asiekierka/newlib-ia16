@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		_rmdir
 _rmdir:
-	ENTER_BX_
+	ENTER_BX_(2)
 	MOV_ARG0W_BX_(%dx)
 	movb	$0x3a,	%ah
 	int	$0x21

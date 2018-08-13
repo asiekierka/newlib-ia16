@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		rawmemchr
 rawmemchr:
-	ENTER_BX_
+	ENTER_BX_(4)
 	pushw	%di
 	pushw	%es
 	movw	%ds,	%di

@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		_write
 _write:
-	ENTER_BX_
+	ENTER_BX_(6)
 	MOV_ARG4W_BX_(%cx)
 	/*
 	 * int $0x21 with %ah == 0x40 and %cx == 0 will truncate or extend

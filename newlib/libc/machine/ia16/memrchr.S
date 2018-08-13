@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		memrchr
 memrchr:
-	ENTER_BX_
+	ENTER_BX_(6)
 	pushw	%di
 	pushw	%es
 	movw	%ds,	%di

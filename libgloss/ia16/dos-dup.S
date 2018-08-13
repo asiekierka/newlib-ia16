@@ -7,7 +7,7 @@
 	.section	".text"
 	.global		dup
 dup:
-	ENTER_BX_
+	ENTER_BX_(2)
 	MOV_ARG0W_BX_(%bx)
 	movb	$0x45,	%ah
 	int	$0x21
