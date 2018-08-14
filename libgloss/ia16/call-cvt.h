@@ -25,8 +25,8 @@
  *   ENTER_BX_ (.) should occur before any other pushes to save registers
  *   (e.g. `pushw %si').
  *
- * - ENTER4_BX_ (N) does the same as ENTER_BX_ (N), except that for the
- *   `regparmcall' convention, it assuems that the function has N + 4 bytes
+ * - ENTER2_BX_ (N) does the same as ENTER_BX_ (N), except that for the
+ *   `regparmcall' convention, it assuems that the function has N + 2 bytes
  *   of arguments.
  *
  * - ARG0W_BX_, ARG2W_BX_, ARG4W_BX_, or ARG6W_BX_ refers respectively to the
@@ -50,13 +50,13 @@
  * - RET_(N) emits an instruction to return from a function with N bytes of
  *   arguments.
  *
- * - RET4_(N) does the same as RET_(N), except that for the `regparmcall'
- *   convention, it assumes that the function has N + 4 bytes of arguments.
+ * - RET2_(N) does the same as RET_(N), except that for the `regparmcall'
+ *   convention, it assumes that the function has N + 2 bytes of arguments.
  */
 
 #if defined __IA16_CALLCVT_STDCALL
 # define ENTER_BX_(n)		movw %sp, %bx
-# define ENTER4_BX_(n)		movw %sp, %bx
+# define ENTER2_BX_(n)		movw %sp, %bx
 # define ARG0W_BX_		2(%bx)
 # define ARG2W_BX_		4(%bx)
 # define ARG4W_BX_		6(%bx)
@@ -70,15 +70,15 @@
 # define MOV_ARG4B_BX_(reg)	movb 6(%bx), reg
 # define MOV_ARG6B_BX_(reg)	movb 8(%bx), reg
 # define RET_(n)		ret $(n)
-# define RET4_(n)		ret $(n)
+# define RET2_(n)		ret $(n)
 #elif defined __IA16_CALLCVT_REGPARMCALL
-# if __IA16_FEATURE_ATTRIBUTE_REGPARMCALL != 20180813L
-#   warning "regparmcall convention is not 20180813L, output code may be bogus"
+# if __IA16_REGPARMCALL_ABI - 0 != 20180814L
+#   warning "regparmcall convention is not 20180814L, output code may be bogus"
 # endif
 # define ENTER_BX_(n)		.if (n)>6; \
 				movw %sp, %bx; \
 				.endif
-# define ENTER4_BX_(n)		.if (n)+4>6; \
+# define ENTER2_BX_(n)		.if (n)+2>6; \
 				movw %sp, %bx; \
 				.endif
 # define ARG0W_BX_		%ax
@@ -110,8 +110,8 @@
 				.else; \
 				ret; \
 				.endif
-# define RET4_(n)		.if (n)+4>6; \
-				ret $((n)+4-6); \
+# define RET2_(n)		.if (n)+2>6; \
+				ret $((n)+2-6); \
 				.else; \
 				ret; \
 				.endif
@@ -120,7 +120,7 @@
 #   warning "not sure which calling convention is in use; assuming cdecl"
 # endif
 # define ENTER_BX_(n)		movw %sp, %bx
-# define ENTER4_BX_(n)		movw %sp, %bx
+# define ENTER2_BX_(n)		movw %sp, %bx
 # define ARG0W_BX_		2(%bx)
 # define ARG2W_BX_		4(%bx)
 # define ARG4W_BX_		6(%bx)
@@ -134,5 +134,5 @@
 # define MOV_ARG4B_BX_(reg)	movb 6(%bx), reg
 # define MOV_ARG6B_BX_(reg)	movb 8(%bx), reg
 # define RET_(n)		ret
-# define RET4_(n)		ret
+# define RET2_(n)		ret
 #endif

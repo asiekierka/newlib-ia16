@@ -7,16 +7,14 @@
 	.section	".text"
 	.global		_lseek
 _lseek:
-	movw	%sp,	%bx
+	ENTER_BX_(8)
+	MOV_ARG2W_BX_(%dx)
+	MOV_ARG4W_BX_(%cx)
 #ifndef __IA16_CALLCVT_REGPARMCALL
-	movw	4(%bx),	%dx
-	movw	6(%bx),	%cx
 	movb	8(%bx),	%al
 	movw	2(%bx),	%bx
 #else
-	movw	2(%bx),	%dx
-	movw	4(%bx),	%cx
-	movb	6(%bx),	%bl
+	movb	2(%bx),	%bl
 	xchg	%ax,	%bx
 #endif
 	movb	$0x42,	%ah
@@ -26,4 +24,4 @@ _lseek:
 	movw	$-1,	%ax
 	cwd
 .noerror:
-	RET4_(8)
+	RET_(8)
