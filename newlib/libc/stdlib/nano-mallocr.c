@@ -26,6 +26,10 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/*
+ * Changes 2018 by TK Chia to improve heap corruption checking.
+ */
+
 /* Implementation of <<malloc>> <<free>> <<calloc>> <<realloc>>, optional
  * as to be reenterable.
  *
@@ -33,9 +37,11 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <malloc.h>
+#include <unistd.h>
 
 #if DEBUG
 #include <assert.h>
@@ -334,7 +340,7 @@ void * nano_malloc(RARG malloc_size_t s)
 #endif /* DEFINE_MALLOC */
 
 #ifdef DEFINE_FREE
-#define MALLOC_CHECK_DOUBLE_FREE
+#define MALLOC_CHECK_CORRUPT_HEAP
 
 /** Function nano_free
   * Implementation of libc free.
@@ -353,6 +359,19 @@ void nano_free (RARG void * free_p)
     if (free_p == NULL) return;
 
     p_to_free = get_chunk_from_ptr(free_p);
+
+#ifdef MALLOC_CHECK_CORRUPT_HEAP
+    if (sizeof(long) > sizeof(size_t)
+        && (p_to_free->size < 0 || p_to_free->size > (size_t)0 - (size_t)1))
+    {
+        static const char msg1[] = "*** ",
+			  msg2[] = ": bogus heap chunk size *** ";
+        write(2, msg1, sizeof(msg1) - 1);
+        write(2, __func__, sizeof(__func__) - 1);
+        write(2, msg2, sizeof(msg2) - 1);
+        abort ();
+    }
+#endif
 
     MALLOC_LOCK;
     if (free_list == NULL)
@@ -407,13 +426,16 @@ void nano_free (RARG void * free_p)
             p->next = q->next;
         }
     }
-#ifdef MALLOC_CHECK_DOUBLE_FREE
+#ifdef MALLOC_CHECK_CORRUPT_HEAP
     else if ((char *)p + p->size > (char *)p_to_free)
     {
         /* Report double free fault */
-        RERRNO = ENOMEM;
-        MALLOC_UNLOCK;
-        return;
+        static const char msg1[] = "*** ",
+			  msg2[] = ": possible double free *** ";
+        write(2, msg1, sizeof(msg1) - 1);
+        write(2, __func__, sizeof(__func__) - 1);
+        write(2, msg2, sizeof(msg2) - 1);
+        abort ();
     }
 #endif
     else if ((char *)p_to_free + p_to_free->size == (char *) q)
