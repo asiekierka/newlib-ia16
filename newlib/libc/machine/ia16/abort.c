@@ -57,7 +57,20 @@ __ia16_abort_impl (abort_regs_t regs)
   dump_mem ((const unsigned *) regs.sp, 192);
 
   for (;;)
-    _exit (128 | SIGABRT);
+    {
+#ifndef __IA16_FEATURE_PROTECTED_MODE
+      /* _exit (.) may ultimately make the system weird out and wipe the
+	 information dump from the screen.  Try to delay a bit before
+	 actually exiting, if possible.
+
+	 If we are not compiling for protected mode, then it should be fine
+	 to use the `hlt' instruction.  */
+      unsigned delay = 64;
+      while (delay-- != 0)
+	__asm volatile ("hlt");
+#endif
+      _exit (128 | SIGABRT);
+    }
 }
 
 __asm(
