@@ -36,10 +36,13 @@ dump_mem (const unsigned *mem, unsigned n_words)
   while (n_words-- != 0)
     {
       word = *mem++;
-      buf[0] = "0123456789abcdef"[ word >> 12];
-      buf[1] = "0123456789abcdef"[(word >>  8) & 0xf];
-      buf[2] = "0123456789abcdef"[(word >>  4) & 0xf];
-      buf[3] = "0123456789abcdef"[ word        & 0xf];
+      buf[3] = "0123456789abcdef"[word & 0xf];
+      word >>= 4;
+      buf[2] = "0123456789abcdef"[word & 0xf];
+      word >>= 4;
+      buf[1] = "0123456789abcdef"[word & 0xf];
+      word >>= 4;
+      buf[0] = "0123456789abcdef"[word];
       write (2, buf, 5);
     }
 }
@@ -56,21 +59,22 @@ __ia16_abort_impl (abort_regs_t regs)
   write (2, msg2, sizeof (msg2) - 1);
   dump_mem ((const unsigned *) regs.sp, 192);
 
-  for (;;)
-    {
 #ifndef __IA16_FEATURE_PROTECTED_MODE
-      /* _exit (.) may ultimately make the system weird out and wipe the
-	 information dump from the screen.  Try to delay a bit before
-	 actually exiting, if possible.
+  /* _exit (.) may ultimately make the system weird out and wipe the
+     information dump from the screen.  Try to delay a bit before actually
+     exiting, if possible.
 
-	 If we are not compiling for protected mode, then it should be fine
-	 to use the `hlt' instruction.  */
-      unsigned delay = 64;
-      while (delay-- != 0)
-	__asm volatile ("hlt");
+     If we are not compiling for protected mode, then it should be fine to
+     use the `hlt' instruction.  */
+  {
+    unsigned delay = 64;
+    while (delay-- != 0)
+      __asm volatile ("hlt");
+  }
 #endif
-      _exit (128 | SIGABRT);
-    }
+
+  for (;;)
+    _exit (128 | SIGABRT);
 }
 
 __asm(

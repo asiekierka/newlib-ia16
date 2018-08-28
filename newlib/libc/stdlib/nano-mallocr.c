@@ -361,15 +361,15 @@ void nano_free (RARG void * free_p)
     p_to_free = get_chunk_from_ptr(free_p);
 
 #ifdef MALLOC_CHECK_CORRUPT_HEAP
+#define NANO_FREE_ERR(what) NANO_FREE_ERR_2(nano_free, what)
+#define NANO_FREE_ERR_2(who, what) NANO_FREE_ERR_3(who, what)
+#define NANO_FREE_ERR_3(who, what) "*** " #who ": " what " *** "
     if (sizeof(long) > sizeof(size_t)
         && (p_to_free->size < 0 || p_to_free->size > (size_t)0 - (size_t)1))
     {
-        static const char msg1[] = "*** ",
-			  msg2[] = ": bogus heap chunk size *** ";
-        write(2, msg1, sizeof(msg1) - 1);
-        write(2, __func__, sizeof(__func__) - 1);
-        write(2, msg2, sizeof(msg2) - 1);
-        abort ();
+        static const char msg[] = NANO_FREE_ERR("bogus heap chunk size");
+        write(2, msg, sizeof(msg) - 1);
+        abort();
     }
 #endif
 
@@ -430,12 +430,9 @@ void nano_free (RARG void * free_p)
     else if ((char *)p + p->size > (char *)p_to_free)
     {
         /* Report double free fault */
-        static const char msg1[] = "*** ",
-			  msg2[] = ": possible double free *** ";
-        write(2, msg1, sizeof(msg1) - 1);
-        write(2, __func__, sizeof(__func__) - 1);
-        write(2, msg2, sizeof(msg2) - 1);
-        abort ();
+        static const char msg[] = NANO_FREE_ERR("possible double free");
+        write(2, msg, sizeof(msg) - 1);
+        abort();
     }
 #endif
     else if ((char *)p_to_free + p_to_free->size == (char *) q)
