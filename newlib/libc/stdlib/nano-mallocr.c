@@ -128,6 +128,8 @@
 #define MALLOC_PAGE_ALIGN (0x1000)
 #define MAX_ALLOC_SIZE (0x80000000U)
 
+#define MALLOC_CHECK_CORRUPT_HEAP
+
 typedef size_t malloc_size_t;
 
 typedef struct malloc_chunk
@@ -266,6 +268,18 @@ void * nano_malloc(RARG malloc_size_t s)
     while (r)
     {
         int rem = r->size - alloc_size;
+#ifdef MALLOC_CHECK_CORRUPT_HEAP
+#define NANO_MALLOC_ERR(what) NANO_MALLOC_ERR_2(nano_malloc, what)
+#define NANO_MALLOC_ERR_2(who, what) NANO_MALLOC_ERR_3(who, what)
+#define NANO_MALLOC_ERR_3(who, what) "*** " #who ": " what " *** "
+        if (sizeof(long) > sizeof(size_t)
+            && (r->size < 0 || r->size > (size_t)0 - (size_t)1))
+        {
+            static const char msg[] = NANO_MALLOC_ERR("bogus heap chunk size");
+            write(2, msg, sizeof(msg) - 1);
+            abort();
+        }
+#endif
         if (rem >= 0)
         {
             if (rem >= MALLOC_MINCHUNK)
@@ -340,7 +354,6 @@ void * nano_malloc(RARG malloc_size_t s)
 #endif /* DEFINE_MALLOC */
 
 #ifdef DEFINE_FREE
-#define MALLOC_CHECK_CORRUPT_HEAP
 
 /** Function nano_free
   * Implementation of libc free.
