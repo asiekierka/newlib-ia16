@@ -215,7 +215,7 @@ SECTIONS
                 /* Minimum address allowed for sbrk() to use.  */
                 __heap_end_minimum = ALIGN(8);
 
-		ASSERT(. <= 0xfff8,
+		ASSERT(. <= 0xfd00,
 		    "Error: too large for a small-model .exe file.");
     	} >dsegvma AT >bseglma
 

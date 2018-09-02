@@ -57,7 +57,7 @@ SECTIONS
 	__lbss1 = __lbss0 + 1;
 	__lbss = __lbss1 / 2;
 
-    ASSERT(. <= 0xfff8, "Error: too large for a .com file.")
+    ASSERT(. <= 0xfd00, "Error: too large for a .com file.")
 
     /DISCARD/ : { *(.*) }
   }
