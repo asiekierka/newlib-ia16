@@ -1,8 +1,18 @@
-/* Linker script for ELKS executables with combined data and text segment.  */
+#!/bin/sh
+
+crtbegin="`$CC -print-file-name=crtbegin.o`"
+crtend="`$CC -print-file-name=crtend.o`"
+sed -e "s;@multidir@;$1;g" \
+    -e "s;@crtbegin@;$crtbegin;g" -e "s;@crtend@;$crtend;g" \
+    -e "s/@self@/`basename "$0"`/g" <<'EOF'
+/* Linker script for DOS executables with combined data and text segment.
+   Generated from @self@.  */
 
 OUTPUT_FORMAT(binary)
 ENTRY(_start)
-INPUT(crtbegin.o crtend.o dos-com-crt0.o)
+INPUT(@crtbegin@
+      @crtend@
+      @multidir@/dos-com-crt0.o)
 GROUP(-lc -lgcc -ldos-com -lm)
 
 SECTIONS
@@ -43,14 +53,14 @@ SECTIONS
 	}
 
     .bss (NOLOAD) : {
-    	 	 __sbss = .;
+		 __sbss = .;
                 *(.bss) *(.bss.*)
                 *(COMMON)
                 __ebss = .;
 
                 /* Minimum address allowed for sbrk() to use.  */
                 __heap_end_minimum = ALIGN(8);
-    	}
+	}
 
 	__ldata = __edata - __sdata;
 	__lbss0 = __ebss - __sbss;
@@ -61,3 +71,4 @@ SECTIONS
 
     /DISCARD/ : { *(.*) }
   }
+EOF

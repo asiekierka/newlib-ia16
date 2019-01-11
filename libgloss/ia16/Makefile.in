@@ -91,7 +91,7 @@ CRT0		= $(DOS_TINY_CRT0)
 INCLUDES += -I$(srcdir) -I. -I$(srcdir)/.. -I../libnosys
 
 INSTALL_FILES = ${DOS_TINY_BSP} ${DOS_TINY_CRT0} \
-  ${DOS_SMALL_BSP} ${DOS_SMALL_CRT0}
+  ${DOS_SMALL_BSP} ${DOS_SMALL_CRT0} ${ALL_SCRIPTS}
 ifneq (,$(findstring elks,$(target)))
 INSTALL_FILES += ${ELKS_BSP} ${ELKS_CRT0}
 endif
@@ -101,14 +101,7 @@ endif
 # it to link is a good test, so we ignore all the errors for now.
 #
 # all: ${MON_CRT0} ${MON_BSP}
-ifneq (,$(findstring elks,$(target)))
-all: ${ELKS_CRT0} ${ELKS_BSP} libnosys.a
-endif
-
-ifneq (,$(findstring elf,$(target)))
-all: ${DOS_TINY_CRT0} ${DOS_TINY_BSP} ${DOS_SMALL_CRT0} ${DOS_SMALL_BSP} \
-  libnosys.a
-endif
+all: $(INSTALL_FILES) libnosys.a
 #
 # Here's where we build the board support packages for each target.
 #
@@ -205,8 +198,15 @@ $(DOS_SMALL_BSP) : $(DOS_SMALL_OBJS)
 .c.S:
 	${CC} ${CFLAGS_FOR_TARGET} -c $<
 
+dos-com.ld: dos-com.ld.in
+	CC='$(CC)' $(SHELL) $< '$(DESTDIR)${tooldir}/lib${MULTISUBDIR}' >$@
+
+dos-exe-small.ld: dos-exe-small.ld.in
+	CC='$(CC)' $(SHELL) $< '$(DESTDIR)${tooldir}/lib${MULTISUBDIR}' >$@
+
 clean mostlyclean:
-	rm -f a.out core *.i *.o *-test *.srec *.dis *.x *.hex $(ALL_BSP)
+	rm -f a.out core *.i *.o *-test *.srec *.dis *.x *.hex \
+	  dos-com.ld dos-exe-small.ld $(ALL_BSP)
 
 distclean maintainer-clean realclean: clean
 	rm -f Makefile config.status *~
@@ -215,12 +215,12 @@ distclean maintainer-clean realclean: clean
 install: 
 	$(mkinstalldirs) $(DESTDIR)${tooldir}/lib${MULTISUBDIR}
 	set -e; for x in ${INSTALL_FILES}; do\
-	  ${INSTALL_DATA} $$x $(DESTDIR)${tooldir}/lib${MULTISUBDIR}/$$x; \
+	  if [ -f $$x ]; then \
+	    ${INSTALL_DATA} $$x $(DESTDIR)${tooldir}/lib${MULTISUBDIR}/$$x; \
+	  else \
+	    ${INSTALL_DATA} $(srcdir)/$$x $(DESTDIR)${tooldir}/lib${MULTISUBDIR}/$$x; \
+	  fi; \
 	done
-	@for script in ${ALL_SCRIPTS}; do\
-	  ${INSTALL_DATA} ${srcdir}/$${script} $(DESTDIR)${tooldir}/lib${MULTISUBDIR}/$${script}; \
-	done
-
 
 doc:
 info:
