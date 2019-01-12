@@ -63,14 +63,15 @@ DOS_TINY_OBJS =	dos-chdir.o dos-close.o dos-dup.o dos-dup2.o dos-fstat.o \
 		dos-write.o
 DOS_TINY_CFLAGS	= -mseparate-code-segment -g -Os
 DOS_TINY_ASFLAGS =
-DOS_TINY_SCRIPTS = dos-com.ld
+DOS_TINY_SCRIPTS = dos-com.ld dos-mt.ld dos-mts.ld dos-mtl.ld dos-mtsl.ld
 DOS_TINY_BSP	= libdos-com.a
 DOS_TINY_CRT0	= dos-com-crt0.o
 
 DOS_SMALL_OBJS	= $(DOS_TINY_OBJS)
 DOS_SMALL_CFLAGS = $(DOS_TINY_CFLAGS)
 DOS_SMALL_ASFLAGS = $(DOS_TINY_ASFLAGS)
-DOS_SMALL_SCRIPTS = dos-exe-small.ld
+DOS_SMALL_SCRIPTS = dos-exe-small.ld dos-ms.ld dos-mss.ld dos-msl.ld \
+		    dos-mssl.ld
 DOS_SMALL_BSP	= libdos-exe-small.a
 DOS_SMALL_CRT0	= dos-exe-small-crt0.o
 
@@ -202,10 +203,31 @@ GEN_LD_SCRIPT = \
   CC='$(CC)' CFLAGS='$(CFLAGS) $(CFLAGS_FOR_TARGET)' \
     multidir='$(DESTDIR)$(tooldir)/lib$(MULTISUBDIR)' $(SHELL) $<
 
-dos-com.ld: dos-com.ld.in
+# dos-com.ld and dos-exe-small.ld are "older" names for dos-mtsl.ld and
+# dos-mssl.ld which I am keeping around for backward compatibility.  -- tkchia
+
+dos-mt.ld: dos-mt.ld.in
+	$(GEN_LD_SCRIPT) -nostdlib >$@
+
+dos-mts.ld: dos-mt.ld.in
+	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
+
+dos-mtl.ld: dos-mt.ld.in
+	$(GEN_LD_SCRIPT) -nostartfiles >$@
+
+dos-mtsl.ld dos-com.ld: dos-mt.ld.in
 	$(GEN_LD_SCRIPT) >$@
 
-dos-exe-small.ld: dos-exe-small.ld.in
+dos-ms.ld: dos-ms.ld.in
+	$(GEN_LD_SCRIPT) -nostdlib >$@
+
+dos-mss.ld: dos-ms.ld.in
+	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
+
+dos-msl.ld: dos-ms.ld.in
+	$(GEN_LD_SCRIPT) -nostartfiles >$@
+
+dos-mssl.ld dos-exe-small.ld: dos-ms.ld.in
 	$(GEN_LD_SCRIPT) >$@
 
 clean mostlyclean:

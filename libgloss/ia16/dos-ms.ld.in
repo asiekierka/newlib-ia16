@@ -1,19 +1,43 @@
 #!/bin/sh
 
-crtbegin="`$CC -print-file-name=crtbegin.o`"
-crtend="`$CC -print-file-name=crtend.o`"
-sed -e "s;@multidir@;$multidir;g" \
+set -e
+cmd1='#'
+cmd2='#'
+w1=with
+w2=with
+case "$1" in
+  -nostdlib)
+    cmd1='/^@if_starts@/,/^@endif@/ d'
+    cmd2='/^@if_libs@/,/^@endif@/ d'
+    w1=without
+    w2=without;;
+  -nostartfiles)
+     cmd1='/^@if_starts@/,/^@endif@/ d'
+     w1=without;;
+  -nodefaultlibs)
+     cmd2='/^@if_libs@/,/^@endif@/ d'
+     w2=without;;
+esac
+crtbegin="`$CC $CFLAGS -print-file-name=crtbegin.o`"
+crtend="`$CC $CFLAGS -print-file-name=crtend.o`"
+sed -e "$cmd1" -e "$cmd2" -e "s;@withstarts@;$w1;g" -e "s;@withlibs@;$w2;g" \
+    -e "s;@multidir@;$multidir;g" -e "s/@self@/`basename "$0"`/g" \
     -e "s;@crtbegin@;$crtbegin;g" -e "s;@crtend@;$crtend;g" \
-    -e "s/@self@/`basename "$0"`/g" <<'EOF'
-/* Linker script for DOS executables with separate data and text segments.
+    -e "/^@if/ d" -e "/^@endif@/ d" <<'EOF'
+/* Linker script for DOS executables with separate data and text segments,
+   @withstarts@ startup files, and @withlibs@ default libraries.
    Partly derived from elks-separate.ld .  Generated from @self@.  */
 
 OUTPUT_FORMAT(binary)
 ENTRY(_start)
+@if_starts@
 INPUT(@crtbegin@
       @crtend@
       @multidir@/dos-exe-small-crt0.o)
+@endif@
+@if_libs@
 GROUP(-lc -lgcc -ldos-exe-small -lm)
+@endif@
 
 MEMORY
   {
