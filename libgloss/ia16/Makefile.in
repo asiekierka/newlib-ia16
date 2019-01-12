@@ -198,15 +198,19 @@ $(DOS_SMALL_BSP) : $(DOS_SMALL_OBJS)
 .c.S:
 	${CC} ${CFLAGS_FOR_TARGET} -c $<
 
+GEN_LD_SCRIPT = \
+  CC='$(CC)' CFLAGS='$(CFLAGS) $(CFLAGS_FOR_TARGET)' \
+    multidir='$(DESTDIR)$(tooldir)/lib$(MULTISUBDIR)' $(SHELL) $<
+
 dos-com.ld: dos-com.ld.in
-	CC='$(CC)' $(SHELL) $< '$(DESTDIR)${tooldir}/lib${MULTISUBDIR}' >$@
+	$(GEN_LD_SCRIPT) >$@
 
 dos-exe-small.ld: dos-exe-small.ld.in
-	CC='$(CC)' $(SHELL) $< '$(DESTDIR)${tooldir}/lib${MULTISUBDIR}' >$@
+	$(GEN_LD_SCRIPT) >$@
 
 clean mostlyclean:
-	rm -f a.out core *.i *.o *-test *.srec *.dis *.x *.hex \
-	  dos-com.ld dos-exe-small.ld $(ALL_BSP)
+	rm -f a.out core *.i *.o *-test *.srec *.dis *.x *.hex dos-*.ld \
+	  $(ALL_BSP)
 
 distclean maintainer-clean realclean: clean
 	rm -f Makefile config.status *~

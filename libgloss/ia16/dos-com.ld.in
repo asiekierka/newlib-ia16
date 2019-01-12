@@ -2,7 +2,7 @@
 
 crtbegin="`$CC -print-file-name=crtbegin.o`"
 crtend="`$CC -print-file-name=crtend.o`"
-sed -e "s;@multidir@;$1;g" \
+sed -e "s;@multidir@;$multidir;g" \
     -e "s;@crtbegin@;$crtbegin;g" -e "s;@crtend@;$crtend;g" \
     -e "s/@self@/`basename "$0"`/g" <<'EOF'
 /* Linker script for DOS executables with combined data and text segment.
