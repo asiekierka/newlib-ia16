@@ -16,7 +16,10 @@
 	.section .startupA
 	.global _start
 _start:
-	# Sanity check for DOS version >= 2
+	# Sanity check for DOS version >= 2.  (Note that this sanity check
+	# may not really work under MS-DOS 1.x, and the system may crash
+	# without even coming here, unless the linker script has been set up
+	# to handle 1.x, via __msdos_handle_v1.)
 	mov	$0x30,	%ah
 	int	$0x21
 	cmp	$2,	%al
@@ -24,8 +27,8 @@ _start:
 #ifdef TINY
 	ret
 #else
-/* Return to the `int $0x20' command at the PSP start --- we cannot just
-   say `int $0x20' here, as %cs is wrong.  */
+	# Return to the `int $0x20' command at the PSP start --- we cannot
+	# just say `int $0x20' here, as %cs is wrong.
 	pushw	%ds
 #ifdef __IA16_FEATURE_PUSH_IMM
 	pushw	$0
@@ -52,12 +55,12 @@ _start:
 #endif
 
 #ifndef TINY
-/* For the small memory model, we need to copy the command line arguments
-   out to the data segment, rather than modify them in place in DOS's DTA ---
-   since the DTA is outside the data segment.  */
+	# For the small memory model, we need to copy the command line
+	# arguments out to the data segment, rather than modify them in
+	# place in DOS's DTA --- since the DTA is outside the data segment.
 	.lcomm	.Largv,	128
-/* We currently do not use the PSP segment value after startup, so we can
-   overlap .Lpsp with .Largv.  This may change in the future.  */
+	# We currently do not use the PSP segment value after startup, so we
+	# can overlap .Lpsp with .Largv.  This may change in the future.
 	.set	.Lpsp,	.Largv
 #endif
 

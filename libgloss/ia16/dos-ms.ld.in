@@ -84,7 +84,6 @@ SECTIONS
        paragraph counts at link time; I also intend to hack GNU as and/or
        libbfd to output MZ relocations into .msdos_mz_reloc and
        .msdos_mz_reloc.* at assembly time.  -- tkchia  */
-
     .msdos_mz_hdr : {
 		HIDDEN (__msdos_mz_hdr_start = .);
 
@@ -100,12 +99,21 @@ SECTIONS
 		SHORT (__msdos_mz_hdr_paras)
 		/* Minimum extra paragraphs.  */
 		SHORT ((0x10000 - SIZEOF (.data) - ADDR (.data)) / 16)
-		/* Maximum extra paragraphs.  Instead of setting this to
-		   0xffff so that the program hogs up all remaining
-		   conventional memory, just let the program have memory up
-		   to the end of the data segment, and ask for more memory
-		   from DOS if it really needs it.  */
-		SHORT ((0x10000 - SIZEOF (.data) - ADDR (.data)) / 16)
+		/* Maximum extra paragraphs.
+
+		   In the normal case, instead of setting this to 0xffff so
+		   that the program hogs up all remaining conventional
+		   memory, just let the program have memory up to the end of
+		   the data segment, and ask for more memory from DOS if it
+		   really needs it.
+
+		   However, if we are asked to fail gracefully under MS-DOS
+		   v1.x, set this to 0xffff.  DOS 1.x command.com treats
+		   this field as a LOADLOW flag (if this is not -1, it will
+		   try to place our .exe at the top of conventional memory,
+		   which will crash everything).  -- tkchia  */
+		SHORT (DEFINED (__msdos_handle_v1) ? 0xffff
+		    : (0x10000 - SIZEOF (.data) - ADDR (.data)) / 16)
 		/* Initial %ss.  */
 		SHORT (LOADADDR (.data) / 16 - __msdos_mz_hdr_paras
 		    - ADDR (.data) / 16 + 0x10000)
@@ -128,8 +136,11 @@ SECTIONS
 		*(.msdos_mz_reloc .msdos_mz_reloc.*)
 		HIDDEN (__msdos_mz_rel_end = .);
 		HIDDEN (__msdos_mz_rels = (. - __msdos_mz_rel_start) / 4);
-
-		/* Padding.  */
+		/* Padding.  MS-DOS >= 2 will just use whatever paragraph
+		   count is given as the header size.  MS-DOS 1.x will round
+		   the header size up to a 512-byte boundary though, so take
+		   care of this if we need to handle 1.x.  -- tkchia */
+		. = DEFINED (__msdos_handle_v1) ? ALIGN (512) : .;
 		HIDDEN (__msdos_mz_hdr_paras
 			    = (. - __msdos_mz_hdr_start + 15) / 16);
 		. = ALIGN (16);
