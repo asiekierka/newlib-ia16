@@ -36,6 +36,7 @@ CC = @CC@
 AS = @AS@
 AR = @AR@
 LD = @LD@
+NM = @NM@
 RANLIB = @RANLIB@
 
 # Yuk.
@@ -75,8 +76,17 @@ DOS_SMALL_SCRIPTS = dos-exe-small.ld dos-ms.ld dos-mss.ld dos-msl.ld \
 DOS_SMALL_BSP	= libdos-exe-small.a
 DOS_SMALL_CRT0	= dos-exe-small-crt0.o
 
+# This is a hack to allow us to build Newlib's nano formatted I/O functions
+# as a separate "board support package", so that we do not have to build the
+# whole of Newlib twice over with --enable-newlib-nano-formatted-io and
+# without...  -- tkchia 20190201
+NANO_STDIO_OBJS = nano-vfprintf.o nano-vfprintf_i.o nano-vfprintf_float.o \
+		  nano-vfscanf.o nano-vfscanf_i.o nano-vfscanf_float.o
+NANO_STDIO_BSP	= libnstdio.a
+
 ALL_SCRIPTS	= $(ELKS_SCRIPTS) $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS)
-ALL_BSP		= $(ELKS_BSP) $(DOS_TINY_BSP) $(DOS_SMALL_BSP)
+ALL_BSP		= $(ELKS_BSP) $(DOS_TINY_BSP) $(DOS_SMALL_BSP) \
+		  $(NANO_STDIO_BSP)
 
 OBJS		= $(DOS_TINY_OBJS)
 CFLAGS		= $(DOS_TINY_CFLAGS)
@@ -92,7 +102,7 @@ CRT0		= $(DOS_TINY_CRT0)
 INCLUDES += -I$(srcdir) -I. -I$(srcdir)/.. -I../libnosys
 
 INSTALL_FILES = ${DOS_TINY_BSP} ${DOS_TINY_CRT0} \
-  ${DOS_SMALL_BSP} ${DOS_SMALL_CRT0} ${ALL_SCRIPTS}
+  ${DOS_SMALL_BSP} ${DOS_SMALL_CRT0} ${NANO_STDIO_BSP} ${ALL_SCRIPTS}
 ifneq (,$(findstring elks,$(target)))
 INSTALL_FILES += ${ELKS_BSP} ${ELKS_CRT0}
 endif
@@ -133,6 +143,8 @@ $(objroot)/newlib/$(ELKS_BSP):
 	ln -s ../libgloss/ia16/$(ELKS_BSP) $(objroot)/newlib
 $(objroot)/newlib/$(ELKS_CRT0):
 	ln -s ../libgloss/ia16/$(ELKS_CRT0) $(objroot)/newlib
+$(objroot)/newlib/$(NANO_STDIO_BSP):
+	ln -s ../libgloss/ia16/$(NANO_STDIO_BSP) $(objroot)/newlib
 
 #
 # Here's where we build the test programs for each target.
@@ -149,6 +161,25 @@ CFLAGS_FOR_TARGET = ${MULTILIB} ${INCLUDES} ${NEWLIB_CFLAGS}
 
 .c.o:
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $<
+
+nano-vfprintf.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf.c
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
+	  -o $@
+nano-vfprintf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf_float.c
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
+	  -o $@
+nano-vfprintf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf_float.c
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
+	  -o $@
+nano-vfscanf.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf.c
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
+	  -o $@
+nano-vfscanf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_float.c
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
+	  -o $@
+nano-vfscanf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_float.c
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
+	  -o $@
 
 $(ELKS_CRT0) : elks-crt0.s
 	$(CC) $< -c -o $@
@@ -195,6 +226,45 @@ $(DOS_TINY_BSP) : $(DOS_TINY_OBJS)
 
 $(DOS_SMALL_BSP) : $(DOS_SMALL_OBJS)
 	$(AR) rcs $@ $+
+
+# When building the nano I/O "BSP", we need to also extract the modules from
+# libc.a that directly or indirectly use the nano I/O routines, and include
+# them in our "BSP".  This is so that calling, say, psignal(, ) will invoke
+# the nano fprintf (...) and not the default one.
+#
+# FIXME: This code makes a number of assumptions, e.g. that libc.a will be
+# built when we reach here, and that the .o file names cannot clash with our
+# BSP modules' names.  -- tkchia 20190201
+$(NANO_STDIO_BSP): $(objroot)/newlib/libc/libc.a $(NANO_STDIO_OBJS)
+	$(AR) rcs $@.1.tmp $(NANO_STDIO_OBJS)
+	set -e; \
+	a="$@.1.tmp"; \
+	while [ -n "$$a" ]; do \
+	  echo '/:$$/ { s/:$$//; h; d }' >$@.2.tmp; \
+	  echo '/:$$/ { s/:$$//; h; d }' >$@.3.tmp; \
+	  $(NM) "$$a" | \
+	    sed -n -e '/ T /! d' \
+		   -e 's,.* T ,/ T ,' \
+		   -e 's,$$,\$$/ { g; p; d },' \
+		   -e p >>$@.2.tmp; \
+	  $(NM) "$$a" | \
+	    sed -n -e '/ T /! d' \
+		   -e 's,.* T ,/ U ,' \
+		   -e 's,$$,\$$/ { g; p; d },' \
+		   -e p >>$@.3.tmp; \
+	  $(NM) $< | sed -n -f $@.2.tmp | sort | uniq >$@.4.tmp; \
+	  if $(NM) $< | sed -n -f $@.3.tmp | fgrep -v -w -f $@.4.tmp \
+							   >$@.5.tmp; then \
+	    xargs $(AR) x $< <$@.5.tmp; \
+	    xargs $(AR) rs $@.1.tmp <$@.5.tmp; \
+	    xargs rm -f <$@.5.tmp; \
+	    a="$<"; \
+	  else \
+	    a=; \
+	  fi; \
+	done
+	mv $@.1.tmp $@
+	rm -f $@.2.tmp $@.3.tmp $@.4.tmp $@.5.tmp
 
 .c.S:
 	${CC} ${CFLAGS_FOR_TARGET} -c $<
