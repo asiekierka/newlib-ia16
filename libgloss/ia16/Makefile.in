@@ -165,7 +165,7 @@ CFLAGS_FOR_TARGET = ${MULTILIB} ${INCLUDES} ${NEWLIB_CFLAGS}
 nano-vfprintf.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
 	  -o $@
-nano-vfprintf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf_float.c
+nano-vfprintf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf_i.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
 	  -o $@
 nano-vfprintf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf_float.c
@@ -174,7 +174,7 @@ nano-vfprintf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf_float.c
 nano-vfscanf.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
 	  -o $@
-nano-vfscanf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_float.c
+nano-vfscanf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_i.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
 	  -o $@
 nano-vfscanf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_float.c
