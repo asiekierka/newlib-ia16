@@ -14,6 +14,7 @@
  */
 
 #include <string.h>
+#include <time.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -77,9 +78,31 @@ dos_lseek (int fd, off_t offset, int whence, off_t *p_new_offset)
 static time_t
 dos_get_fd_mtime (int fd)
 {
+  /* Small static lookup table to quickly convert a packed <year, month>
+     returned by DOS to a value which can be scaled to a time_t.  */
+  static const unsigned packed_ym_to_day[] = {
+    3620u, 3651u, 3682u, 3711u, 3742u, 3772u, 3803u, 3833u,
+    3864u, 3895u, 3925u, 3956u, 3986u, 4017u, 4048u, 4076u,
+    3986u, 4017u, 4048u, 4076u, 4107u, 4137u, 4168u, 4198u,
+    4229u, 4260u, 4290u, 4321u, 4351u, 4382u, 4413u, 4441u,
+    4351u, 4382u, 4413u, 4441u, 4472u, 4502u, 4533u, 4563u,
+    4594u, 4625u, 4655u, 4686u, 4716u, 4747u, 4778u, 4806u,
+    4716u, 4747u, 4778u, 4806u, 4837u, 4867u, 4898u, 4928u,
+    4959u, 4990u, 5020u, 5051u, 5081u, 5112u, 5143u, 5172u
+  };
+  /* Another small static lookup table to convert an hour count to a scaled
+     second count.  */
+  static const unsigned hour_to_scaled_sec[] = {
+	0u,  1800u,  3600u,  5400u,  7200u,  9000u, 10800u, 12600u,
+    14400u, 16200u, 18000u, 19800u, 21600u, 23400u, 25200u, 27000u,
+    28800u, 30600u, 32400u, 34200u, 36000u, 37800u, 39600u, 41400u,
+    43200u, 45000u, 46800u, 48600u, 50400u, 52200u, 54000u, 55800u
+  };
+
   int ret, carry;
-  unsigned cx, dx;
-  struct tm tm;
+  unsigned cx, dx, ym, mday, hour, min, sec;
+  time_t t;
+
   asm volatile ("int $0x21; sbbw %0, %0"
 		: "=r" (carry), "=a" (ret), "=c" (cx), "=d" (dx)
 		: "1" (0x5700u), "b" (fd)
@@ -89,14 +112,29 @@ dos_get_fd_mtime (int fd)
       errno = ret;
       return carry;
     }
-  tm.tm_year = (dx >> 9) + 80u;
-  tm.tm_mon = ((dx >> 5) & 0x0fu) - 1;
-  tm.tm_mday = dx & 0x1fu;
-  tm.tm_hour = cx >> 11;
-  tm.tm_min = (cx >> 5) & 0x3fu;
-  tm.tm_sec = (cx & 0x1fu) * 2;
-  tm.tm_isdst = -1;
-  return mktime (&tm);
+
+  /* Convert the packed date and time to a "localized" time_t value.  */
+  ym = dx >> 5;
+  hour = cx >> 11;
+  min = (cx >> 5) & 0x3fu;
+  sec = (cx & 0x1fu) * 2;
+  mday = dx & 0x1fu;
+  t = packed_ym_to_day[ym % 0x40u];
+  t += (time_t) (365 + 365 + 365 + 366) * (ym / 0x40u);
+  t += mday;
+  /* (Adjust for the year 2100, which is not a leap year...)  */
+  if (dx >= 0xf060u)
+    --t;
+  t *= (time_t) 86400;
+  /* And...  */
+  t += (time_t) 2 * hour_to_scaled_sec[hour];
+  t += (time_t) 60 * min;
+  t += sec;
+
+  /* Adjust to a UTC time value using time zone settings.  */
+  tzset ();
+  t += _timezone;
+  return t;
 }
 
 int
