@@ -86,7 +86,9 @@ __swhatbuf_r (struct _reent *ptr,
   const int snpt = 0;
 #endif
 
-#ifdef __USE_INTERNAL_STAT64
+#if defined __ia16__
+  if (fp->_file < 0)
+#elif defined __USE_INTERNAL_STAT64
   struct stat64 st;
 
   if (fp->_file < 0 || _fstat64_r (ptr, fp->_file, &st) < 0)
@@ -105,9 +107,12 @@ __swhatbuf_r (struct _reent *ptr,
       return (0);
     }
 
+#ifdef __ia16__
+  *couldbetty = 1;
+#else
   /* could be a tty iff it is a character device */
   *couldbetty = S_ISCHR(st.st_mode);
-#ifdef HAVE_BLKSIZE
+# ifdef HAVE_BLKSIZE
   if (st.st_blksize > 0)
     {
       /*
@@ -119,6 +124,7 @@ __swhatbuf_r (struct _reent *ptr,
       fp->_blksize = st.st_blksize;
       return ((st.st_mode & S_IFMT) == S_IFREG ?  __SOPT : snpt);
     }
+# endif
 #endif
   *bufsize = BUFSIZ;
   return (snpt);
