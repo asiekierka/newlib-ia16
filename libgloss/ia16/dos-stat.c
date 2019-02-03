@@ -1,6 +1,7 @@
 /* dos-stat.c basic stat for DOS
  *
  * Copyright (c) 2018 Bart Oldeman
+ * Copyright (c) 2019 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -26,6 +27,8 @@ extern int errno;
 #ifndef FP_SEG
 #define FP_SEG(x) ((unsigned)((unsigned long)(void __far *)(x) >> 16))
 #endif
+
+extern time_t __msdos_cvt_file_time (unsigned, unsigned);
 
 #define _A_RDONLY 1
 #define _A_HIDDEN 2
@@ -78,7 +81,15 @@ _stat (const char * restrict path, struct stat * restrict buf)
 {
   struct _find_t findbuf;
   unsigned char attr;
-  struct tm tm;
+
+  /* Check that the PATH is not itself a wildcard.  (This does not handle
+     Windows-style \\?\... UNC paths, but from what I know, DOS does not have
+     these anyway.)  */
+  if (path[strcspn (path, "*?")] != 0)
+    {
+      errno = ENOENT;
+      return -1;
+    }
 
   if (dos_findfirst (path, &findbuf))
     return -1;
@@ -90,16 +101,8 @@ _stat (const char * restrict path, struct stat * restrict buf)
   buf->st_mode = ((attr & _A_RDONLY) ? 0 : (S_IWUSR | S_IWGRP | S_IWOTH)) |
     (S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) |
     ((attr & _A_SUBDIR) ? (S_IFDIR|S_IEXEC) : S_IFREG);
-  tm.tm_sec = (findbuf.time << 1) & 0x3f;
-  tm.tm_min = (findbuf.time >> 5) & 0x3f;
-  tm.tm_hour = findbuf.time >> 11;
-  tm.tm_mday = findbuf.date & 0x1f;
-  tm.tm_mon = ((findbuf.date >> 5) & 0xf) - 1;
-  tm.tm_year = (findbuf.date >> 9) + 80;
-  tm.tm_isdst = -1;
-  buf->st_mtime = mktime(&tm);
-  buf->st_atime = buf->st_mtime;
-  buf->st_ctime = buf->st_mtime;
+  buf->st_mtime = buf->st_atime = buf->st_ctime
+    = __msdos_cvt_file_time (findbuf.date, findbuf.time);
   buf->st_size = findbuf.size;
   buf->st_dev = path[1] == ':' ? toupper (path[0]) - 'A' : dos_getdrive ();
   buf->st_nlink = 1;
