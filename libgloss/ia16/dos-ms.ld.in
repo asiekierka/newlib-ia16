@@ -244,6 +244,19 @@ SECTIONS
 		*(.gcc_except_table)
 		__edata = .;
 
+		/* GNU ld said
+			"section .text VMA [0000000000000020,000000000000002f]
+			overlaps section .msdos_mz_hdr VMA [0000000000000000,
+			00000000000001ff]"
+		   for gcc-ia16's ia16/torture/nostdlib-1.c test, because ld's
+		   overlay checks saw only two non-empty overlapping segments,
+		   .text and .msdos_mz_hdr, and they did not start at the
+		   same address.
+
+		   To work around this, put something inside .data if it might
+		   be necessary.  -- tkchia  */
+		. = (. == __sdata ? . + 1 : .);
+
 		/* ".../ia16-elf/bin/ld: a.out: R_386_RELSEG16 with
 		   unaligned section `.bss'" */
 		. = ALIGN (8);
