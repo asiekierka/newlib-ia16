@@ -81,6 +81,7 @@ static time_t
 dos_get_fd_mtime (int fd)
 {
   int ret, carry;
+  unsigned cx, dx;
 
   asm volatile ("int $0x21; sbbw %0, %0"
 		: "=r" (carry), "=a" (ret), "=c" (cx), "=d" (dx)
