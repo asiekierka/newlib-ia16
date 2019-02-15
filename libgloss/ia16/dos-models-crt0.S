@@ -6,11 +6,7 @@
 #error "no memory model defined -- please use either -DTINY or -DSMALL"
 #endif
 
-#ifdef __IA16_FEATURE_PUSH_IMM
-	.arch i186
-#else
 	.arch i8086
-#endif
 	.code16
 
 	.section .startupA
@@ -24,21 +20,26 @@ _start:
 	int	$0x21
 	cmp	$2,	%al
 	jnb	.Ldos_ok
+.Lbad:
 #ifdef TINY
 	ret
 #else
 	# Return to the `int $0x20' command at the PSP start --- we cannot
 	# just say `int $0x20' here, as %cs is wrong.
 	pushw	%ds
-#ifdef __IA16_FEATURE_PUSH_IMM
-	pushw	$0
-#else
 	xorw	%ax,	%ax
 	pushw	%ax
-#endif
 	lretw
 #endif
 .Ldos_ok:
+	# If we are building a multilib variant that assumes an 80186 CPU or
+	# above, do a quick check that we are indeed dealing with a 186+.
+#ifdef __IA16_FEATURE_PUSH_IMM
+	pushw	%sp
+	popw	%ax
+	cmpw	%ax,	%sp
+	jnz	.Lbad
+#endif
 #ifndef TINY
 	pushw	%ss
 	popw	%es
