@@ -1,7 +1,7 @@
 /* Linker script for ELKS executables with separate data and text segments.  */
 
 OUTPUT_FORMAT(binary)
-ENTRY(startup)
+ENTRY(_start)
 MEMORY
   {
     /* Place header VMA outside of program address space.  */
@@ -24,7 +24,7 @@ SECTIONS
 		LONG (__ltext_padded);
 		LONG (__ldata);
 		LONG (__lbss);
-		LONG (0);
+		LONG (_start);
 		LONG (0);		/* chmem field.  */
 		LONG (0);
 	} >hdrvma AT>hdrlma
