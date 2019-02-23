@@ -34,11 +34,15 @@ _start:
 .Ldos_ok:
 	# If we are building a multilib variant that assumes an 80186 CPU or
 	# above, do a quick check that we are indeed dealing with a 186+.
+	#
+	# 0x6a is `pushw' on 186+, and an alias for 0x7a (`jpe') on the 8086
+	# (www.os2museum.com/wp/undocumented-8086-opcodes/).
 #ifdef __IA16_FEATURE_PUSH_IMM
-	pushw	%sp
-	popw	%ax
+	movw	%ax,	%sp
+	.byte	0x6a, 0x00
 	cmpw	%ax,	%sp
-	jnz	.Lbad
+	jz	.Lbad
+	popw	%ax
 #endif
 #ifndef TINY
 	pushw	%ss
