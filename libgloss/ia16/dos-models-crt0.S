@@ -38,7 +38,7 @@ _start:
 	# 0x6a is `pushw' on 186+, and an alias for 0x7a (`jpe') on the 8086
 	# (www.os2museum.com/wp/undocumented-8086-opcodes/).
 #ifdef __IA16_FEATURE_PUSH_IMM
-	movw	%ax,	%sp
+	movw	%sp,	%ax
 	.byte	0x6a, 0x00
 	cmpw	%ax,	%sp
 	jz	.Lbad
@@ -48,7 +48,10 @@ _start:
 	pushw	%ss
 	popw	%es
 #endif
+#ifndef __IA16_FEATURE_PUSH_IMM
+	# In the 80186 case, %ax is already 0.
 	xorw	%ax, %ax
+#endif
 	movw	$__sbss, %di
 	movw	$__lbss, %cx
 	cld
