@@ -1,6 +1,5 @@
-/* abort.c verbose abort () implementation for IA-16
- *
- * Copyright (c) 2018 TK Chia
+/*
+ * Copyright (c) 2018--2019 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -13,6 +12,18 @@
  * they apply.
  */
 
+/*
+ * This file now only contains an internal __ia16_abort_impl (.) routine
+ * used by the user-callable abort ().
+ *
+ * abort () for MS-DOS now has separate implementations for the tiny and
+ * small memory models, under the libgloss/ia16/ subtree.
+ *
+ * There is currently no abort () implementation for ELKS.
+ *
+ * TODO: move this file into libgloss/ia16/ too?  -- tkchia 20190301
+ */
+
 #include <signal.h>
 #include <unistd.h>
 
@@ -21,13 +32,16 @@
 #else
 # define NL		"\n"
 #endif
+#define MK_FP(seg, off)	((void __far *) \
+			 ((unsigned long) (unsigned) (seg) << 16 \
+			  | (unsigned) (off)))
 
 typedef struct {
-  unsigned ax, bx, cx, dx, bp, si, di, flags, cs, ds, es, ss, sp;
+  unsigned ax, bx, cx, dx, bp, si, di, cs, es, ds, ss, sp, flags;
 } abort_regs_t;
 
 static void
-dump_mem (const unsigned *mem, unsigned n_words)
+dump_mem (const unsigned __far *mem, unsigned n_words)
 {
   unsigned word;
   char buf[5];
@@ -51,13 +65,13 @@ void
 __ia16_abort_impl (abort_regs_t regs)
 {
   static const char msg1[] = NL "abort () called" NL
-				"reg (a-d bp si di f cs ds es ss sp):" NL,
+				"reg (a-d bp si di cs es ds ss sp f):" NL,
 		    msg2[] = NL "stk:" NL;
 
   write (2, msg1, sizeof (msg1) - 1);
   dump_mem ((const unsigned *) &regs, sizeof (regs) / sizeof (unsigned));
   write (2, msg2, sizeof (msg2) - 1);
-  dump_mem ((const unsigned *) regs.sp, 192);
+  dump_mem ((const unsigned *) MK_FP (regs.ss, regs.sp), 192);
 
 #ifndef __IA16_FEATURE_PROTECTED_MODE
   /* _exit (.) may ultimately make the system weird out and wipe the
@@ -76,30 +90,3 @@ __ia16_abort_impl (abort_regs_t regs)
   for (;;)
     _exit (128 | SIGABRT);
 }
-
-__asm(
-  "	.text\n"
-  "	.global	abort\n"
-  "abort:\n"
-  "	movw	%sp,	%ss:abort_stack-2\n"
-  "	movw	$abort_stack-2, %sp\n"
-  "	pushw	%ss\n"
-  "	pushw	%es\n"
-  "	pushw	%ds\n"
-  "	pushw	%cs\n"
-  "	pushfw\n"
-  "	pushw	%di\n"
-  "	pushw	%si\n"
-  "	pushw	%bp\n"
-  "	pushw	%dx\n"
-  "	pushw	%cx\n"
-  "	pushw	%bx\n"
-  "	pushw	%ax\n"
-  "	pushw	%ss\n"
-  "	popw	%ds\n"
-  "	cld\n"
-  "	call	__ia16_abort_impl\n"
-  "	.bss\n"
-  "	.skip	128\n"
-  "abort_stack:\n"
-  "	.text");

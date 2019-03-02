@@ -57,18 +57,20 @@ ELKS_SCRIPTS	= elks-separate.ld elks-combined.ld
 ELKS_BSP	= libelks.a
 ELKS_CRT0	= crt0.o
 
-DOS_TINY_OBJS =	dos-chdir.o dos-close.o dos-cvt-file-time.o dos-dup.o \
-		dos-dup2.o dos-fstat.o dos-getcwd.o dos-gettimeofday.o \
-		dos-isatty.o dos-lseek.o dos-mkdir.o dos-open.o dos-read.o \
-		dos-rename.o dos-rmdir.o dos-sbrk.o dos-stat.o dos-times.o \
-		dos-unlink.o dos-usleep.o dos-write.o
+DOS_COMMON_OBJS = dos-chdir.o dos-close.o dos-cvt-file-time.o dos-dup.o \
+		  dos-dup2.o dos-fstat.o dos-getcwd.o dos-gettimeofday.o \
+		  dos-isatty.o dos-lseek.o dos-mkdir.o dos-open.o dos-read.o \
+		  dos-rename.o dos-rmdir.o dos-sbrk.o dos-stat.o dos-times.o \
+		  dos-unlink.o dos-usleep.o dos-write.o
+
+DOS_TINY_OBJS	= $(DOS_COMMON_OBJS) dos-mtabort.o
 DOS_TINY_CFLAGS	= -mseparate-code-segment -g -Os
 DOS_TINY_ASFLAGS =
 DOS_TINY_SCRIPTS = dos-com.ld dos-mt.ld dos-mts.ld dos-mtl.ld dos-mtsl.ld
 DOS_TINY_BSP	= libdos-com.a
 DOS_TINY_CRT0	= dos-com-crt0.o
 
-DOS_SMALL_OBJS	= $(DOS_TINY_OBJS)
+DOS_SMALL_OBJS	= $(DOS_COMMON_OBJS) dos-msabort.o
 DOS_SMALL_CFLAGS = $(DOS_TINY_CFLAGS)
 DOS_SMALL_ASFLAGS = $(DOS_TINY_ASFLAGS)
 DOS_SMALL_SCRIPTS = dos-exe-small.ld dos-ms.ld dos-mss.ld dos-msl.ld \
