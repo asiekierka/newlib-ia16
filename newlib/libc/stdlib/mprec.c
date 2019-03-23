@@ -1,3 +1,6 @@
+/*
+ * Size optimizations for IA-16 by TK Chia 2019
+ */
 /****************************************************************
  *
  * The author of this software is David M. Gay.
@@ -231,6 +234,9 @@ s2b (struct _reent * ptr,
 int
 hi0bits (register __ULong x)
 {
+#if defined __GNUC__ && __LONG_MAX__ - 0L == 2147483647L
+  return x ? __builtin_clzl (x) : 32;
+#else
   register int k = 0;
 
   if (!(x & 0xffff0000))
@@ -260,6 +266,7 @@ hi0bits (register __ULong x)
 	return 32;
     }
   return k;
+#endif
 }
 
 int
@@ -268,6 +275,10 @@ lo0bits (__ULong *y)
   register int k;
   register __ULong x = *y;
 
+#if defined __GNUC__ && __LONG_MAX__ - 0L == 2147483647L
+  k = x ? __builtin_ctzl (x) : 32;
+  x >>= k;
+#else
   if (x & 7)
     {
       if (x & 1)
@@ -308,6 +319,7 @@ lo0bits (__ULong *y)
       if (!x & 1)
 	return 32;
     }
+#endif
   *y = x;
   return k;
 }
