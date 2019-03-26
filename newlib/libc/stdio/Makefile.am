@@ -213,6 +213,7 @@ LIBADD_OBJS = \
 else
 LIBADD_OBJS = \
 	$(lpfx)svfiprintf.$(oext) $(lpfx)svfprintf.$(oext) \
+	$(lpfx)sprintr.$(oext) $(lpfx)ssprintr.$(oext) \
 	$(lpfx)svfiscanf.$(oext) $(lpfx)svfscanf.$(oext) \
 	$(lpfx)vfiprintf.$(oext) \
 	$(lpfx)vfscanf.$(oext) $(lpfx)vfiscanf.$(oext) \
@@ -277,6 +278,15 @@ $(lpfx)svfprintf.$(oext): vfprintf.c
 
 $(lpfx)svfiprintf.$(oext): vfprintf.c
 	$(LIB_COMPILE) -DINTEGER_ONLY -DSTRING_ONLY -c $(srcdir)/vfprintf.c -o $@
+
+$(lpfx)sprintr.$(oext): vfprintf.c
+	$(LIB_COMPILE) -DINTEGER_ONLY -DHELPER_ONLY -c $(srcdir)/vfprintf.c -o $@
+
+$(lpfx)ssprintr.$(oext): vfprintf.c
+	$(LIB_COMPILE) -DINTEGER_ONLY -DSTRING_ONLY -DHELPER_ONLY -c $(srcdir)/vfprintf.c -o $@
+
+$(lpfx)vfwprintf.$(oext): vfwprintf.c
+	$(LIB_COMPILE) -c $(srcdir)/vfwprintf.c -o $@
 
 $(lpfx)vfiwprintf.$(oext): vfwprintf.c
 	$(LIB_COMPILE) -DINTEGER_ONLY -c $(srcdir)/vfwprintf.c -o $@
@@ -491,6 +501,8 @@ $(lpfx)nano-svfprintf.$(oext): local.h nano-vfprintf_local.h
 $(lpfx)nano-svfscanf.$(oext): local.h nano-vfscanf_local.h
 endif
 $(lpfx)svfiprintf.$(oext): local.h
+$(lpfx)sprintr.$(oext): local.h
+$(lpfx)ssprintr.$(oext): local.h
 $(lpfx)svfiscanf.$(oext): local.h floatio.h
 $(lpfx)svfprintf.$(oext): local.h
 $(lpfx)svfscanf.$(oext): local.h floatio.h

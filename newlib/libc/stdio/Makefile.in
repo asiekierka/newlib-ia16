@@ -430,6 +430,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -609,6 +610,7 @@ GENERAL_SOURCES = \
 @ELIX_LEVEL_1_FALSE@@ELIX_LEVEL_2_FALSE@@ELIX_LEVEL_3_FALSE@@NEWLIB_NANO_FORMATTED_IO_TRUE@ELIX_4_INT_FORMATTED_IO_SOURCES = 
 @NEWLIB_NANO_FORMATTED_IO_FALSE@LIBADD_OBJS = \
 @NEWLIB_NANO_FORMATTED_IO_FALSE@	$(lpfx)svfiprintf.$(oext) $(lpfx)svfprintf.$(oext) \
+@NEWLIB_NANO_FORMATTED_IO_FALSE@	$(lpfx)sprintr.$(oext) $(lpfx)ssprintr.$(oext) \
 @NEWLIB_NANO_FORMATTED_IO_FALSE@	$(lpfx)svfiscanf.$(oext) $(lpfx)svfscanf.$(oext) \
 @NEWLIB_NANO_FORMATTED_IO_FALSE@	$(lpfx)vfiprintf.$(oext) \
 @NEWLIB_NANO_FORMATTED_IO_FALSE@	$(lpfx)vfscanf.$(oext) $(lpfx)vfiscanf.$(oext) \
@@ -1912,6 +1914,15 @@ $(lpfx)svfprintf.$(oext): vfprintf.c
 $(lpfx)svfiprintf.$(oext): vfprintf.c
 	$(LIB_COMPILE) -DINTEGER_ONLY -DSTRING_ONLY -c $(srcdir)/vfprintf.c -o $@
 
+$(lpfx)sprintr.$(oext): vfprintf.c
+	$(LIB_COMPILE) -DINTEGER_ONLY -DHELPER_ONLY -c $(srcdir)/vfprintf.c -o $@
+
+$(lpfx)ssprintr.$(oext): vfprintf.c
+	$(LIB_COMPILE) -DINTEGER_ONLY -DSTRING_ONLY -DHELPER_ONLY -c $(srcdir)/vfprintf.c -o $@
+
+$(lpfx)vfwprintf.$(oext): vfwprintf.c
+	$(LIB_COMPILE) -c $(srcdir)/vfwprintf.c -o $@
+
 $(lpfx)vfiwprintf.$(oext): vfwprintf.c
 	$(LIB_COMPILE) -DINTEGER_ONLY -c $(srcdir)/vfwprintf.c -o $@
 
@@ -2030,6 +2041,8 @@ $(lpfx)stdio.$(oext): local.h
 @NEWLIB_NANO_FORMATTED_IO_TRUE@$(lpfx)nano-svfprintf.$(oext): local.h nano-vfprintf_local.h
 @NEWLIB_NANO_FORMATTED_IO_TRUE@$(lpfx)nano-svfscanf.$(oext): local.h nano-vfscanf_local.h
 $(lpfx)svfiprintf.$(oext): local.h
+$(lpfx)sprintr.$(oext): local.h
+$(lpfx)ssprintr.$(oext): local.h
 $(lpfx)svfiscanf.$(oext): local.h floatio.h
 $(lpfx)svfprintf.$(oext): local.h
 $(lpfx)svfscanf.$(oext): local.h floatio.h
