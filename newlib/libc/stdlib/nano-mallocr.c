@@ -276,7 +276,7 @@ void * nano_malloc(RARG malloc_size_t s)
             && (r->size < 0 || r->size > (size_t)0 - (size_t)1))
         {
             static const char msg[] = NANO_MALLOC_ERR("bogus heap chunk size");
-            write(2, msg, sizeof(msg) - 1);
+            write(STDERR_FILENO, msg, sizeof(msg) - 1);
             abort();
         }
 #endif
@@ -381,7 +381,7 @@ void nano_free (RARG void * free_p)
         && (p_to_free->size < 0 || p_to_free->size > (size_t)0 - (size_t)1))
     {
         static const char msg[] = NANO_FREE_ERR("bogus heap chunk size");
-        write(2, msg, sizeof(msg) - 1);
+        write(STDERR_FILENO, msg, sizeof(msg) - 1);
         abort();
     }
 #endif
@@ -444,7 +444,7 @@ void nano_free (RARG void * free_p)
     {
         /* Report double free fault */
         static const char msg[] = NANO_FREE_ERR("possible double free");
-        write(2, msg, sizeof(msg) - 1);
+        write(STDERR_FILENO, msg, sizeof(msg) - 1);
         abort();
     }
 #endif
