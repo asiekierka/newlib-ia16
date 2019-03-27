@@ -44,10 +44,21 @@ Supporting OS subroutines required (only if enabled): <<close>>, <<fstat>>,
 */
 
 #include <assert.h>
+#include <limits.h>
 #include <stdlib.h>
-#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 #ifndef HAVE_ASSERT_FUNC
+static void
+_DEFUN (__puts_stderr, (str),
+	const char *str)
+{
+  write (STDERR_FILENO, str, strlen (str));
+}
+
+#define MAX_INT_LEN ((CHAR_BIT * sizeof (int) - 1) * 4 / 13 + 2)
+
 /* func can be NULL, in which case no function information is given.  */
 void
 __assert_func (const char *file,
@@ -55,10 +66,21 @@ __assert_func (const char *file,
 	const char *func,
 	const char *failedexpr)
 {
-  fiprintf(stderr,
-	   "assertion \"%s\" failed: file \"%s\", line %d%s%s\n",
-	   failedexpr, file, line,
-	   func ? ", function: " : "", func ? func : "");
+  char str[MAX_INT_LEN + 1];
+
+  __puts_stderr ("assertion \"");
+  __puts_stderr (failedexpr);
+  __puts_stderr ("\" failed: file \"");
+  __puts_stderr (file);
+  __puts_stderr ("\", line ");
+  __itoa (line, str, 10);
+  __puts_stderr (str);
+  if (func)
+    {
+      __puts_stderr (", function: ");
+      __puts_stderr (func);
+    }
+  __puts_stderr ("\n");
   abort();
   /* NOTREACHED */
 }
