@@ -188,10 +188,8 @@ static char *rcsid = "$Id$";
 #endif
 
 /* The __sprint_r/__ssprint_r functions are shared between all versions of
-   vfprintf and vfwprintf.  They must only be defined once, which we do in
-   the INTEGER_ONLY versions here. */
+   vfprintf and vfwprintf.  They must only be defined once. */
 #ifdef STRING_ONLY
-#ifdef INTEGER_ONLY
 #ifdef HELPER_ONLY
 #ifndef _FVWRITE_IN_STREAMIO
 int
@@ -358,10 +356,8 @@ int __ssputs_r (struct _reent *, FILE *, const char *, size_t);
 #endif
 int __ssprint_r (struct _reent *, FILE *, register struct __suio *);
 #endif /* !HELPER_ONLY */
-#endif /* !INTEGER_ONLY */
 
 #else /* !STRING_ONLY */
-#ifdef INTEGER_ONLY
 #ifdef HELPER_ONLY
 
 #ifndef _FVWRITE_IN_STREAMIO
@@ -441,7 +437,6 @@ int __sfputs_r (struct _reent *, FILE *, const char *buf, size_t);
 #endif
 int __sprint_r (struct _reent *, FILE *, register struct __suio *);
 #endif /* !HELPER_ONLY */
-#endif /* !INTEGER_ONLY */
 
 #ifdef _UNBUF_STREAM_OPT
 /*
