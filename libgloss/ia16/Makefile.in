@@ -86,9 +86,26 @@ NANO_STDIO_OBJS = nano-vfprintf.o nano-vfprintf_i.o nano-vfprintf_float.o \
 		  nano-vfscanf.o nano-vfscanf_i.o nano-vfscanf_float.o
 NANO_STDIO_BSP	= libnstdio.a
 
-ALL_SCRIPTS	= $(ELKS_SCRIPTS) $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS)
+# Another hack, to support a mechanism to detect whether we need floating-point
+# printf (...) and/or scanf (...) support.  -- tkchia 20190407
+IPRINTF_OBJS	= i-dprintf.o i-vdprintf.o i-sprintf.o i-fprintf.o i-printf.o \
+		  i-snprintf.o i-asprintf.o i-asnprintf.o i-vprintf.o \
+		  i-vfprintf.o i-vsprintf.o i-vsnprintf.o i-vasprintf.o \
+		  i-vasnprintf.o i-dprintfr.o i-vdprintfr.o i-sprintfr.o \
+		  i-fprintfr.o i-printfr.o i-snprintfr.o i-asprintfr.o \
+		  i-asnprintf.o i-vprintfr.o i-vfprintfr.o i-vsprintfr.o \
+		  i-vsnprintfr.o i-vasprintfr.o i-vasnprintfr.o
+IPRINTF_BSP	= iprtf-fw.a
+ISCANF_OBJS	= i-sscanf.o i-fscanf.o i-scanf.o i-vscanf.o i-vfscanf.o \
+		  i-vsscanf.o i-sscanfr.o i-fscanfr.o i-scanfr.o i-vscanfr.o \
+		  i-vfscanfr.o i-vsscanfr.o
+ISCANF_BSP	= iscnf-fw.a
+AUTOFLOAT_STDIO_SCRIPTS = libastdio.a libanstdio.a
+
+ALL_SCRIPTS	= $(ELKS_SCRIPTS) $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS) \
+		  $(AUTOFLOAT_STDIO_SCRIPTS)
 ALL_BSP		= $(ELKS_BSP) $(DOS_TINY_BSP) $(DOS_SMALL_BSP) \
-		  $(NANO_STDIO_BSP)
+		  $(NANO_STDIO_BSP) $(IPRINTF_BSP) $(ISCANF_BSP)
 
 OBJS		= $(DOS_TINY_OBJS)
 CFLAGS		= $(DOS_TINY_CFLAGS)
@@ -104,7 +121,8 @@ CRT0		= $(DOS_TINY_CRT0)
 INCLUDES += -I$(srcdir) -I. -I$(srcdir)/.. -I../libnosys
 
 INSTALL_FILES = ${DOS_TINY_BSP} ${DOS_TINY_CRT0} \
-  ${DOS_SMALL_BSP} ${DOS_SMALL_CRT0} ${NANO_STDIO_BSP} ${ALL_SCRIPTS}
+  ${DOS_SMALL_BSP} ${DOS_SMALL_CRT0} ${NANO_STDIO_BSP} ${IPRINTF_BSP} \
+  ${ISCANF_BSP} ${ALL_SCRIPTS}
 ifneq (,$(findstring elks,$(target)))
 INSTALL_FILES += ${ELKS_BSP} ${ELKS_CRT0}
 endif
@@ -147,6 +165,10 @@ $(objroot)/newlib/$(ELKS_CRT0):
 	ln -s ../libgloss/ia16/$(ELKS_CRT0) $(objroot)/newlib
 $(objroot)/newlib/$(NANO_STDIO_BSP):
 	ln -s ../libgloss/ia16/$(NANO_STDIO_BSP) $(objroot)/newlib
+$(objroot)/newlib/$(IPRINTF_BSP):
+	ln -s ../libgloss/ia16/$(IPRINTF_BSP) $(objroot)/newlib
+$(objroot)/newlib/$(ISCANF_BSP):
+	ln -s ../libgloss/ia16/$(ISCANF_BSP) $(objroot)/newlib
 
 #
 # Here's where we build the test programs for each target.
@@ -267,6 +289,54 @@ $(NANO_STDIO_BSP): $(objroot)/newlib/libc/libc.a $(NANO_STDIO_OBJS)
 	done
 	mv $@.1.tmp $@
 	rm -f $@.2.tmp $@.3.tmp $@.4.tmp $@.5.tmp
+
+$(IPRINTF_BSP): $(IPRINTF_OBJS)
+	$(AR) rcs $@ $+
+
+i-printf.o:
+	(echo '.arch i8086, jumps; .code16; .text; .global printf'; \
+	 echo 'printf: jmp iprintf') | \
+	  $(CC) $(CFLAGS_FOR_TARGET) $(ASFLAGS_FOR_TARGET) $(ASFLAGS) \
+	    -c $(CFLAGS) -x assembler - -o $@
+i-%printf.o:
+	(echo '.arch i8086, jumps; .code16; .text; .global $*printf'; \
+	 echo '$*printf: jmp $*iprintf') | \
+	  $(CC) $(CFLAGS_FOR_TARGET) $(ASFLAGS_FOR_TARGET) $(ASFLAGS) \
+	    -c $(CFLAGS) -x assembler - -o $@
+i-printfr.o:
+	(echo '.arch i8086, jumps; .code16; .text; .global _printf_r'; \
+	 echo '_printf_r: jmp _iprintf_r') | \
+	  $(CC) $(CFLAGS_FOR_TARGET) $(ASFLAGS_FOR_TARGET) $(ASFLAGS) \
+	    -c $(CFLAGS) -x assembler - -o $@
+i-%printfr.o:
+	(echo '.arch i8086, jumps; .code16; .text; .global _$*printf_r'; \
+	 echo '_$*printf_r: jmp _$*iprintf_r') | \
+	  $(CC) $(CFLAGS_FOR_TARGET) $(ASFLAGS_FOR_TARGET) $(ASFLAGS) \
+	    -c $(CFLAGS) -x assembler - -o $@
+
+$(ISCANF_BSP): $(ISCANF_OBJS)
+	$(AR) rcs $@ $+
+
+i-scanf.o:
+	(echo '.arch i8086, jumps; .code16; .text; .global scanf'; \
+	 echo 'scanf: jmp iscanf') | \
+	  $(CC) $(CFLAGS_FOR_TARGET) $(ASFLAGS_FOR_TARGET) $(ASFLAGS) \
+	    -c $(CFLAGS) -x assembler - -o $@
+i-%scanf.o:
+	(echo '.arch i8086, jumps; .code16; .text; .global $*scanf'; \
+	 echo '$*scanf: jmp $*iscanf') | \
+	  $(CC) $(CFLAGS_FOR_TARGET) $(ASFLAGS_FOR_TARGET) $(ASFLAGS) \
+	    -c $(CFLAGS) -x assembler - -o $@
+i-scanfr.o:
+	(echo '.arch i8086, jumps; .code16; .text; .global _scanf_r'; \
+	 echo '_scanf_r: jmp _iscanf_r') | \
+	  $(CC) $(CFLAGS_FOR_TARGET) $(ASFLAGS_FOR_TARGET) $(ASFLAGS) \
+	    -c $(CFLAGS) -x assembler - -o $@
+i-%scanfr.o:
+	(echo '.arch i8086, jumps; .code16; .text; .global _$*scanf_r'; \
+	 echo '_$*scanf_r: jmp _$*iscanf_r') | \
+	  $(CC) $(CFLAGS_FOR_TARGET) $(ASFLAGS_FOR_TARGET) $(ASFLAGS) \
+	    -c $(CFLAGS) -x assembler - -o $@
 
 .c.S:
 	${CC} ${CFLAGS_FOR_TARGET} -c $<
