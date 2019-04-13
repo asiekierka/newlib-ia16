@@ -1,7 +1,37 @@
-/* Linker script for ELKS executables with combined data and text segment.  */
+#!/bin/sh
+
+set -e
+cmd1='#'
+cmd2='#'
+w1=with
+w2=with
+case "$1" in
+  -nostdlib)
+    cmd1='/^@if_starts@/,/^@endif@/ d'
+    cmd2='/^@if_libs@/,/^@endif@/ d'
+    w1=without
+    w2=without;;
+  -nostartfiles)
+     cmd1='/^@if_starts@/,/^@endif@/ d'
+     w1=without;;
+  -nodefaultlibs)
+     cmd2='/^@if_libs@/,/^@endif@/ d'
+     w2=without;;
+esac
+sed -e "$cmd1" -e "$cmd2" -e "s;@withstarts@;$w1;g" -e "s;@withlibs@;$w2;g" \
+    -e "s/@self@/`basename "$0"`/g" -e "/^@if/ d" -e "/^@endif@/ d" <<'EOF'
+/* Linker script for ELKS executables with combined data and text segment,
+   @withstarts@ startup files, and @withlibs@ default libraries.  Generated
+   from @self@.  */
 
 OUTPUT_FORMAT(binary)
 ENTRY(_start)
+@if_starts@
+INPUT(-l:crtbegin.o -l:crtend.o -l:elks-crt0.o)
+@endif@
+@if_libs@
+GROUP(-lc -lgcc -lelks -lm)
+@endif@
 MEMORY
   {
     /* Place header VMA outside of program address space.  */
@@ -77,3 +107,4 @@ SECTIONS
 
     /DISCARD/ : { *(.*) }
   }
+EOF

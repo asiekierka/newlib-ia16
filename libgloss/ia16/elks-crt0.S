@@ -15,15 +15,22 @@
 #	argc
 
 	.text
-	.global		startup
-startup:
+	.global	_start
+_start:
 	popw	%di		# Get argc.
 	movw	%sp, %bx	# Get argv.
 	leaw	(%bx,%di),%bp
 	leaw	2(%bp,%di),%cx	# Envp = %bx + %di + %di + 2.
+#ifndef __IA16_CALLCVT_REGPARMCALL
 	pushw	%cx
 	pushw	%bx
 	pushw	%di
-	call	_main
+#else
+	xchgw	%ax, %di
+	movw	%bx, %dx
+#endif
+	call	main
+#ifndef __IA16_CALLCVT_REGPARMCALL
 	pushw	%ax
-	call	_exit
+#endif
+	call	exit

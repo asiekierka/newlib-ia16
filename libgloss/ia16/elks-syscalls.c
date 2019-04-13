@@ -105,7 +105,7 @@ SYSCALLiCV (LABEL, FUNC, SYSCALL)
 #endif
 
 /* int func (char *, int) */
-#if defined(SYSCALL_chnod) || defined(SYSCALL_access) || defined(SYSCALL_mkdir)
+#if defined(SYSCALL_chmod) || defined(SYSCALL_access) || defined(SYSCALL_mkdir)
 #define SYSCALLiCi(L,F,S) \
 int L (char *a1, int a2) \
 { int ret;	\
@@ -124,6 +124,9 @@ int L (int a1, int *a2) \
   SYSCALL_RETVAL	\
 }
 SYSCALLiii (LABEL, FUNC, SYSCALL)
+# ifdef SYSCALL_dup2
+SYSCALLiii (dup2, FUNC, SYSCALL)
+# endif
 #endif
 
 /* int func (int, void *) */
@@ -160,7 +163,7 @@ SYSCALLiCCi (LABEL, FUNC, SYSCALL)
 #endif
 
 /* int func (char *, int, int) */
-#if defined(SYSCALL_open) || defined(SYSCALL_mknod) || defined(SYSCALL_chown)
+#if defined(SYSCALL_mknod) || defined(SYSCALL_chown)
 #define SYSCALLiCii(L,F,S) \
 int L (char *a1, int a2, int a3) \
 { int ret;	\
@@ -168,6 +171,22 @@ int L (char *a1, int a2, int a3) \
   SYSCALL_RETVAL	\
 }
 SYSCALLiCii (LABEL, FUNC, SYSCALL)
+#endif
+
+/* int func (char *, int[, int]) */
+#if defined(SYSCALL_open)
+#include <stdarg.h>
+#define SYSCALLiCi_i(L,F,S) \
+int L (char *a1, int a2, ...) \
+{ int ret, a3;	\
+  va_list ap;	\
+  va_start (ap, a2);		\
+  a3 = va_arg (ap, int);	\
+  va_end (ap);			\
+  S (F, ret, a1, a2, a3);	\
+  SYSCALL_RETVAL	\
+}
+SYSCALLiCi_i (LABEL, FUNC, SYSCALL)
 #endif
 
 /* int func (int, void *, int) */
@@ -195,7 +214,7 @@ SYSCALLiiii (LABEL, FUNC, SYSCALL)
 #endif
 
 /* int func (int, int, void *) */
-#if defined(SYSCALL_fcntl) || defined(SYSCALL_ioctl)
+#if defined(SYSCALL_fcntl)
 #define SYSCALLiiiV(L,F,S) \
 int L (int a1, int a2, void *a3) \
 { int ret;	\
@@ -203,6 +222,23 @@ int L (int a1, int a2, void *a3) \
   SYSCALL_RETVAL	\
 }
 SYSCALLiiiV (LABEL, FUNC, SYSCALL)
+#endif
+
+/* int func (int, int[, void *]) */
+#if defined(SYSCALL_ioctl)
+#include <stdarg.h>
+#define SYSCALLiii_V(L,F,S) \
+int L (int a1, int a2, ...) \
+{ int ret;	\
+  va_list ap;	\
+  void *a3;	\
+  va_start (ap, a2);		\
+  a3 = va_arg (ap, void *);	\
+  va_end (ap);	\
+  S (F, ret, a1, a2, a3);	\
+  SYSCALL_RETVAL	\
+}
+SYSCALLiii_V (LABEL, FUNC, SYSCALL)
 #endif
 
 /* int func (int, void *, void *) */

@@ -51,11 +51,12 @@ ELKS_SYS_OBJS =	exit.o fork.o read.o write.o open.o close.o wait4.o link.o \
 		readlink.o umask.o settimeofday.o gettimeofday.o select.o \
 		readdir.o fchown.o dlload.o setsid.o socket.o bind.o \
 		listen.o accept.o connect.o knlvsn.o
-ELKS_LIB_OBJS	= elks-sbrk.o
+ELKS_LIB_OBJS	= elks-abort.o elks-isatty.o elks-sbrk.o
 ELKS_CFLAGS	= -g -Os
-ELKS_SCRIPTS	= elks-separate.ld elks-combined.ld
+ELKS_SCRIPTS	= elk-mt.ld elk-mts.ld elk-mtl.ld elk-mtsl.ld \
+		  elk-ms.ld elk-mss.ld elk-msl.ld elk-mssl.ld
 ELKS_BSP	= libelks.a
-ELKS_CRT0	= crt0.o
+ELKS_CRT0	= elks-crt0.o
 
 DOS_COMMON_OBJS = dos-chdir.o dos-close.o dos-cvt-file-time.o dos-dup.o \
 		  dos-dup2.o dos-fstat.o dos-getcwd.o dos-gettimeofday.o \
@@ -120,12 +121,12 @@ CRT0		= $(DOS_TINY_CRT0)
 # Need to augment the definition from host_makefile_frag above.
 INCLUDES += -I$(srcdir) -I. -I$(srcdir)/.. -I../libnosys
 
-INSTALL_FILES = ${DOS_TINY_BSP} ${DOS_TINY_CRT0} \
-  ${DOS_SMALL_BSP} ${DOS_SMALL_CRT0} ${NANO_STDIO_BSP} ${IPRINTF_BSP} \
-  ${ISCANF_BSP} ${ALL_SCRIPTS}
-ifneq (,$(findstring elks,$(target)))
-INSTALL_FILES += ${ELKS_BSP} ${ELKS_CRT0}
-endif
+INSTALL_FILES = \
+  ${DOS_TINY_BSP} ${DOS_TINY_CRT0} \
+  ${DOS_SMALL_BSP} ${DOS_SMALL_CRT0} \
+  ${ELKS_BSP} ${ELKS_CRT0} \
+  ${NANO_STDIO_BSP} ${IPRINTF_BSP} ${ISCANF_BSP} \
+  ${ALL_SCRIPTS}
 
 #
 # build a test program for each target board. Just trying to get
@@ -204,9 +205,13 @@ nano-vfscanf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_i.c
 nano-vfscanf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_float.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
 	  -o $@
+elks-isatty.o: $(srcroot)/newlib/libc/posix/_isatty.c
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
+	  -o $@
 
-$(ELKS_CRT0) : elks-crt0.s
-	$(CC) $< -c -o $@
+$(ELKS_CRT0) : elks-crt0.S
+	$(CC) $(CFLAGS_FOR_TARGET) \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
 $(ELKS_SYS_OBJS) : elks-syscalls.c elks-syscalls.h
 	$(CC) $(CFLAGS_FOR_TARGET) $(ELKS_CFLAGS) -DLABEL=_$(subst .o,,$@) \
@@ -370,6 +375,30 @@ dos-msl.ld: dos-ms.ld.in
 	$(GEN_LD_SCRIPT) -nostartfiles >$@
 
 dos-mssl.ld dos-exe-small.ld: dos-ms.ld.in
+	$(GEN_LD_SCRIPT) >$@
+
+elk-mt.ld: elk-mt.ld.in
+	$(GEN_LD_SCRIPT) -nostdlib >$@
+
+elk-mts.ld: elk-mt.ld.in
+	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
+
+elk-mtl.ld: elk-mt.ld.in
+	$(GEN_LD_SCRIPT) -nostartfiles >$@
+
+elk-mtsl.ld: elk-mt.ld.in
+	$(GEN_LD_SCRIPT) >$@
+
+elk-ms.ld: elk-ms.ld.in
+	$(GEN_LD_SCRIPT) -nostdlib >$@
+
+elk-mss.ld: elk-ms.ld.in
+	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
+
+elk-msl.ld: elk-ms.ld.in
+	$(GEN_LD_SCRIPT) -nostartfiles >$@
+
+elk-mssl.ld: elk-ms.ld.in
 	$(GEN_LD_SCRIPT) >$@
 
 clean mostlyclean:
