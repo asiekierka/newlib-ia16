@@ -85,16 +85,15 @@ SECTIONS
 		__sdata = .;
 
 		/* Build lists of constructors and destructors.  */
-		___CTOR_LIST__ = .;
-		SHORT ((___CTOR_END__ - ___CTOR_LIST__) / 2 - 2);
-		*(.ctors) *(SORT_BY_NAME(.ctors.*))
-		SHORT (0);
-		___CTOR_END__ = .;
-		___DTOR_LIST__ = .;
-		SHORT ((___DTOR_END__ - ___DTOR_LIST__) / 2 - 2);
-		*(.dtors) *(SORT_BY_NAME(.dtors.*))
-		SHORT (0);
-		___DTOR_END__ = .;
+		KEEP (*crtbegin*.o(.ctors))
+		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
+		KEEP (*(SORT(.ctors.*)))
+		KEEP (*(.ctors))
+
+		KEEP (*crtbegin*.o(.dtors))
+		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
+		KEEP (*(SORT(.dtors.*)))
+		KEEP (*(.dtors))
 
 		*(.rodata) *(.rodata.*)
 		*(.data) *(.data.*)
