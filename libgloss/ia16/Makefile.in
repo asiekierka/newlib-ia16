@@ -42,7 +42,7 @@ RANLIB = @RANLIB@
 # Yuk.
 OBJCOPY = $(subst ranlib,objcopy,$(RANLIB))
 
-ELKS_SYS_OBJS =	exit.o fork.o read.o write.o open.o close.o wait4.o link.o \
+ELKS_SYS_OBJS =	fork.o read.o write.o open.o close.o wait4.o link.o \
 		unlink.o execve.o chdir.o mknod.o chmod.o chown.o brk.o \
 		stat.o lseek.o getpid.o mount.o umount.o setuid.o getuid.o \
 		fstat.o utime.o chroot.o vfork.o access.o sync.o kill.o \
@@ -52,7 +52,7 @@ ELKS_SYS_OBJS =	exit.o fork.o read.o write.o open.o close.o wait4.o link.o \
 		readdir.o fchown.o dlload.o setsid.o socket.o bind.o \
 		listen.o accept.o connect.o knlvsn.o
 ELKS_LIB_OBJS	= elks-abort.o elks-isatty.o elks-sbrk.o
-ELKS_CFLAGS	= -g -Os
+ELKS_CFLAGS	= $(CFLAGS) -melks
 ELKS_SCRIPTS	= elk-mt.ld elk-mts.ld elk-mtl.ld elk-mtsl.ld \
 		  elk-ms.ld elk-mss.ld elk-msl.ld elk-mssl.ld
 ELKS_BSP	= libelks.a

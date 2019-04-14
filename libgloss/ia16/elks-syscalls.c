@@ -55,12 +55,15 @@ SYSCALLiv (LABEL, FUNC, SYSCALL)
 
 /* void func (int) */
 #if defined(SYSCALL_exit)
+/* _exit (.) is now in elks-crt0.S.  -- tkchia 20190414  */
+#if 0
 #define SYSCALLvi(L,F,S) \
 void L (int a1) \
 { int dummy;	\
   S (F, dummy, a1);	\
 }
 SYSCALLvi (LABEL, FUNC, SYSCALL)
+#endif
 #endif
 
 /* int func (void *) */

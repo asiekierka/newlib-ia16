@@ -62,6 +62,11 @@ SECTIONS
     /* Target text sections.  */
     .text : {
 		__stext = .;
+		*(.startupA)
+		*(.init)
+		*(.startupB)
+		*(.fini)
+		*(.startupC)
 		*(.text) *(.text.*)
 		__etext = .;
 
