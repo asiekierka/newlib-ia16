@@ -28,6 +28,7 @@
 
 /*
  * Changes 2018 by TK Chia to improve heap corruption checking.
+ * Changes 2019 by Bart Oldeman for more efficient 16-bit code.
  */
 
 /* Implementation of <<malloc>> <<free>> <<calloc>> <<realloc>>, optional
@@ -112,21 +113,18 @@
 #define sbrk_start __malloc_sbrk_start
 #define current_mallinfo __malloc_current_mallinfo
 
-#define ALIGN_PTR(ptr, align) \
-    (((ptr) + (align) - (intptr_t)1) & ~((align) - (intptr_t)1))
-#define ALIGN_SIZE(size, align) \
-    (((size) + (align) - (size_t)1) & ~((align) - (size_t)1))
+#define ALIGN_TO(size, align) \
+    (((size) + (align) -1U) & ~((align) -1U))
 
 /* Alignment of allocated block */
 #define MALLOC_ALIGN (8U)
-#define CHUNK_ALIGN (MAX(sizeof(void*), sizeof(long)))
+#define CHUNK_ALIGN (MAX(sizeof(void*), sizeof(malloc_size_t)))
 #define MALLOC_PADDING ((MAX(MALLOC_ALIGN, CHUNK_ALIGN)) - CHUNK_ALIGN)
 
 /* as well as the minimal allocation size
  * to hold a free pointer */
 #define MALLOC_MINSIZE (sizeof(void *))
 #define MALLOC_PAGE_ALIGN (0x1000)
-#define MAX_ALLOC_SIZE (0x80000000U)
 
 #define MALLOC_CHECK_CORRUPT_HEAP
 
@@ -134,28 +132,24 @@ typedef size_t malloc_size_t;
 
 typedef struct malloc_chunk
 {
-    /*          --------------------------------------
-     *   chunk->| size                               |
-     *          --------------------------------------
-     *          | Padding for alignment              |
-     *          | This includes padding inserted by  |
-     *          | the compiler (to align fields) and |
-     *          | explicit padding inserted by this  |
-     *          | implementation. If any explicit    |
-     *          | padding is being used then the     |
-     *          | sizeof (size) bytes at             |
-     *          | mem_ptr - CHUNK_OFFSET must be     |
-     *          | initialized with the negative      |
-     *          | offset to size.                    |
-     *          --------------------------------------
-     * mem_ptr->| When allocated: data               |
-     *          | When freed: pointer to next free   |
-     *          | chunk                              |
-     *          --------------------------------------
+    /*          ------------------
+     *   chunk->| size (4 bytes) |
+     *          ------------------
+     *          | Padding for    |
+     *          | alignment      |
+     *          | holding        |
+     *          | offset|1 to    |
+     *          | size           |
+     *          ------------------
+     * mem_ptr->| point to next  |
+     *          | free when freed|
+     *          | or data load   |
+     *          | when allocated |
+     *          ------------------
      */
     /* size of the allocated payload area, including size before
        CHUNK_OFFSET */
-    long size;
+    malloc_size_t size;
 
     /* since here, the memory is either the next free block, or data load */
     struct malloc_chunk * next;
@@ -191,11 +185,8 @@ static inline chunk * get_chunk_from_ptr(void * ptr)
     /* Assume that there is no explicit padding in the
        chunk, and that the chunk starts at ptr - CHUNK_OFFSET.  */
     chunk * c = (chunk *)((char *)ptr - CHUNK_OFFSET);
-
-    /* c->size being negative indicates that there is explicit padding in
-       the chunk. In which case, c->size is currently the negative offset to
-       the true size.  */
-    if (c->size < 0) c = (chunk *)((char *)c + c->size);
+    /* Skip the padding area */
+    if (c->size & 1U) c = (chunk *)((char *)c - (c->size & ~1U));
     return c;
 }
 
@@ -224,7 +215,7 @@ static void* sbrk_aligned(RARG malloc_size_t s)
     if (p == (void *)-1)
         return p;
 
-    align_p = (char*)ALIGN_PTR((uintptr_t)p, CHUNK_ALIGN);
+    align_p = (char*)ALIGN_TO((uintptr_t)p, CHUNK_ALIGN);
     if (align_p != p)
     {
         /* p is not aligned, ask for a few more bytes so that we have s
@@ -254,7 +245,7 @@ void * nano_malloc(RARG malloc_size_t s)
     alloc_size += CHUNK_OFFSET; /* size of chunk head */
     alloc_size = MAX(alloc_size, MALLOC_MINCHUNK);
 
-    if (alloc_size >= MAX_ALLOC_SIZE || alloc_size < s)
+    if (alloc_size < s)
     {
         RERRNO = ENOMEM;
         return NULL;
@@ -272,8 +263,7 @@ void * nano_malloc(RARG malloc_size_t s)
 #define NANO_MALLOC_ERR(what) NANO_MALLOC_ERR_2(nano_malloc, what)
 #define NANO_MALLOC_ERR_2(who, what) NANO_MALLOC_ERR_3(who, what)
 #define NANO_MALLOC_ERR_3(who, what) "*** " #who ": " what " *** "
-        if (sizeof(long) > sizeof(size_t)
-            && (r->size < 0 || r->size > (size_t)0 - (size_t)1))
+        if (r->size & (CHUNK_ALIGN - 1U))
         {
             static const char msg[] = NANO_MALLOC_ERR("bogus heap chunk size");
             write(STDERR_FILENO, msg, sizeof(msg) - 1);
@@ -327,25 +317,12 @@ void * nano_malloc(RARG malloc_size_t s)
 
     ptr = (char *)r + CHUNK_OFFSET;
 
-    align_ptr = (char *)ALIGN_PTR((uintptr_t)ptr, MALLOC_ALIGN);
+    align_ptr = (char *)ALIGN_TO((uintptr_t)ptr, MALLOC_ALIGN);
     offset = align_ptr - ptr;
 
     if (offset)
     {
-        /* Initialize sizeof (malloc_chunk.size) bytes at
-           align_ptr - CHUNK_OFFSET with negative offset to the
-           size field (at the start of the chunk).
-
-           The negative offset to size from align_ptr - CHUNK_OFFSET is
-           the size of any remaining padding minus CHUNK_OFFSET.  This is
-           equivalent to the total size of the padding, because the size of
-           any remaining padding is the total size of the padding minus
-           CHUNK_OFFSET.
-
-           Note that the size of the padding must be at least CHUNK_OFFSET.
-
-           The rest of the padding is not initialized.  */
-        *(long *)((char *)r + offset) = -offset;
+        ((chunk *)((char *)r + offset))->size = offset | 1U;
     }
 
     assert(align_ptr + size <= (char *)r + alloc_size);
@@ -377,8 +354,7 @@ void nano_free (RARG void * free_p)
 #define NANO_FREE_ERR(what) NANO_FREE_ERR_2(nano_free, what)
 #define NANO_FREE_ERR_2(who, what) NANO_FREE_ERR_3(who, what)
 #define NANO_FREE_ERR_3(who, what) "*** " #who ": " what " *** "
-    if (sizeof(long) > sizeof(size_t)
-        && (p_to_free->size < 0 || p_to_free->size > (size_t)0 - (size_t)1))
+    if (p_to_free->size & (CHUNK_ALIGN - 1U))
     {
         static const char msg[] = NANO_FREE_ERR("bogus heap chunk size");
         write(STDERR_FILENO, msg, sizeof(msg) - 1);
@@ -577,13 +553,14 @@ void nano_malloc_stats(RONEARG)
 malloc_size_t nano_malloc_usable_size(RARG void * ptr)
 {
     chunk * c = (chunk *)((char *)ptr - CHUNK_OFFSET);
-    long size_or_offset = c->size;
+    malloc_size_t size_or_offset = c->size;
 
-    if (size_or_offset < 0)
+    if (size_or_offset & 1U)
     {
         /* Padding is used. Excluding the padding size */
-        c = (chunk *)((char *)c + c->size);
-        return c->size - CHUNK_OFFSET + size_or_offset;
+        size_or_offset &= ~1U;
+        c = (chunk *)((char *)c - size_or_offset);
+        return c->size - CHUNK_OFFSET - size_or_offset;
     }
     return c->size - CHUNK_OFFSET;
 }
@@ -633,7 +610,7 @@ void * nano_memalign(RARG size_t align, size_t s)
     if (allocated == NULL) return NULL;
 
     chunk_p = get_chunk_from_ptr(allocated);
-    aligned_p = (char *)ALIGN_PTR(
+    aligned_p = (char *)ALIGN_TO(
                   (uintptr_t)((char *)chunk_p + CHUNK_OFFSET),
                   (uintptr_t)align);
     offset = aligned_p - ((char *)chunk_p + CHUNK_OFFSET);
@@ -653,8 +630,8 @@ void * nano_memalign(RARG size_t align, size_t s)
         {
             /* Padding is used. Need to set a jump offset for aligned pointer
             * to get back to chunk head */
-            assert(offset >= sizeof(int));
-            *(long *)((char *)chunk_p + offset) = -offset;
+            assert(offset >= sizeof(malloc_size_t));
+            ((chunk *)((char *)chunk_p + offset))->size = offset | 1U;
         }
     }
 
