@@ -234,6 +234,7 @@ AC_CONFIG_FILES([Makefile],
   . ${libgloss_topdir}/config-ml.in
 fi],
 srcdir=${srcdir}
+host=${host}
 target=${target}
 host=${host}
 with_multisubdir=${with_multisubdir}

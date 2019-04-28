@@ -45,6 +45,7 @@ AC_CONFIG_FILES([Makefile],
   . ${libgloss_topdir}/config-ml.in
 fi],
 srcdir=${srcdir}
+host=${host}
 target=${target}
 with_multisubdir=${with_multisubdir}
 ac_configure_args="--enable-multilib ${ac_configure_args}"
