@@ -114,17 +114,22 @@
 #define current_mallinfo __malloc_current_mallinfo
 
 #define ALIGN_TO(size, align) \
-    (((size) + (align) -1U) & ~((align) -1U))
+    (((size) + (align) - (malloc_size_t) 1) & ~ ((align) - (malloc_size_t) 1))
+#define ALIGN_PTR_TO(ptr, align) \
+    ((char *) \
+     (((uintptr_t) (ptr) + (align) - (uintptr_t) 1) \
+      & ~ ((align) - (uintptr_t) 1)))
 
 /* Alignment of allocated block */
 #define MALLOC_ALIGN (8U)
-#define CHUNK_ALIGN (MAX(sizeof(void*), sizeof(malloc_size_t)))
+#define CHUNK_ALIGN (ALIGN_TO(MAX(sizeof(void*), sizeof(malloc_size_t)), 2U))
 #define MALLOC_PADDING ((MAX(MALLOC_ALIGN, CHUNK_ALIGN)) - CHUNK_ALIGN)
 
 /* as well as the minimal allocation size
  * to hold a free pointer */
 #define MALLOC_MINSIZE (sizeof(void *))
 #define MALLOC_PAGE_ALIGN (0x1000)
+#define MAX_ALLOC_SIZE (0x80000000U)
 
 #define MALLOC_CHECK_CORRUPT_HEAP
 
@@ -215,7 +220,7 @@ static void* sbrk_aligned(RARG malloc_size_t s)
     if (p == (void *)-1)
         return p;
 
-    align_p = (char*)ALIGN_TO((uintptr_t)p, CHUNK_ALIGN);
+    align_p = ALIGN_PTR_TO(p, CHUNK_ALIGN);
     if (align_p != p)
     {
         /* p is not aligned, ask for a few more bytes so that we have s
@@ -245,7 +250,7 @@ void * nano_malloc(RARG malloc_size_t s)
     alloc_size += CHUNK_OFFSET; /* size of chunk head */
     alloc_size = MAX(alloc_size, MALLOC_MINCHUNK);
 
-    if (alloc_size < s)
+    if (alloc_size >= MAX_ALLOC_SIZE || alloc_size < s)
     {
         RERRNO = ENOMEM;
         return NULL;
@@ -317,7 +322,7 @@ void * nano_malloc(RARG malloc_size_t s)
 
     ptr = (char *)r + CHUNK_OFFSET;
 
-    align_ptr = (char *)ALIGN_TO((uintptr_t)ptr, MALLOC_ALIGN);
+    align_ptr = ALIGN_PTR_TO(ptr, MALLOC_ALIGN);
     offset = align_ptr - ptr;
 
     if (offset)
@@ -558,7 +563,7 @@ malloc_size_t nano_malloc_usable_size(RARG void * ptr)
     if (size_or_offset & 1U)
     {
         /* Padding is used. Excluding the padding size */
-        size_or_offset &= ~1U;
+        size_or_offset &= ~(malloc_size_t)1U;
         c = (chunk *)((char *)c - size_or_offset);
         return c->size - CHUNK_OFFSET - size_or_offset;
     }
@@ -610,9 +615,7 @@ void * nano_memalign(RARG size_t align, size_t s)
     if (allocated == NULL) return NULL;
 
     chunk_p = get_chunk_from_ptr(allocated);
-    aligned_p = (char *)ALIGN_TO(
-                  (uintptr_t)((char *)chunk_p + CHUNK_OFFSET),
-                  (uintptr_t)align);
+    aligned_p = ALIGN_PTR_TO((char *)chunk_p + CHUNK_OFFSET, align);
     offset = aligned_p - ((char *)chunk_p + CHUNK_OFFSET);
 
     if (offset)
