@@ -243,7 +243,7 @@ void * nano_malloc(RARG malloc_size_t s)
     char * ptr, * align_ptr;
     int offset;
 
-    malloc_size_t alloc_size;
+    malloc_size_t alloc_size, rem;
 
     alloc_size = ALIGN_SIZE(s, CHUNK_ALIGN); /* size of aligned data load */
     alloc_size += MALLOC_PADDING; /* padding */
@@ -263,7 +263,6 @@ void * nano_malloc(RARG malloc_size_t s)
 
     while (r)
     {
-        int rem = r->size - alloc_size;
 #ifdef MALLOC_CHECK_CORRUPT_HEAP
 #define NANO_MALLOC_ERR(what) NANO_MALLOC_ERR_2(nano_malloc, what)
 #define NANO_MALLOC_ERR_2(who, what) NANO_MALLOC_ERR_3(who, what)
@@ -275,29 +274,8 @@ void * nano_malloc(RARG malloc_size_t s)
             abort();
         }
 #endif
-        if (rem >= 0)
+        if (r->size >= alloc_size)
         {
-            if (rem >= MALLOC_MINCHUNK)
-            {
-                /* Find a chunk that much larger than required size, break
-                * it into two chunks and return the second one */
-                r->size = rem;
-                r = (chunk *)((char *)r + rem);
-                r->size = alloc_size;
-            }
-            /* Find a chunk that is exactly the size or slightly bigger
-             * than requested size, just return this chunk */
-            else if (p == r)
-            {
-                /* Now it implies p==r==free_list. Move the free_list
-                 * to next chunk */
-                free_list = r->next;
-            }
-            else
-            {
-                /* Normal case. Remove it from free_list */
-                p->next = r->next;
-            }
             break;
         }
         p=r;
@@ -316,8 +294,35 @@ void * nano_malloc(RARG malloc_size_t s)
             MALLOC_UNLOCK;
             return NULL;
         }
+        /* create new free chunk that is claimed below */
+        r->size = alloc_size;
+        r->next = NULL;
+    }
+
+    /* Now it implies r->size >= alloc_size */
+    rem = r->size - alloc_size;
+    if (rem >= MALLOC_MINCHUNK)
+    {
+        /* Find a chunk that much larger than required size, break
+         * it into two chunks and return the second one */
+        r->size = rem;
+        r = (chunk *)((char *)r + rem);
         r->size = alloc_size;
     }
+    /* Find a chunk that is exactly the size or slightly bigger
+     * than requested size, just return this chunk */
+    else if (p == r)
+    {
+        /* Now it implies p==r==free_list. Move the free_list
+         * to next chunk */
+        free_list = r->next;
+    }
+    else
+    {
+        /* Normal case. Remove it from free_list */
+        p->next = r->next;
+    }
+
     MALLOC_UNLOCK;
 
     ptr = (char *)r + CHUNK_OFFSET;
