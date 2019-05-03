@@ -239,7 +239,7 @@ static void* sbrk_aligned(RARG malloc_size_t s)
   */
 void * nano_malloc(RARG malloc_size_t s)
 {
-    chunk *p, *r;
+    chunk *p, *q, *r;
     char * ptr, * align_ptr;
     int offset;
 
@@ -259,6 +259,7 @@ void * nano_malloc(RARG malloc_size_t s)
     MALLOC_LOCK;
 
     p = free_list;
+    q = p;
     r = p;
 
     while (r)
@@ -278,6 +279,7 @@ void * nano_malloc(RARG malloc_size_t s)
         {
             break;
         }
+        q=p;
         p=r;
         r=r->next;
     }
@@ -285,7 +287,14 @@ void * nano_malloc(RARG malloc_size_t s)
     /* Failed to find a appropriate chunk. Ask for more memory */
     if (r == NULL)
     {
-        r = sbrk_aligned(RCALL alloc_size);
+        /* check if last free block p can be extended */
+        char *sbrk_now = _SBRK_R(RCALL 0);
+        malloc_size_t adjust = 0;
+        if (p && (char *)p + p->size == sbrk_now)
+        {
+            adjust = p->size;
+        }
+        r = sbrk_aligned(RCALL alloc_size - adjust);
 
         /* sbrk returns -1 if fail to allocate */
         if (r == (void *)-1)
@@ -294,7 +303,13 @@ void * nano_malloc(RARG malloc_size_t s)
             MALLOC_UNLOCK;
             return NULL;
         }
-        /* create new free chunk that is claimed below */
+        if (adjust)
+        {
+            /* extended chunk at p, so need to shift back in the list */
+            r = p;
+            p = q;
+        }
+        /* modify or create new free chunk that is claimed below */
         r->size = alloc_size;
         r->next = NULL;
     }
