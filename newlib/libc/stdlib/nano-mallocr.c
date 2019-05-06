@@ -319,14 +319,16 @@ void * nano_malloc(RARG malloc_size_t s)
     if (rem >= MALLOC_MINCHUNK)
     {
         /* Find a chunk that much larger than required size, break
-         * it into two chunks and return the second one */
-        r->size = rem;
-        r = (chunk *)((char *)r + rem);
+         * it into two chunks and return the first one */
+        chunk *rem_r = (chunk *)((char *)r + alloc_size);
+        rem_r->size = rem;
+        rem_r->next = r->next;
         r->size = alloc_size;
+        r->next = rem_r;
     }
     /* Find a chunk that is exactly the size or slightly bigger
      * than requested size, just return this chunk */
-    else if (p == r)
+    if (p == r)
     {
         /* Now it implies p==r==free_list. Move the free_list
          * to next chunk */
