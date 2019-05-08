@@ -309,6 +309,8 @@ void * nano_malloc(RARG malloc_size_t s)
             r = p;
             p = q;
         }
+        else if (!p)
+            p = r;
         /* modify or create new free chunk that is claimed below */
         r->size = alloc_size;
         r->next = NULL;
