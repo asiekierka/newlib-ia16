@@ -56,6 +56,42 @@ _start:
 	movw	$__lbss, %cx
 	cld
 	rep	stosw
+#ifdef DPMIABLE
+	# We still have segment registers pointing to the code segment, data
+	# segment, and PSP; and we have not invoked the program's
+	# constructor routines yet.  This is a good time to switch to
+	# protected mode if we want to.
+	movw	$0x1687, %ax
+	int	$0x2f
+	testw	%ax,	%ax
+	jnz	.Lno_dpmi
+	# Allocate space for the DPMI private data area.  Do this by
+	# adjusting the size of our own DOS memory control block.
+	movw	%di,	%ss:.Ldpmi_entry
+	movw	%es,	%ss:.Ldpmi_entry+2
+	pushw	%ds
+	popw	%es
+	movw	%si,	%bx
+	addw	$0x1000, %bx
+	movb	$0x4a,	%ah
+	int	$0x21
+	jc	.Lno_dpmi
+	# Try to switch to protected mode.
+	movw	%es,	%ax
+	addw	$0x1000, %ax
+	movw	%ax,	%es
+	xorw	%ax,	%ax
+	lcallw	*%ss:.Ldpmi_entry
+	jc	.Lno_dpmi
+	# Success!  Limit %cs so that it does not go beyond the end of our
+	# actual code.  Note that %ax == 0 is preserved from above.
+	movb	$0x08,	%al
+	movw	%cs,	%bx
+	xorw	%cx,	%cx
+	movw	$__etext-1, %dx
+	int	$0x31
+.Lno_dpmi:
+#endif
 #ifndef TINY
 	pushw	%ds
 	pushw	%ss
@@ -70,6 +106,15 @@ _start:
 	# We currently do not use the PSP segment value after startup, so we
 	# can overlap .Lpsp with .Largv.  This may change in the future.
 	.set	.Lpsp,	.Largv
+# ifdef DPMIABLE
+	# Also use the same area for temporarily storing the DPMI mode
+	# switch entry point.
+	.set	.Ldpmi_entry, .Largv
+# endif
+#else
+# ifdef DPMIABLE
+	.lcomm	.Ldpmi_entry, 4
+# endif
 #endif
 
 	.section .startupB
