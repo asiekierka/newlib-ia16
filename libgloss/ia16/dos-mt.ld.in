@@ -5,6 +5,9 @@ cmd1='#'
 cmd2='#'
 w1=with
 w2=with
+w3=without
+crt0=-l:dos-com-crt0.o
+ldpmi=
 case "$1" in
   -nostdlib)
     cmd1='/^@if_starts@/,/^@endif@/ d'
@@ -17,20 +20,28 @@ case "$1" in
   -nodefaultlibs)
      cmd2='/^@if_libs@/,/^@endif@/ d'
      w2=without;;
+  -mdpmiable)
+     crt0=-l:dpm-mt-crt0.o
+     ldpmi=-l:dpm-mt.a
+     w3=with;;
 esac
-sed -e "$cmd1" -e "$cmd2" -e "s;@withstarts@;$w1;g" -e "s;@withlibs@;$w2;g" \
+sed -e "$cmd1" -e "$cmd2" -e "s;@crt0@;$crt0;g" -e "s;@ldpmi@;$ldpmi;g" \
+    -e "s;@withstarts@;$w1;g" -e "s;@withlibs@;$w2;g" \
+    -e "s;@withdpmiable@;$w3;g" \
     -e "s/@self@/`basename "$0"`/g" -e "/^@if/ d" -e "/^@endif@/ d" <<'EOF'
 /* Linker script for DOS executables with combined data and text segment,
-   @withstarts@ startup files, and @withlibs@ default libraries.
+   @withstarts@ startup files, @withlibs@ default libraries, and @withdpmiable@
+   DPMI support.
+
    Generated from @self@.  */
 
 OUTPUT_FORMAT(binary)
 ENTRY(_start)
 @if_starts@
-INPUT(-l:crtbegin.o -l:crtend.o -l:dos-com-crt0.o)
+INPUT(-l:crtbegin.o -l:crtend.o @crt0@)
 @endif@
 @if_libs@
-GROUP(-lc -lgcc -ldos-com -lm)
+GROUP(-lc -lgcc @ldpmi@ -ldos-com -lm)
 @endif@
 
 SECTIONS
