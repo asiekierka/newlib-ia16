@@ -6,7 +6,11 @@
 #error "no memory model defined -- please use either -DTINY or -DSMALL"
 #endif
 
+#ifdef DPMIABLE
+	.arch i286
+#else
 	.arch i8086
+#endif
 	.code16
 
 	.section .startupA
@@ -65,10 +69,18 @@ _start:
 	int	$0x2f
 	testw	%ax,	%ax
 	jnz	.Lno_dpmi
+	# Plug in the DPMI entry point address.  This is self-modifying code
+	# (!) --- rely on the `int $0x21' later to get the instruction cache
+	# flushed, before we reach the `lcallw'.
+#ifdef TINY
+	movw	%di,	1+0f
+	movw	%es,	3+0f
+#else
+	movw	%di,	%cs:1+0f
+	movw	%es,	%cs:3+0f
+#endif
 	# Allocate space for the DPMI private data area.  Do this by
 	# adjusting the size of our own DOS memory control block.
-	movw	%di,	%ss:.Ldpmi_entry
-	movw	%es,	%ss:.Ldpmi_entry+2
 	pushw	%ds
 	popw	%es
 	movw	%si,	%bx
@@ -81,7 +93,8 @@ _start:
 	addw	$0x1000, %ax
 	movw	%ax,	%es
 	xorw	%ax,	%ax
-	lcallw	*%ss:.Ldpmi_entry
+0:
+	lcallw	$0,	$0
 	jc	.Lno_dpmi
 	# Success!  Limit %cs so that it does not go beyond the end of our
 	# actual code.  Note that %ax == 0 is preserved from above.
@@ -90,6 +103,27 @@ _start:
 	xorw	%cx,	%cx
 	movw	$__etext-1, %dx
 	int	$0x31
+	# Make %ss an expand-down descriptor, and limit it.
+	movw	%ss,	%bx
+	larw	%bx,	%cx
+	xchgb	%cl,	%ch
+	or	$0x04,	%cl
+	movw	$0x0009, %ax
+	int	$0x31
+	jc	1f
+	movw	$0x0008, %ax
+	movw	%ss,	%bx
+	xorw	%cx,	%cx
+# ifdef TINY
+	movw	$0x2c-1, %dx
+	int	$0x31
+	pushw	%ss
+	popw	%ds
+# else
+	movw	$__sdata-1, %dx
+	int	$0x31
+# endif
+1:
 .Lno_dpmi:
 #endif
 #ifndef TINY
@@ -101,20 +135,11 @@ _start:
 #ifndef TINY
 	# For the small memory model, we need to copy the command line
 	# arguments out to the data segment, rather than modify them in
-	# place in DOS's DTA --- since the DTA is outside the data segment.
+	# place in DOS's PSP --- since the PSP is outside the data segment.
 	.lcomm	.Largv,	128
 	# We currently do not use the PSP segment value after startup, so we
 	# can overlap .Lpsp with .Largv.  This may change in the future.
 	.set	.Lpsp,	.Largv
-# ifdef DPMIABLE
-	# Also use the same area for temporarily storing the DPMI mode
-	# switch entry point.
-	.set	.Ldpmi_entry, .Largv
-# endif
-#else
-# ifdef DPMIABLE
-	.lcomm	.Ldpmi_entry, 4
-# endif
 #endif
 
 	.section .startupB
