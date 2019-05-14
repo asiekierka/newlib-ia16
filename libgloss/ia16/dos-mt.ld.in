@@ -7,7 +7,6 @@ w1=with
 w2=with
 w3=without
 crt0=-l:dos-com-crt0.o
-ldpmi=
 case "$1" in
   -nostdlib)
     cmd1='/^@if_starts@/,/^@endif@/ d'
@@ -22,10 +21,9 @@ case "$1" in
      w2=without;;
   -mdpmiable)
      crt0=-l:dpm-mt-crt0.o
-     ldpmi=-l:dpm-mt.a
      w3=with;;
 esac
-sed -e "$cmd1" -e "$cmd2" -e "s;@crt0@;$crt0;g" -e "s;@ldpmi@;$ldpmi;g" \
+sed -e "$cmd1" -e "$cmd2" -e "s;@crt0@;$crt0;g" \
     -e "s;@withstarts@;$w1;g" -e "s;@withlibs@;$w2;g" \
     -e "s;@withdpmiable@;$w3;g" \
     -e "s/@self@/`basename "$0"`/g" -e "/^@if/ d" -e "/^@endif@/ d" <<'EOF'
@@ -41,7 +39,7 @@ ENTRY(_start)
 INPUT(-l:crtbegin.o -l:crtend.o @crt0@)
 @endif@
 @if_libs@
-GROUP(-lc -lgcc @ldpmi@ -ldos-com -lm)
+GROUP(-lc -lgcc -ldos-com -lm)
 @endif@
 
 SECTIONS
