@@ -1,4 +1,5 @@
 #include "call-cvt.h"
+#include "pmode.h"
 
 	.arch i8086,jumps
 	.code16
@@ -12,7 +13,7 @@ _read:
 	MOV_ARG4W_BX_(%cx)
 	MOV_ARG0W_BX_(%bx)
 	movb	$0x3f,	%ah
-	int	$0x21
+	REAL_DOS_CALL_
 	jnc	.noerror
 	movw	%ax,	errno
 	movw	$-1,	%ax

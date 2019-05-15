@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <_syslist.h>
+#include "pmode.h"
 
 #undef errno
 extern int errno;
@@ -49,7 +50,7 @@ struct _find_t {
 
 static void dos_set_dta (void __far *dta)
 {
-  asm volatile ("int $0x21" : :
+  asm volatile (REAL_DOS_CALL_ : :
 	        "Rah"((char)0x1a),
 		"d"((unsigned)(unsigned long)(dta)), "Rds"(FP_SEG(dta)));
 }

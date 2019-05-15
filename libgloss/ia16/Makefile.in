@@ -63,6 +63,9 @@ DOS_COMMON_OBJS = dos-chdir.o dos-close.o dos-cvt-file-time.o dos-dup.o \
 		  dos-isatty.o dos-lseek.o dos-mkdir.o dos-open.o dos-read.o \
 		  dos-rename.o dos-rmdir.o dos-sbrk.o dos-stat.o dos-times.o \
 		  dos-unlink.o dos-usleep.o dos-write.o
+ifneq "" "$(filter -mprotected-mode,$(CC) $(MULTILIB) $(CFLAGS))"
+  DOS_COMMON_OBJS += dpm-hosted.o dpm-real-dos.o
+endif
 
 DOS_TINY_OBJS	= $(DOS_COMMON_OBJS) dos-mtabort.o
 DOS_TINY_CFLAGS	= -mseparate-code-segment -g -Os
@@ -254,17 +257,17 @@ $(DPMIABLE_SMALL_CRT0) : dos-models-crt0.S
 	$(CC) $(CFLAGS_FOR_TARGET) -UTINY -DSMALL -DDPMIABLE \
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
-dos-chdir.o: dos-chdir.S call-cvt.h
+dos-chdir.o: dos-chdir.S call-cvt.h pmode.h
 dos-close.o: dos-close.S call-cvt.h
-dos-getcwd.o: dos-getcwd.S call-cvt.h
+dos-getcwd.o: dos-getcwd.S call-cvt.h pmode.h
 dos-isatty.o: dos-isatty.S call-cvt.h
 dos-lseek.o: dos-lseek.S call-cvt.h
-dos-mkdir.o: dos-mkdir.S call-cvt.h
-dos-read.o: dos-read.S call-cvt.h
-dos-rename.o: dos-rename.S call-cvt.h
-dos-rmdir.o: dos-rmdir.S call-cvt.h
-dos-unlink.o: dos-unlink.S call-cvt.h
-dos-write.o: dos-write.S call-cvt.h
+dos-mkdir.o: dos-mkdir.S call-cvt.h pmode.h
+dos-read.o: dos-read.S call-cvt.h pmode.h
+dos-rename.o: dos-rename.S call-cvt.h pmode.h
+dos-rmdir.o: dos-rmdir.S call-cvt.h pmode.h
+dos-unlink.o: dos-unlink.S call-cvt.h pmode.h
+dos-write.o: dos-write.S call-cvt.h pmode.h
 
 # (!) dos-times.S uses the division operator.
 dos-times.o: override CFLAGS += -Wa,--divide
