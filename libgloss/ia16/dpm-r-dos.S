@@ -28,8 +28,8 @@
 	.code16
 
 	.text
-	.global	__ia16_real_dos_call
-__ia16_real_dos_call:
+	.global	__ia16_rmode_dos_call
+__ia16_rmode_dos_call:
 	pushw	%di
 	movw	__ia16_dpmi_rmode_ds, %di
 	test	%di,	%di

@@ -72,13 +72,13 @@ _start:
 	# Plug in the DPMI entry point address.  This is self-modifying code
 	# (!) --- rely on the `int $0x21' later to get the instruction cache
 	# flushed, before we reach the `lcallw'.
-#ifdef TINY
+# ifdef TINY
 	movw	%di,	1+0f
 	movw	%es,	3+0f
-#else
+# else
 	movw	%di,	%cs:1+0f
 	movw	%es,	%cs:3+0f
-#endif
+# endif
 	# Allocate space for the DPMI private data area.  Do this by
 	# adjusting the size of our own DOS memory control block.
 	pushw	%ds
@@ -93,17 +93,21 @@ _start:
 	addw	$0x1000, %ax
 	movw	%ax,	%es
 	xorw	%ax,	%ax
+# ifndef TINY
+	movw	%cs,	%cx
+# endif
 	movw	%ss,	%dx
 0:
 	lcallw	$0,	$0
 	jc	.Lno_dpmi
 	# Success!  Quickly store the real mode value of %ss, which may come
 	# in useful later.
-#ifdef TINY
+# ifdef TINY
 	movw	%dx,	__ia16_dpmi_rmode_ds
-#else
+# else
+	movw	%cx,	%ss:__ia16_dpmi_rmode_cs
 	movw	%dx,	%ss:__ia16_dpmi_rmode_ds
-#endif
+# endif
 	# Limit %cs so that it does not go beyond the end of our actual
 	# code.  Note that %ax == 0 is preserved from above.
 	movb	$0x08,	%al
@@ -148,12 +152,6 @@ _start:
 	# We currently do not use the PSP segment value after startup, so we
 	# can overlap .Lpsp with .Largv.  This may change in the future.
 	.set	.Lpsp,	.Largv
-#endif
-#if defined DPMIABLE || defined __IA16_FEATURE_PROTECTED_MODE
-	# Real mode paragraph value for our near data segment.  This also
-	# serves (for now) as a handy way to check whether we are running
-	# under DPMI.
-	.comm	__ia16_dpmi_rmode_ds, 2
 #endif
 
 	.section .startupB

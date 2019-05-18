@@ -24,7 +24,7 @@ _write:
 	MOV_ARG2W_BX_(%dx)
 	MOV_ARG0W_BX_(%bx)
 	movb	$0x40,	%ah
-	REAL_DOS_CALL_
+	RMODE_DOS_CALL_
 	jnc	.noerror
 	movw	%ax,	errno
 	sbbw	%cx,	%cx

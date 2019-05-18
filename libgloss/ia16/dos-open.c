@@ -42,7 +42,7 @@ extern int errno;
 static int dos_exists (const char *pathname)
 {
   int carry;
-  asm volatile (REAL_DOS_CALL_ "; sbb %0, %0" :
+  asm volatile (RMODE_DOS_CALL_ "; sbb %0, %0" :
 		"=a"(carry) :
 	        "a"(0x4300), "d"(pathname), "Rds"(FP_SEG(pathname)) :
 		"cx", "cc");
@@ -52,7 +52,7 @@ static int dos_exists (const char *pathname)
 static int dos_open (const char *pathname, unsigned char flags)
 {
   int ret, carry;
-  asm volatile (REAL_DOS_CALL_ "; sbb %0, %0" :
+  asm volatile (RMODE_DOS_CALL_ "; sbb %0, %0" :
 		"=r"(carry), "=a"(ret) :
 	        "Rah"((char)0x3d), "Ral"(flags), "d"(pathname),
 		"Rds"(FP_SEG(pathname)) : "cc");
@@ -67,7 +67,7 @@ static int dos_open (const char *pathname, unsigned char flags)
 static int dos_creat (const char *pathname, unsigned char attr)
 {
   int ret, carry;
-  asm volatile (REAL_DOS_CALL_ "; sbb %0, %0" :
+  asm volatile (RMODE_DOS_CALL_ "; sbb %0, %0" :
 		"=r"(carry), "=a"(ret) :
 	        "Rah"((char)0x3c), "Rcl"(attr), "d"(pathname),
 		"Rds"(FP_SEG(pathname)) : "cc");

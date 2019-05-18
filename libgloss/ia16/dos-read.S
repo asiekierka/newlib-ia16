@@ -13,7 +13,7 @@ _read:
 	MOV_ARG4W_BX_(%cx)
 	MOV_ARG0W_BX_(%bx)
 	movb	$0x3f,	%ah
-	REAL_DOS_CALL_
+	RMODE_DOS_CALL_
 	jnc	.noerror
 	movw	%ax,	errno
 	movw	$-1,	%ax

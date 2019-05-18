@@ -16,7 +16,7 @@ _getcwd:
 	MOV_ARG0W_BX_(%si)
 	movb	$0,	%dl
 	movb	$0x47,	%ah
-	REAL_DOS_CALL_
+	RMODE_DOS_CALL_
 	jc	.error
 	movw	%si,	%ax
 	popw	%si

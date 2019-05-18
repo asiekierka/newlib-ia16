@@ -1,6 +1,4 @@
 /*
- * Macros for protected mode operation.
- *
  * Copyright (c) 2019 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
@@ -14,20 +12,9 @@
  * they apply.
  */
 
-#ifdef __ASSEMBLER__
-# ifdef __IA16_FEATURE_PROTECTED_MODE
-#   define RMODE_DOS_CALL_ call __ia16_rmode_dos_call
-#   define RMODE_FUNC_CALL_BX_ call __ia16_rmode_func_call_bx
-# else
-#   define RMODE_DOS_CALL_ int $0x21
-#   define RMODE_FUNC_CALL_BX_ callw *%bx
-# endif
-#else
-# ifdef __IA16_FEATURE_PROTECTED_MODE
-#   define RMODE_DOS_CALL_ "call __ia16_rmode_dos_call"
-#   define RMODE_FUNC_CALL_BX_ "call __ia16_rmode_func_call_bx"
-# else
-#   define RMODE_DOS_CALL_ "int $0x21"
-#   define RMODE_FUNC_CALL_BX_ "callw *%bx"
-# endif
-#endif
+	.bss
+	.global	__ia16_dpmi_rmode_cs
+	.global	__ia16_dpmi_rmode_ds
+__ia16_dpmi_rmode_cs:
+__ia16_dpmi_rmode_ds:
+	.skip	2

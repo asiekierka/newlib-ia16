@@ -66,10 +66,10 @@ DOS_COMMON_OBJS = dos-chdir.o dos-close.o dos-cvt-file-time.o dos-dup.o \
 PROTECTED_MODE_P = $(filter -mprotected-mode -mdpmiable -melks%, \
 			    $(CC) $(MULTILIB) $(CFLAGS))
 DOS_COMMON_OBJS += $(if $(PROTECTED_MODE_P), \
-			dpm-hosted.o dpm-real-dos.o dpm-abort.o)
+			dpm-hosted.o dpm-r-dos.o dpm-r-func.o dpm-abort.o)
 
 DOS_TINY_OBJS	= $(DOS_COMMON_OBJS)
-DOS_TINY_OBJS	+= $(if $(PROTECTED_MODE_P),,dos-mtabort.o)
+DOS_TINY_OBJS	+= $(if $(PROTECTED_MODE_P),dpm-mtds.o,dos-mtabort.o)
 DOS_TINY_CFLAGS	= -mseparate-code-segment -g -Os
 DOS_TINY_ASFLAGS =
 DOS_TINY_SCRIPTS = dos-com.ld dos-mt.ld dos-mts.ld dos-mtl.ld dos-mtsl.ld
@@ -77,7 +77,8 @@ DOS_TINY_BSP	= libdos-com.a
 DOS_TINY_CRT0	= dos-com-crt0.o
 
 DOS_SMALL_OBJS	= $(DOS_COMMON_OBJS)
-DOS_SMALL_OBJS += $(if $(PROTECTED_MODE_P),,dos-msabort.o)
+DOS_SMALL_OBJS	+= $(if $(PROTECTED_MODE_P),dpm-mscs.o dpm-msds.o, \
+			dos-msabort.o)
 DOS_SMALL_CFLAGS = $(DOS_TINY_CFLAGS)
 DOS_SMALL_ASFLAGS = $(DOS_TINY_ASFLAGS)
 DOS_SMALL_SCRIPTS = dos-exe-small.ld dos-ms.ld dos-mss.ld dos-msl.ld \

@@ -50,7 +50,7 @@ struct _find_t {
 
 static void dos_set_dta (void __far *dta)
 {
-  asm volatile (REAL_DOS_CALL_ : :
+  asm volatile (RMODE_DOS_CALL_ : :
 	        "Rah"((char)0x1a),
 		"d"((unsigned)(unsigned long)(dta)), "Rds"(FP_SEG(dta)));
 }

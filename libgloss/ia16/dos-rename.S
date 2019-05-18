@@ -16,7 +16,7 @@ _rename:
 	MOV_ARG2W_BX_(%di)
 	MOV_ARG0W_BX_(%dx)
 	movb	$0x56,	%ah
-	REAL_DOS_CALL_
+	RMODE_DOS_CALL_
 	jc	.error
 	xorw	%ax,	%ax
 	popw	%di

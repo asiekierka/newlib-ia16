@@ -11,7 +11,7 @@ _chdir:
 	ENTER_BX_(2)
 	MOV_ARG0W_BX_(%dx)
 	movb	$0x3b,	%ah
-	REAL_DOS_CALL_
+	RMODE_DOS_CALL_
 	jc	.error
 	xorw	%ax,	%ax
 	RET_(2)

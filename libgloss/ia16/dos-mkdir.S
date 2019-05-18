@@ -11,7 +11,7 @@ _mkdir:
 	ENTER_BX_(4)
 	MOV_ARG0W_BX_(%dx)
 	movb	$0x39,	%ah
-	REAL_DOS_CALL_
+	RMODE_DOS_CALL_
 	jc	.error
 	xorw	%ax,	%ax
 	RET_(4)

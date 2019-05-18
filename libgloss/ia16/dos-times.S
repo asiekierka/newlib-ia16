@@ -33,6 +33,11 @@
 	.section .text
 
 .Lctor_times:
+#ifdef __IA16_FEATURE_PROTECTED_MODE
+	movw	$0f,	%bx
+	jmp	__ia16_rmode_func_call_bx
+0:
+#endif
 	pushw	%es
 	movb	$0x34,	%ah
 	int	$0x21
@@ -49,6 +54,11 @@
 	ret
 
 .Ldtor_times:
+#ifdef __IA16_FEATURE_PROTECTED_MODE
+	movw	$0f,	%bx
+	jmp	__ia16_rmode_func_call_bx
+0:
+#endif
 	pushw	%es
 	/*
 	 * If the program (or some other program) had also added its own
@@ -72,9 +82,10 @@
 
 	.global	_times
 _times:
-	movw	%es,	%cx
 	ENTER_BX_(2)
 	MOV_ARG0W_BX_(%bx)
+#ifndef __IA16_FEATURE_PROTECTED_MODE
+	movw	%es,	%cx
 	/* Fill ->tms_utime.  */
 	lesw	.Luser_counter+2, %dx
 	movw	%dx,	(%bx)
@@ -84,6 +95,20 @@ _times:
 	movw	%ax,	4(%bx)
 	movw	%es,	6(%bx)
 	movw	%cx,	%es
+#else
+	cli
+	/* Fill ->tms_utime.  */
+	movw	.Luser_counter+2, %dx
+	movw	.Luser_counter+4, %cx
+	movw	%dx,	(%bx)
+	movw	%cx,	2(%bx)
+	/* Fill ->tms_stime.  */
+	movw	.Lsystem_counter+2, %ax
+	movw	.Lsystem_counter+4, %cx
+	movw	%ax,	4(%bx)
+	movw	%cx,	6(%bx)
+	sti
+#endif
 	/* Zero ->tms_cutime and ->tms_cstime for now...  */
 	xorw	%cx,	%cx
 	movw	%cx,	8(%bx)

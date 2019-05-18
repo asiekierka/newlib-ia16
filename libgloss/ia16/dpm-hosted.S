@@ -12,8 +12,13 @@
  * they apply.
  */
 
-/* Say whether we are running under DPMI.  Return 1 if so, -1 otherwise ---
-   similar to Open Watcom's corresponding routine.  */
+/*
+ * Say whether we are running under DPMI.  Return 1 if so, -1 otherwise ---
+ * similar to Open Watcom's corresponding routine.
+ *
+ * Use the variable for the stored real mode %ds value as a quick handy way
+ * to check for DPMI.  If we are in real mode, this will be zero.
+ */
 
 	.arch	i8086, jumps
 	.code16
