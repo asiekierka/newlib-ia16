@@ -108,12 +108,20 @@ _start:
 	.popsection
 	movw	$0b,	%si
 	movw	$1b-0b,	%cx
-	rep cmpsb %es:(%di), %ss:(%si)
+# ifdef TINY
+	repz cmpsb
+# else
+	repz cmpsb %es:(%di), %ss:(%si)
+# endif
 	jnz	.L16bit_ok
 	incw	%di
 	incw	%di
 	movb	$2b-1b,	%cl
-	rep cmpsb %es:(%di), %ss:(%si)
+# ifdef TINY
+	repz cmpsb
+# else
+	repz cmpsb %es:(%di), %ss:(%si)
+# endif
 	jz	.Lno_dpmi
 .L16bit_ok:
 	# Allocate space for the DPMI private data area.  Do this by
