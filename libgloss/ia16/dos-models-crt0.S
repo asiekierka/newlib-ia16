@@ -73,12 +73,49 @@ _start:
 	# (!) --- rely on the `int $0x21' later to get the instruction cache
 	# flushed, before we reach the `lcallw'.
 # ifdef TINY
-	movw	%di,	1+0f
-	movw	%es,	3+0f
+	movw	%di,	.Ldpmi_lcall+1
+	movw	%es,	.Ldpmi_lcall+3
 # else
-	movw	%di,	%cs:1+0f
-	movw	%es,	%cs:3+0f
+	movw	%di,	%cs:.Ldpmi_lcall+1
+	movw	%es,	%cs:.Ldpmi_lcall+3
 # endif
+	# If we have a 32-bit DPMI host, try to see if we are running under
+	# Sandmann's CWSDPMI, which works around a bug in some DPMI clients:
+	#	"Ideally, on the request to enter DPMI's PM with a 16-bit
+	#	 request, we would just fail the call setting the carry bit
+	#	 like the DPMI specification describes.  Some buggy 16-bit
+	#	 compiler tools don't check the return status and will hang
+	#	 the machine in this case.  So, I issue an error message and
+	#	 exit the image instead."
+	# We work around this workaround, and continue in real (or V86 mode)
+	# instead of quitting.
+	shrw	%bx
+	jnc	.L16bit_ok
+	.pushsection .rodata
+0:
+	.byte	0xa8,0x01	#	"test	al,1"
+	.byte	0x75,0x29	#	"jnz	short ok_32"
+	.byte	0xba		#	"mov	dx,"...
+1:
+	.byte	0x0e		#	"push	cs"
+	.byte	0x1f		#	"pop	ds"
+	.byte	0xb4,0x09	#	"mov	ah,9"
+	.byte	0xcd,0x21	#	"int	21h"
+	.byte	0xb8,0x01,0x4c	#	"mov	ax,4c01h"
+	.byte	0xcd,0x21	#	"int	21h"
+2:
+	.balign	2
+	.popsection
+	movw	$0b,	%si
+	movw	$1b-0b,	%cx
+	rep cmpsb %es:(%di), %ss:(%si)
+	jnz	.L16bit_ok
+	incw	%di
+	incw	%di
+	movb	$2b-1b,	%cl
+	rep cmpsb %es:(%di), %ss:(%si)
+	jz	.Lno_dpmi
+.L16bit_ok:
 	# Allocate space for the DPMI private data area.  Do this by
 	# adjusting the size of our own DOS memory control block.
 	pushw	%ds
@@ -97,7 +134,7 @@ _start:
 	movw	%cs,	%cx
 # endif
 	movw	%ss,	%dx
-0:
+.Ldpmi_lcall:
 	lcallw	$0,	$0
 	jc	.Lno_dpmi
 	# Success!  Quickly store the real mode value of %ss, which may come
@@ -122,7 +159,7 @@ _start:
 	or	$0x04,	%cl
 	movw	$0x0009, %ax
 	int	$0x31
-	jc	1f
+	jc	.Lcont_dpmi
 	movw	$0x0008, %ax
 	movw	%ss,	%bx
 	xorw	%cx,	%cx
@@ -135,7 +172,7 @@ _start:
 	movw	$__sdata-1, %dx
 	int	$0x31
 # endif
-1:
+.Lcont_dpmi:
 .Lno_dpmi:
 #endif
 #ifndef TINY
