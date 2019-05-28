@@ -302,28 +302,29 @@ $(NANO_STDIO_BSP): $(objroot)/newlib/libc/libc.a $(NANO_STDIO_OBJS)
 	  echo '/:$$/ { s/:$$//; h; d }' >$@.2.tmp; \
 	  echo '/:$$/ { s/:$$//; h; d }' >$@.3.tmp; \
 	  $(NM) "$$a" | \
-	    sed -n -e '/ T /! d' \
-		   -e 's,.* T ,/ T ,' \
+	    sed -n -e '/ [TRDB] /! d' \
+		   -e 's,.* \([TRDB]\) ,/ \1 ,' \
 		   -e 's,$$,\$$/ { g; p; d },' \
 		   -e p >>$@.2.tmp; \
 	  $(NM) "$$a" | \
-	    sed -n -e '/ T /! d' \
-		   -e 's,.* T ,/ U ,' \
+	    sed -n -e '/ [TRDB] /! d' \
+		   -e 's,.* [TRDB] ,/ U ,' \
 		   -e 's,$$,\$$/ { g; p; d },' \
 		   -e p >>$@.3.tmp; \
 	  $(NM) $< | sed -n -f $@.2.tmp | sort | uniq >$@.4.tmp; \
 	  if $(NM) $< | sed -n -f $@.3.tmp | fgrep -v -w -f $@.4.tmp \
 							   >$@.5.tmp; then \
-	    xargs $(AR) x $< <$@.5.tmp; \
-	    xargs $(AR) rs $@.1.tmp <$@.5.tmp; \
-	    xargs rm -f <$@.5.tmp; \
+	    sort $@.5.tmp | uniq >$@.6.tmp; \
+	    xargs $(AR) x $< <$@.6.tmp; \
+	    xargs $(AR) rs $@.1.tmp <$@.6.tmp; \
+	    xargs rm -f <$@.6.tmp; \
 	    a="$<"; \
 	  else \
 	    a=; \
 	  fi; \
 	done
 	mv $@.1.tmp $@
-	rm -f $@.2.tmp $@.3.tmp $@.4.tmp $@.5.tmp
+	rm -f $@.2.tmp $@.3.tmp $@.4.tmp $@.5.tmp $@.6.tmp
 
 $(IPRINTF_BSP): $(IPRINTF_OBJS)
 	$(AR) rcs $@ $+
