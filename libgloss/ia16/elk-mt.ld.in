@@ -53,8 +53,8 @@ SECTIONS
 		LONG (__ltext_padded);
 		LONG (__ldata);
 		LONG (__lbss);
-		LONG (_start);
-		LONG (0);		/* chmem field.  */
+		LONG (_start);		/* Entry point.  */
+		LONG (_total_adjusted);	/* Total memory allocated.  */
 		LONG (0);
 	} >hdrvma AT>hdrlma
 
@@ -102,13 +102,21 @@ SECTIONS
 		*(.bss) *(.bss.*)
 		*(COMMON)
 		__ebss = .;
+		. = ALIGN (8);
+		__ebss_padded = .;
 
 		/* Minimum address allowed for sbrk() to use.  */
 		__heap_end_minimum = .;
+		ASSERT (. + 0x100 <= 0x10000,
+		    "Error: too large for a tiny-model ELKS a.out file.");
 	} >bsegvma AT>bseglma
 	__ldata = __edata - __sdata;
 	__lbss  = __ebss  - __sbss;
 
-    /DISCARD/ : { *(.*) }
+	PROVIDE (_total = 0);
+	_total_adjusted = _total == 0 ? 0
+			  : MIN (0x10000, MAX (. + 0x100, _total));
+
+    /DISCARD/ : { *(*) }
   }
 EOF
