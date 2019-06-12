@@ -284,6 +284,11 @@ SECTIONS
 	__lbss1 = __lbss0 + 1;
 	__lbss = __lbss1 / 2;
 
+	/* Used by the DPMI initialization code in dos-models-crt0.S.  */
+	__msdos_initial_alloc_paras =
+	    LOADADDR (.data) / 16 - LOADADDR (.text) / 16 + 0x10
+	    + 0x1000 - ADDR (.data) / 16;
+
     /DISCARD/ : { *(.*) }
   }
 EOF

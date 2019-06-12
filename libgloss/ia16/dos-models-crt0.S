@@ -129,13 +129,21 @@ _start:
 	pushw	%ds
 	popw	%es
 	movw	%si,	%bx
+# ifdef TINY
 	addw	$0x1000, %bx
+# else
+	addw	$__msdos_initial_alloc_paras, %bx
+# endif
 	movb	$0x4a,	%ah
 	int	$0x21
 	jc	.Lno_dpmi
 	# Try to switch to protected mode.
 	movw	%es,	%ax
+# ifdef TINY
 	addw	$0x1000, %ax
+# else
+	addw	$__msdos_initial_alloc_paras, %ax
+# endif
 	movw	%ax,	%es
 	xorw	%ax,	%ax
 # ifndef TINY
