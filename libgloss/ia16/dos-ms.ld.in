@@ -46,7 +46,7 @@ MEMORY
   {
     bseglma	(wx) : ORIGIN = 0x00000, LENGTH = 0xa0000
     hdrvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x40020
-    csegvma	(wx) : ORIGIN = 0x00020, LENGTH = 0x10000
+    csegvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10020
     ft0segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
     ft1segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
     ft2segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
@@ -71,7 +71,7 @@ MEMORY
     fd5segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
     fd6segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
     fd7segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    dsegvma	(wx) : ORIGIN = 0x00020, LENGTH = 0x10000
+    dsegvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10020
   }
 
 SECTIONS
@@ -154,8 +154,25 @@ SECTIONS
 		    "Error: too many MZ relocations");
 	} >hdrvma AT>bseglma
 
+    /* Auxiliary symbols, for H. Peter Anvin's proposed relocation system
+       (https://git.zytor.com/users/hpa/abi/segelf.git/plain/segelf.txt ;
+       also see https://bugzilla.nasm.us/show_bug.cgi?id=3392533#c26).  */
+    ".text!" (NOLOAD) : {
+		PROVIDE (__stext! = .);
+		*(.startupA!)
+		*(.init!)
+		*(.startupB!)
+		*(.fini!)
+		*(.startupC!)
+		*(.text!) *(.text.*!)
+		PROVIDE (__etext! = .);
+		PROVIDE (__etext_padded! = .);
+		. = .;
+		ASSERT(. == 0, "Error: .text! auxiliary section has content");
+	} >csegvma AT >bseglma
+
     /* Target text sections.  */
-    .text : {
+    .text 0x20 : {
 		__stext = .;
 		*(.startupA)
 		*(.init)
@@ -190,45 +207,91 @@ SECTIONS
        section name, and then arrange for this linker script to distribute
        the sections into a fixed set of "bins", and hope that none of the
        bins are too large (> 64KiB).  -- tkchia */
-    .fartext.0 : { *(.fartext.*0) . = ALIGN (16); } >ft0segvma AT >bseglma
-    .fartext.1 : { *(.fartext.*1) . = ALIGN (16); } >ft1segvma AT >bseglma
-    .fartext.2 : { *(.fartext.*2) . = ALIGN (16); } >ft2segvma AT >bseglma
-    .fartext.3 : { *(.fartext.*3) . = ALIGN (16); } >ft3segvma AT >bseglma
-    .fartext.4 : { *(.fartext.*4) . = ALIGN (16); } >ft4segvma AT >bseglma
-    .fartext.5 : { *(.fartext.*5) . = ALIGN (16); } >ft5segvma AT >bseglma
-    .fartext.6 : { *(.fartext.*6) . = ALIGN (16); } >ft6segvma AT >bseglma
+    .fartext.0 : { *(.fartext.*0!) *(.fartext.*0) . = ALIGN (16);
+	} >ft0segvma AT >bseglma
+    .fartext.1 : { *(.fartext.*1!) *(.fartext.*1) . = ALIGN (16);
+	} >ft1segvma AT >bseglma
+    .fartext.2 : { *(.fartext.*2!) *(.fartext.*2) . = ALIGN (16);
+	} >ft2segvma AT >bseglma
+    .fartext.3 : { *(.fartext.*3!) *(.fartext.*3) . = ALIGN (16);
+	} >ft3segvma AT >bseglma
+    .fartext.4 : { *(.fartext.*4!) *(.fartext.*4) . = ALIGN (16);
+	} >ft4segvma AT >bseglma
+    .fartext.5 : { *(.fartext.*5!) *(.fartext.*5) . = ALIGN (16);
+	} >ft5segvma AT >bseglma
+    .fartext.6 : { *(.fartext.*6!) *(.fartext.*6) . = ALIGN (16);
+	} >ft6segvma AT >bseglma
     .fartext.7 : {
+		*(.fartext! .fartext.*!)
 		*(.fartext .fartext.*)
 		. = ALIGN (16);
 	} >ft7segvma AT >bseglma
 
     /* Target far data sections.  Place the far data sections _before_ the
        near data section (and before near BSS).  -- tkchia  */
-    .farrodata.0 : { *(.farrodata.*0) . = ALIGN (16); } >fr0segvma AT >bseglma
-    .farrodata.1 : { *(.farrodata.*1) . = ALIGN (16); } >fr1segvma AT >bseglma
-    .farrodata.2 : { *(.farrodata.*2) . = ALIGN (16); } >fr2segvma AT >bseglma
-    .farrodata.3 : { *(.farrodata.*3) . = ALIGN (16); } >fr3segvma AT >bseglma
-    .farrodata.4 : { *(.farrodata.*4) . = ALIGN (16); } >fr4segvma AT >bseglma
-    .farrodata.5 : { *(.farrodata.*5) . = ALIGN (16); } >fr5segvma AT >bseglma
-    .farrodata.6 : { *(.farrodata.*6) . = ALIGN (16); } >fr6segvma AT >bseglma
+    .farrodata.0 : { *(.farrodata.*0!) *(.farrodata.*0) . = ALIGN (16);
+	} >fr0segvma AT >bseglma
+    .farrodata.1 : { *(.farrodata.*1!) *(.farrodata.*1) . = ALIGN (16);
+	} >fr1segvma AT >bseglma
+    .farrodata.2 : { *(.farrodata.*2!) *(.farrodata.*2) . = ALIGN (16);
+	} >fr2segvma AT >bseglma
+    .farrodata.3 : { *(.farrodata.*3!) *(.farrodata.*3) . = ALIGN (16);
+	} >fr3segvma AT >bseglma
+    .farrodata.4 : { *(.farrodata.*4!) *(.farrodata.*4) . = ALIGN (16);
+	} >fr4segvma AT >bseglma
+    .farrodata.5 : { *(.farrodata.*5!) *(.farrodata.*5) . = ALIGN (16);
+	} >fr5segvma AT >bseglma
+    .farrodata.6 : { *(.farrodata.*6!) *(.farrodata.*6) . = ALIGN (16);
+	} >fr6segvma AT >bseglma
     .farrodata.7 : {
+		*(.farrodata! .farrodata.*!)
 		*(.farrodata .farrodata.*)
 		. = ALIGN (16);
 	} >fr7segvma AT >bseglma
-    .fardata.0 : { *(.fardata.*0) . = ALIGN (16); } >fd0segvma AT >bseglma
-    .fardata.1 : { *(.fardata.*1) . = ALIGN (16); } >fd1segvma AT >bseglma
-    .fardata.2 : { *(.fardata.*2) . = ALIGN (16); } >fd2segvma AT >bseglma
-    .fardata.3 : { *(.fardata.*3) . = ALIGN (16); } >fd3segvma AT >bseglma
-    .fardata.4 : { *(.fardata.*4) . = ALIGN (16); } >fd4segvma AT >bseglma
-    .fardata.5 : { *(.fardata.*5) . = ALIGN (16); } >fd5segvma AT >bseglma
-    .fardata.6 : { *(.fardata.*6) . = ALIGN (16); } >fd6segvma AT >bseglma
+    .fardata.0 : { *(.fardata.*0!) *(.fardata.*0) . = ALIGN (16);
+	} >fd0segvma AT >bseglma
+    .fardata.1 : { *(.fardata.*1!) *(.fardata.*1) . = ALIGN (16);
+	} >fd1segvma AT >bseglma
+    .fardata.2 : { *(.fardata.*2!) *(.fardata.*2) . = ALIGN (16);
+	} >fd2segvma AT >bseglma
+    .fardata.3 : { *(.fardata.*3!) *(.fardata.*3) . = ALIGN (16);
+	} >fd3segvma AT >bseglma
+    .fardata.4 : { *(.fardata.*4!) *(.fardata.*4) . = ALIGN (16);
+	} >fd4segvma AT >bseglma
+    .fardata.5 : { *(.fardata.*5!) *(.fardata.*5) . = ALIGN (16);
+	} >fd5segvma AT >bseglma
+    .fardata.6 : { *(.fardata.*6!) *(.fardata.*6) . = ALIGN (16);
+	} >fd6segvma AT >bseglma
     .fardata.7 : {
+		*(.fardata! .fardata.*!)
 		*(.fardata .fardata.*)
 		. = ALIGN (16);
 	} >fd7segvma AT >bseglma
 
+    /* More auxiliary symbols for hpa's relocation system.  */
+    ".data!" (NOLOAD) : {
+		PROVIDE (__sdata! = .);
+		KEEP (*(.ctors! .ctors.*! .dtors! .dtors.*!))
+		*(.rodata!) *(.rodata.*!)
+		*(.data!) *(.data.*!)
+		*(.gcc_except_table!)
+		PROVIDE (__edata! = .);
+		PROVIDE (__edata_padded! = .);
+		. = .;
+		ASSERT(. == 0, "Error: .data! auxiliary section has content");
+	} >dsegvma AT >bseglma
+
+    ".bss!" (NOLOAD) : {
+		PROVIDE (__sbss! = .);
+		*(.bss!) *(.bss.*!)
+		PROVIDE (__ebss! = .);
+		PROVIDE (__heap_end_minimum! = .);
+		. = .;
+		ASSERT(. == 0, "Error: .bss! auxiliary section has content");
+	} >dsegvma AT >bseglma
+
     /* Target data sections.  */
-    .data : {
+    .data 0x20 : {
 		__sdata = .;
 
 		/* Build lists of constructors and destructors.  */
@@ -267,13 +330,13 @@ SECTIONS
 	} >dsegvma AT >bseglma
 
     .bss (NOLOAD) : {
-		 __sbss = .;
-                *(.bss) *(.bss.*)
-                *(COMMON)
-                __ebss = .;
+		__sbss = .;
+		*(.bss) *(.bss.*)
+		*(COMMON)
+		__ebss = .;
 
-                /* Minimum address allowed for sbrk() to use.  */
-                __heap_end_minimum = ALIGN(8);
+		/* Minimum address allowed for sbrk() to use.  */
+		__heap_end_minimum = ALIGN(8);
 
 		ASSERT(. <= 0xfd00,
 		    "Error: too large for a small-model .exe file.");

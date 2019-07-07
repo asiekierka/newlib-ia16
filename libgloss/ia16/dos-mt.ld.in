@@ -44,7 +44,46 @@ GROUP(-lc -lgcc -ldos-com -lm)
 
 SECTIONS
   {
+    /* Auxiliary symbols, for H. Peter Anvin's proposed relocation system
+       (https://git.zytor.com/users/hpa/abi/segelf.git/plain/segelf.txt ;
+       also see https://bugzilla.nasm.us/show_bug.cgi?id=3392533#c26).  */
+    . = 0;
+
+    ".text!" (NOLOAD) : {
+		PROVIDE (__stext! = .);
+		*(.startupA!)
+		*(.init!)
+		*(.startupB!)
+		*(.fini!)
+		*(.startupC!)
+		*(.text!) *(.text.*!)
+		PROVIDE (__etext! = .);
+		. = .;
+		ASSERT(. == 0, "Error: .text! auxiliary section has content");
+	}
+
+    ".data!" (NOLOAD) : {
+		PROVIDE (__sdata! = .);
+		KEEP (*(.ctors! .ctors.*! .dtors! .dtors.*!))
+		*(.rodata!) *(.rodata.*!)
+		*(.data!) *(.data.*!)
+		*(.gcc_except_table!)
+		PROVIDE (__edata! = .);
+		. = .;
+		ASSERT(. == 0, "Error: .data! auxiliary section has content");
+	}
+
+    ".bss!" (NOLOAD) : {
+		PROVIDE (__sbss! = .);
+		*(.bss!) *(.bss.*!)
+		PROVIDE (__ebss! = .);
+		PROVIDE (__heap_end_minimum! = .);
+		. = .;
+		ASSERT(. == 0, "Error: .bss! auxiliary section has content");
+	}
+
     . = SEGMENT_START ("text-segment", 0x100);
+
     /* Target text sections.  */
     .text : {
 		__stext = .;
@@ -81,12 +120,12 @@ SECTIONS
 
     .bss (NOLOAD) : {
 		 __sbss = .;
-                *(.bss) *(.bss.*)
-                *(COMMON)
-                __ebss = .;
+		*(.bss) *(.bss.*)
+		*(COMMON)
+		__ebss = .;
 
-                /* Minimum address allowed for sbrk() to use.  */
-                __heap_end_minimum = ALIGN(8);
+		/* Minimum address allowed for sbrk() to use.  */
+		__heap_end_minimum = ALIGN(8);
 	}
 
 	__ldata = __edata - __sdata;
