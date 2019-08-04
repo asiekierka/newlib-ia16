@@ -20,7 +20,7 @@
 
 	.text
 	.balign	2
-0:	.reloc	., R_386_SEGMENT16, abort_stack
+0:	.reloc	., R_386_OZSEG16, abort_stack
 	.hword	0
 	.global	abort
 abort:
