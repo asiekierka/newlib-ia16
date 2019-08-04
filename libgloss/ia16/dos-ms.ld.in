@@ -190,40 +190,61 @@ SECTIONS
        section name, and then arrange for this linker script to distribute
        the sections into a fixed set of "bins", and hope that none of the
        bins are too large (> 64KiB).  -- tkchia */
-    .fartext.0 : { *(.fartext.*0) . = ALIGN (16); } >ft0segvma AT >bseglma
-    .fartext.1 : { *(.fartext.*1) . = ALIGN (16); } >ft1segvma AT >bseglma
-    .fartext.2 : { *(.fartext.*2) . = ALIGN (16); } >ft2segvma AT >bseglma
-    .fartext.3 : { *(.fartext.*3) . = ALIGN (16); } >ft3segvma AT >bseglma
-    .fartext.4 : { *(.fartext.*4) . = ALIGN (16); } >ft4segvma AT >bseglma
-    .fartext.5 : { *(.fartext.*5) . = ALIGN (16); } >ft5segvma AT >bseglma
-    .fartext.6 : { *(.fartext.*6) . = ALIGN (16); } >ft6segvma AT >bseglma
-    .fartext.7 : {
-		*(.fartext .fartext.*)
+    .fartext.0$ : { *(.fartext.*0 .fartext.*0$)
+		. = ALIGN (16); } >ft0segvma AT >bseglma
+    .fartext.1$ : { *(.fartext.*1 .fartext.*1$)
+		. = ALIGN (16); } >ft1segvma AT >bseglma
+    .fartext.2$ : { *(.fartext.*2 .fartext.*2$)
+		. = ALIGN (16); } >ft2segvma AT >bseglma
+    .fartext.3$ : { *(.fartext.*3 .fartext.*3$)
+		. = ALIGN (16); } >ft3segvma AT >bseglma
+    .fartext.4$ : { *(.fartext.*4 .fartext.*4$)
+		. = ALIGN (16); } >ft4segvma AT >bseglma
+    .fartext.5$ : { *(.fartext.*5 .fartext.*5$)
+		. = ALIGN (16); } >ft5segvma AT >bseglma
+    .fartext.6$ : { *(.fartext.*6 .fartext.*6$)
+		. = ALIGN (16); } >ft6segvma AT >bseglma
+    .fartext.7$ : {
+		*(.fartext .fartext$ .fartext.*)
 		. = ALIGN (16);
 	} >ft7segvma AT >bseglma
 
     /* Target far data sections.  Place the far data sections _before_ the
        near data section (and before near BSS).  -- tkchia  */
-    .farrodata.0 : { *(.farrodata.*0) . = ALIGN (16); } >fr0segvma AT >bseglma
-    .farrodata.1 : { *(.farrodata.*1) . = ALIGN (16); } >fr1segvma AT >bseglma
-    .farrodata.2 : { *(.farrodata.*2) . = ALIGN (16); } >fr2segvma AT >bseglma
-    .farrodata.3 : { *(.farrodata.*3) . = ALIGN (16); } >fr3segvma AT >bseglma
-    .farrodata.4 : { *(.farrodata.*4) . = ALIGN (16); } >fr4segvma AT >bseglma
-    .farrodata.5 : { *(.farrodata.*5) . = ALIGN (16); } >fr5segvma AT >bseglma
-    .farrodata.6 : { *(.farrodata.*6) . = ALIGN (16); } >fr6segvma AT >bseglma
-    .farrodata.7 : {
-		*(.farrodata .farrodata.*)
+    .farrodata.0$ : { *(.farrodata.*0 .farrodata.*0$)
+		. = ALIGN (16); } >fr0segvma AT >bseglma
+    .farrodata.1$ : { *(.farrodata.*1 .farrodata.*1$)
+		. = ALIGN (16); } >fr1segvma AT >bseglma
+    .farrodata.2$ : { *(.farrodata.*2 .farrodata.*2$)
+		. = ALIGN (16); } >fr2segvma AT >bseglma
+    .farrodata.3$ : { *(.farrodata.*3 .farrodata.*3$)
+		. = ALIGN (16); } >fr3segvma AT >bseglma
+    .farrodata.4$ : { *(.farrodata.*4 .farrodata.*4$)
+		. = ALIGN (16); } >fr4segvma AT >bseglma
+    .farrodata.5$ : { *(.farrodata.*5 .farrodata.*5$)
+		. = ALIGN (16); } >fr5segvma AT >bseglma
+    .farrodata.6$ : { *(.farrodata.*6 .farrodata.*6$)
+		. = ALIGN (16); } >fr6segvma AT >bseglma
+    .farrodata.7$ : {
+		*(.farrodata .farrodata$ .farrodata.*)
 		. = ALIGN (16);
 	} >fr7segvma AT >bseglma
-    .fardata.0 : { *(.fardata.*0) . = ALIGN (16); } >fd0segvma AT >bseglma
-    .fardata.1 : { *(.fardata.*1) . = ALIGN (16); } >fd1segvma AT >bseglma
-    .fardata.2 : { *(.fardata.*2) . = ALIGN (16); } >fd2segvma AT >bseglma
-    .fardata.3 : { *(.fardata.*3) . = ALIGN (16); } >fd3segvma AT >bseglma
-    .fardata.4 : { *(.fardata.*4) . = ALIGN (16); } >fd4segvma AT >bseglma
-    .fardata.5 : { *(.fardata.*5) . = ALIGN (16); } >fd5segvma AT >bseglma
-    .fardata.6 : { *(.fardata.*6) . = ALIGN (16); } >fd6segvma AT >bseglma
-    .fardata.7 : {
-		*(.fardata .fardata.*)
+    .fardata.0$ : { *(.fardata.*0 .fardata.*0$)
+		. = ALIGN (16); } >fd0segvma AT >bseglma
+    .fardata.1$ : { *(.fardata.*1 .fardata.*1$)
+		. = ALIGN (16); } >fd1segvma AT >bseglma
+    .fardata.2$ : { *(.fardata.*2 .fardata.*2$)
+		. = ALIGN (16); } >fd2segvma AT >bseglma
+    .fardata.3$ : { *(.fardata.*3 .fardata.*3$)
+		. = ALIGN (16); } >fd3segvma AT >bseglma
+    .fardata.4$ : { *(.fardata.*4 .fardata.*4$)
+		. = ALIGN (16); } >fd4segvma AT >bseglma
+    .fardata.5$ : { *(.fardata.*5 .fardata.*5$)
+		. = ALIGN (16); } >fd5segvma AT >bseglma
+    .fardata.6$ : { *(.fardata.*6 .fardata.*6$)
+		. = ALIGN (16); } >fd6segvma AT >bseglma
+    .fardata.7$ : {
+		*(.fardata .fardata$ .fardata.*)
 		. = ALIGN (16);
 	} >fd7segvma AT >bseglma
 
