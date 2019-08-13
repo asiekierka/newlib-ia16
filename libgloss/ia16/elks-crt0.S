@@ -27,6 +27,7 @@ _start:
 	movw	%sp, %bx	# Get argv.
 	leaw	(%bx,%di),%bp
 	leaw	2(%bp,%di),%cx	# Envp = %bx + %di + %di + 2.
+	movw	%cx, environ
 #ifndef __IA16_CALLCVT_REGPARMCALL
 	pushw	%cx
 	pushw	%bx
