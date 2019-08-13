@@ -298,6 +298,10 @@ SECTIONS
 
 		ASSERT(. <= 0xfd00,
 		    "Error: too large for a small-model .exe file.");
+		ASSERT (ABSOLUTE (DEFINED ("main!") ? "main!" : 0) == 0,
+		    "Error: using non-segelf ld script with segelf program.");
+		ASSERT (ABSOLUTE (DEFINED ("environ!") ? "environ!" : 0) == 0,
+		    "Error: using non-segelf ld script with segelf library.");
 	} >dsegvma AT >bseglma
 
 	__ldata = __edata - __sdata;
