@@ -1,9 +1,12 @@
-/* Startup code for a "tiny" model DOS .com file with combined text and data
-   segment, or a "small" model DOS .exe file with one text segment and one
-   separate data segment.  */
+/* Startup code for
+     * a "tiny" model DOS .com file with combined text and data segment,
+     * a "small" model DOS .exe file with one text segment and one separate
+       data segment, or
+     * a "medium" model DOS .exe file with multiple text segments and one
+       data segment.  */
 
-#if !defined TINY && !defined SMALL
-#error "no memory model defined -- please use either -DTINY or -DSMALL"
+#if !defined TINY && !defined SMALL && !defined MEDIUM
+#error "no memory model defined -- please use -DTINY, -DSMALL or -DMEDIUM"
 #endif
 
 #ifdef DPMIABLE
@@ -13,7 +16,9 @@
 #endif
 	.code16
 
-	.section .startupA
+#include "call-cvt.h"
+
+	.section .startupA, "ax"
 	.global _start
 _start:
 	# Sanity check for DOS version >= 2.  (Note that this sanity check
@@ -207,7 +212,7 @@ _start:
 	.set	.Lpsp,	.Largv
 #endif
 
-	.section .startupB
+	.section .startupB, "ax"
 
 	# Find length of environment + progname
 #ifndef TINY
@@ -327,7 +332,7 @@ _start:
 	xchgw	%ax,	%dx
 	movw	%bp,	%cx
 #endif
-	call	main
+	CALL_ (main)
 #if defined __IA16_CALLCVT_CDECL
 	addw	$6,	%sp
 #elif defined __IA16_CALLCVT_STDCALL
@@ -339,7 +344,7 @@ _start:
 #ifndef __IA16_CALLCVT_REGPARMCALL
 	pushw	%ax
 #endif
-	call	exit
+	CALL_ (exit)
 
 .Linside_backslash_other:
 #ifdef TINY
@@ -431,10 +436,13 @@ _exit:
 	xchgw	%ax,	%si
 #endif
 
-	.section .startupC
+	.section .startupC, "ax"
 
 #ifndef __IA16_CALLCVT_REGPARMCALL
 	popw	%bx
+# ifdef MEDIUM
+	popw	%bx
+# endif
 	popw	%ax
 #else
 	xchgw	%ax,	%si
