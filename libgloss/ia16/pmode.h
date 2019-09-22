@@ -15,7 +15,12 @@
  */
 
 #ifdef __ASSEMBLER__
-# ifdef __IA16_FEATURE_PROTECTED_MODE
+/*
+ * DPMI mode is not really supported for the medium model yet.  For now, just
+ * do plain old `int $0x21' calls when using the medium model, even if
+ * -mprotected-mode is specified.
+ */
+# if defined __IA16_FEATURE_PROTECTED_MODE && ! defined __IA16_CMODEL_MEDIUM__
 #   define RMODE_DOS_CALL_ call __ia16_rmode_dos_call
 #   define RMODE_FUNC_CALL_BX_ call __ia16_rmode_func_call_bx
 # else
@@ -23,7 +28,7 @@
 #   define RMODE_FUNC_CALL_BX_ callw *%bx
 # endif
 #else
-# ifdef __IA16_FEATURE_PROTECTED_MODE
+# if defined __IA16_FEATURE_PROTECTED_MODE && ! defined __IA16_CMODEL_MEDIUM__
 #   define RMODE_DOS_CALL_ "call __ia16_rmode_dos_call"
 #   define RMODE_FUNC_CALL_BX_ "call __ia16_rmode_func_call_bx"
 # else
