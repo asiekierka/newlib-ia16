@@ -111,7 +111,8 @@ DPMIABLE_SMALL_CRT0 = dpm-s-c0.o
 # whole of Newlib twice over with --enable-newlib-nano-formatted-io and
 # without...  -- tkchia 20190201
 NANO_STDIO_OBJS = nano-vfprintf.o nano-vfprintf_i.o nano-vfprintf_float.o \
-		  nano-vfscanf.o nano-vfscanf_i.o nano-vfscanf_float.o
+		  nano-vfscanf.o nano-vfscanf_i.o nano-vfscanf_float.o \
+		  nano-svfprintf.o nano-svfscanf.o
 NANO_STDIO_BSP	= libnstdio.a
 
 # Another hack, to support a mechanism to detect whether we need floating-point
@@ -253,6 +254,12 @@ nano-vfscanf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_i.c
 nano-vfscanf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_float.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
 	  -o $@
+nano-svfprintf.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf.c
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
+	  -DSTRING_ONLY $< -o $@
+nano-svfscanf.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf.c
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
+	  -DSTRING_ONLY $< -o $@
 elks-isatty.o: $(srcroot)/newlib/libc/posix/_isatty.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
 	  -o $@
