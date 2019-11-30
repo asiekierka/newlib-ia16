@@ -167,8 +167,16 @@ INSTALL_FILES = \
 INSTALL_FILES += $(if $(PROTECTED_MODE_P), \
 		      $(if $(CMODEL_NOT_MEDIUM_P), \
 			   $(DPMIABLE_TINY_CRT0) $(DPMIABLE_SMALL_CRT0) \
-			   $(DPMIABLE_TINY_SCRIPTS) $(DPMIABLE_SMALL_SCRIPTS) \
-			   $(ELKS_BSP) $(ELKS_CRT0) $(ELKS_SCRIPTS)))
+			   $(DPMIABLE_TINY_SCRIPTS) $(DPMIABLE_SMALL_SCRIPTS)))
+# Building Newlib for the ELKS target is currently disabled.  To properly
+# build Newlib/ELKS, we will probably need to at least add Newlib/ELKS as a
+# multilib combination under GCC, _and_ fix newlib/libc/machine/ia16/sys/
+# errno.h so that it knows about ELKS error codes.  TODO.  -- tkchia 20191129
+#
+# INSTALL_FILES += $(if $(PROTECTED_MODE_P), \
+# 		      $(if $(CMODEL_NOT_MEDIUM_P), \
+# 			   $(ELKS_BSP) $(ELKS_CRT0) $(ELKS_SCRIPTS)))
+
 #
 # build a test program for each target board. Just trying to get
 # it to link is a good test, so we ignore all the errors for now.
