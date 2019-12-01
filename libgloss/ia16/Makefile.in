@@ -73,7 +73,8 @@ DOS_COMMON_OBJS += $(if $(PROTECTED_MODE_P), \
 			     dpm-abort.o))
 
 DOS_TINY_OBJS	= $(DOS_COMMON_OBJS)
-DOS_TINY_OBJS	+= $(if $(PROTECTED_MODE_P),dpm-mtds.o,dos-mtabort.o)
+DOS_TINY_OBJS	+= $(if $(PROTECTED_MODE_P),dpm-mtds.o,dos-mtabort.o) \
+		   dos-mtv1.o
 DOS_TINY_CFLAGS	= -mseparate-code-segment -g -Os
 DOS_TINY_ASFLAGS =
 DOS_TINY_SCRIPTS = dos-com.ld dos-mt.ld dos-mts.ld dos-mtl.ld dos-mtsl.ld
@@ -82,7 +83,8 @@ DOS_TINY_CRT0	= dos-t-c0.o
 
 DOS_SMALL_OBJS	= $(DOS_COMMON_OBJS)
 DOS_SMALL_OBJS	+= $(if $(PROTECTED_MODE_P),dpm-mscs.o dpm-msds.o, \
-			dos-msmmabort.o)
+			dos-msmmabort.o) \
+		   dos-mxv1.o
 DOS_SMALL_CFLAGS = $(DOS_TINY_CFLAGS)
 DOS_SMALL_ASFLAGS = $(DOS_TINY_ASFLAGS)
 DOS_SMALL_SCRIPTS = dos-exe-small.ld dos-ms.ld dos-mss.ld dos-msl.ld \
@@ -91,18 +93,16 @@ DOS_SMALL_BSP	= libdos-s.a
 DOS_SMALL_CRT0	= dos-s-c0.o
 
 DOS_MEDIUM_OBJS	= $(DOS_COMMON_OBJS)
-DOS_MEDIUM_OBJS	+= dos-msmmabort.o
+DOS_MEDIUM_OBJS	+= dos-msmmabort.o dos-mxv1.o
 DOS_MEDIUM_CFLAGS = -mcmodel=medium $(DOS_TINY_CFLAGS)
 DOS_MEDIUM_ASFLAGS = -mcmodel=medium $(DOS_TINY_ASFLAGS)
 DOS_MEDIUM_SCRIPTS = dos-mm.ld dos-mms.ld dos-mml.ld dos-mmsl.ld
 DOS_MEDIUM_BSP	= libdos-m.a
 DOS_MEDIUM_CRT0	= dos-m-c0.o
 
-DPMIABLE_TINY_OBJS =
 DPMIABLE_TINY_SCRIPTS = dpm-mt.ld dpm-mts.ld dpm-mtl.ld dpm-mtsl.ld
 DPMIABLE_TINY_CRT0 = dpm-t-c0.o
 
-DPMIABLE_SMALL_OBJS =
 DPMIABLE_SMALL_SCRIPTS = dpm-ms.ld dpm-mss.ld dpm-msl.ld dpm-mssl.ld
 DPMIABLE_SMALL_CRT0 = dpm-s-c0.o
 
@@ -129,11 +129,13 @@ ISCANF_OBJS	= i-sscanf.o i-fscanf.o i-scanf.o i-vscanf.o i-vfscanf.o \
 		  i-vsscanf.o i-sscanfr.o i-fscanfr.o i-scanfr.o i-vscanfr.o \
 		  i-vfscanfr.o i-vsscanfr.o
 ISCANF_BSP	= iscnf-fw.a
-AUTOFLOAT_STDIO_SCRIPTS = libastdio.a libanstdio.a
+MSDOS_V1_OBJS	= msdos-handle-v1.o
+MSDOS_V1_BSP	= msv1-impl.a
+HELPER_SCRIPTS	= libastdio.a libanstdio.a libdosv1.a
 
 ALL_SCRIPTS	= $(ELKS_SCRIPTS) $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS) \
 		  $(DOS_MEDIUM_SCRIPTS) $(DPMIABLE_TINY_SCRIPTS) \
-		  $(DPMIABLE_SMALL_SCRIPTS) $(AUTOFLOAT_STDIO_SCRIPTS)
+		  $(DPMIABLE_SMALL_SCRIPTS) $(HELPER_SCRIPTS)
 ALL_BSP		= $(ELKS_BSP) $(DOS_TINY_BSP) $(DOS_SMALL_BSP) \
 		  $(DOS_MEDIUM_BSP) \
 		  $(NANO_STDIO_BSP) $(IPRINTF_BSP) $(ISCANF_BSP)
@@ -163,7 +165,7 @@ INCLUDES += -I$(srcdir) -I. -I$(srcdir)/.. -I../libnosys
 
 INSTALL_FILES = \
   $(BSP) $(CRT0) $(NANO_STDIO_BSP) $(IPRINTF_BSP) $(ISCANF_BSP) \
-  $(SCRIPTS) $(AUTOFLOAT_STDIO_SCRIPTS)
+  $(SCRIPTS) $(HELPER_SCRIPTS)
 INSTALL_FILES += $(if $(PROTECTED_MODE_P), \
 		      $(if $(CMODEL_NOT_MEDIUM_P), \
 			   $(DPMIABLE_TINY_CRT0) $(DPMIABLE_SMALL_CRT0) \

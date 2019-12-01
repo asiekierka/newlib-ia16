@@ -49,10 +49,12 @@ SECTIONS
     .text : {
 		__stext = .;
 		*(.startupA)
-		*(.init)
+		*(.msdos_init) *(.msdos_init.*)
 		*(.startupB)
-		*(.fini)
+		*(.init)
 		*(.startupC)
+		*(.fini)
+		*(.startupD)
 		*(.text) *(.text.*)
 		__etext = .;
 	}
@@ -95,6 +97,10 @@ SECTIONS
 	__lbss = __lbss1 / 2;
 
     ASSERT(. <= 0xfd00, "Error: too large for a .com file.")
+
+    /* Used by the memory resizing and DPMI initialization code in
+       dos-models-crt0.S.  */
+    __msdos_initial_alloc_paras = 0x1000;
 
     /DISCARD/ : { *(.*) }
   }

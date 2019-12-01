@@ -1,8 +1,8 @@
 /* Startup code for
-     * a "tiny" model DOS .com file with combined text and data segment,
-     * a "small" model DOS .exe file with one text segment and one separate
+     * a "tiny" model MS-DOS .com file with combined text and data segment,
+     * a "small" model MS-DOS .exe file with one text segment and one separate
        data segment, or
-     * a "medium" model DOS .exe file with multiple text segments and one
+     * a "medium" model MS-DOS .exe file with multiple text segments and one
        data segment.  */
 
 #if !defined TINY && !defined SMALL && !defined MEDIUM
@@ -21,26 +21,19 @@
 	.section .startupA, "ax"
 	.global _start
 _start:
-	# Sanity check for DOS version >= 2.  (Note that this sanity check
-	# may not really work under MS-DOS 1.x, and the system may crash
-	# without even coming here, unless the linker script has been set up
-	# to handle 1.x, via __msdos_handle_v1.)
-	mov	$0x30,	%ah
-	int	$0x21
-	cmp	$2,	%al
-	jnb	.Ldos_ok
-.Lbad:
+
+	.section .startupB, "ax"
+
+	# For a .com file, resize the program's memory control block to
+	# cover only the near code and data segments.  Ignore any failure.
+	#
+	# .exe files that are meant to fail properly under MS-DOS 1.x will
+	# also need to do this, but this is handled by dos-mxv1.S.
 #ifdef TINY
-	ret
-#else
-	# Return to the `int $0x20' command at the PSP start --- we cannot
-	# just say `int $0x20' here, as %cs is wrong.
-	pushw	%ds
-	xorw	%ax,	%ax
-	pushw	%ax
-	lretw
+	movb	$0x4a,	%ah
+	movw	$__msdos_initial_alloc_paras, %bx
+	int	$0x21
 #endif
-.Ldos_ok:
 	# If we are building a multilib variant that assumes an 80186 CPU or
 	# above, do a quick check that we are indeed dealing with a 186+.
 	#
@@ -49,8 +42,11 @@ _start:
 #ifdef __IA16_FEATURE_PUSH_IMM
 	movw	%sp,	%ax
 	.byte	0x6a, 0x00
-	cmpw	%ax,	%sp
-	jz	.Lbad
+	subw	%ax,	%sp
+	jnz	.Lcpu_ok
+	decw	%ax
+	jmp	.Lexit
+.Lcpu_ok:
 	popw	%ax
 #endif
 #ifndef TINY
@@ -134,21 +130,13 @@ _start:
 	pushw	%ds
 	popw	%es
 	movw	%si,	%bx
-# ifdef TINY
-	addw	$0x1000, %bx
-# else
 	addw	$__msdos_initial_alloc_paras, %bx
-# endif
 	movb	$0x4a,	%ah
 	int	$0x21
 	jc	.Lno_dpmi
 	# Try to switch to protected mode.
 	movw	%es,	%ax
-# ifdef TINY
-	addw	$0x1000, %ax
-# else
 	addw	$__msdos_initial_alloc_paras, %ax
-# endif
 	movw	%ax,	%es
 	xorw	%ax,	%ax
 # ifndef TINY
@@ -212,7 +200,7 @@ _start:
 	.set	.Lpsp,	.Largv
 #endif
 
-	.section .startupB, "ax"
+	.section .startupC, "ax"
 
 	# Find length of environment + progname
 #ifndef TINY
@@ -436,7 +424,7 @@ _exit:
 	xchgw	%ax,	%si
 #endif
 
-	.section .startupC, "ax"
+	.section .startupD, "ax"
 
 #ifndef __IA16_CALLCVT_REGPARMCALL
 	popw	%bx
@@ -447,5 +435,6 @@ _exit:
 #else
 	xchgw	%ax,	%si
 #endif
+.Lexit:
 	movb	$0x4c,	%ah
 	int	$0x21
