@@ -228,13 +228,16 @@
 # define LDS_ARG4W2_BX_(reg)	ldsw FAR_ADJ__+6(%bx), reg
 # define LES_ARG4W2_BX_(reg)	lesw FAR_ADJ__+6(%bx), reg
 # ifdef __IA16_CALLCVT_STDCALL
-#   define RET_(n)		RET__ $(n)
-#   define RET2_(n)		RET__ $(n)
+#   define RET_(n)		.if (n); \
+				RET__ $(n); \
+				.else; \
+				RET__; \
+				.endif
 # else
 #   ifndef __IA16_CALLCVT_CDECL
 #     warning "not sure which calling convention is in use; assuming cdecl"
 #   endif
 #   define RET_(n)		RET__
-#   define RET2_(n)		RET__
 # endif
+# define RET2_(n)		RET_ (n)
 #endif
