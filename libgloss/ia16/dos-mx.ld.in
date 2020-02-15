@@ -35,7 +35,7 @@ sed -e "$cmd1" -e "$cmd2" -e "s;@crt0@;$crt0;g" \
     -e "s;@withstarts@;$w1;g" -e "s;@withlibs@;$w2;g" \
     -e "s;@withdpmiable@;$w3;g" \
     -e "s;@cmodel@;$cm;g" -e "s;@cmodel_long@;$cml;g" \
-    -e "s/@self@/`basename "$0"`/g" -e "/^@if/ d" -e "/^@endif@/ d" <<'EOF'
+    -e "s/@self@/`basename "$0"`/g" -e "/^@if/ d" -e "/^@endif@/ d" <<'EPART1'
 /* Linker script for @cmodel_long@-model DOS executables, @withstarts@
    startup files, @withlibs@ default libraries, and @withdpmiable@ DPMI
    support.
@@ -56,30 +56,16 @@ MEMORY
     bseglma	(wx) : ORIGIN = 0x00000, LENGTH = 0xa0000
     hdrvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x40020
     csegvma	(wx) : ORIGIN = 0x00020, LENGTH = 0x10000
-    ft0segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    ft1segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    ft2segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    ft3segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    ft4segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    ft5segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    ft6segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    ft7segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fr0segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fr1segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fr2segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fr3segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fr4segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fr5segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fr6segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fr7segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fd0segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fd1segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fd2segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fd3segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fd4segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fd5segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fd6segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
-    fd7segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000
+EPART1
+for t in ft fr fd; do
+  for x in 0 1 2 3 4 5 6 7; do
+    for y in 0 1 2 3 4 5 6 7; do
+      echo "    $t$x${y}segvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000"
+    done
+  done
+  echo "    ${t}XXsegvma	(wx) : ORIGIN = 0x00000, LENGTH = 0x10000"
+done
+cat <<'EPART2'
     dsegvma	(wx) : ORIGIN = 0x00020, LENGTH = 0x10000
   }
 
@@ -201,63 +187,51 @@ SECTIONS
        section name, and then arrange for this linker script to distribute
        the sections into a fixed set of "bins", and hope that none of the
        bins are too large (> 64KiB).  -- tkchia */
-    .fartext.0$ : { *(.fartext.*0 .fartext.*0$)
-		. = ALIGN (16); } >ft0segvma AT >bseglma
-    .fartext.1$ : { *(.fartext.*1 .fartext.*1$)
-		. = ALIGN (16); } >ft1segvma AT >bseglma
-    .fartext.2$ : { *(.fartext.*2 .fartext.*2$)
-		. = ALIGN (16); } >ft2segvma AT >bseglma
-    .fartext.3$ : { *(.fartext.*3 .fartext.*3$)
-		. = ALIGN (16); } >ft3segvma AT >bseglma
-    .fartext.4$ : { *(.fartext.*4 .fartext.*4$)
-		. = ALIGN (16); } >ft4segvma AT >bseglma
-    .fartext.5$ : { *(.fartext.*5 .fartext.*5$)
-		. = ALIGN (16); } >ft5segvma AT >bseglma
-    .fartext.6$ : { *(.fartext.*6 .fartext.*6$)
-		. = ALIGN (16); } >ft6segvma AT >bseglma
-    .fartext.7$ : {
+EPART2
+for x in 0 1 2 3 4 5 6 7; do
+  for y in 0 1 2 3 4 5 6 7; do
+    cat <<EPART3
+    .fartext.$x$y\$ : { *(.fartext.*$x$y .fartext.*$x$y\$)
+			. = ALIGN (16); } >ft$x${y}segvma AT >bseglma
+EPART3
+  done
+done
+cat <<'EPART4'
+    .fartext.XX$ : {
 		*(.fartext .fartext$ .fartext.*)
 		. = ALIGN (16);
-	} >ft7segvma AT >bseglma
+	} >ftXXsegvma AT >bseglma
 
     /* Target far data sections.  Place the far data sections _before_ the
        near data section (and before near BSS).  -- tkchia  */
-    .farrodata.0$ : { *(.farrodata.*0 .farrodata.*0$)
-		. = ALIGN (16); } >fr0segvma AT >bseglma
-    .farrodata.1$ : { *(.farrodata.*1 .farrodata.*1$)
-		. = ALIGN (16); } >fr1segvma AT >bseglma
-    .farrodata.2$ : { *(.farrodata.*2 .farrodata.*2$)
-		. = ALIGN (16); } >fr2segvma AT >bseglma
-    .farrodata.3$ : { *(.farrodata.*3 .farrodata.*3$)
-		. = ALIGN (16); } >fr3segvma AT >bseglma
-    .farrodata.4$ : { *(.farrodata.*4 .farrodata.*4$)
-		. = ALIGN (16); } >fr4segvma AT >bseglma
-    .farrodata.5$ : { *(.farrodata.*5 .farrodata.*5$)
-		. = ALIGN (16); } >fr5segvma AT >bseglma
-    .farrodata.6$ : { *(.farrodata.*6 .farrodata.*6$)
-		. = ALIGN (16); } >fr6segvma AT >bseglma
-    .farrodata.7$ : {
+EPART4
+for x in 0 1 2 3 4 5 6 7; do
+  for y in 0 1 2 3 4 5 6 7; do
+    cat <<EPART5
+    .farrodata.$x$y\$ : { *(.farrodata.*$x$y .farrodata.*$x$y\$)
+			  . = ALIGN (16); } >fr$x${y}segvma AT >bseglma
+EPART5
+  done
+done
+cat <<'EPART6'
+    .farrodata.XX$ : {
 		*(.farrodata .farrodata$ .farrodata.*)
 		. = ALIGN (16);
-	} >fr7segvma AT >bseglma
-    .fardata.0$ : { *(.fardata.*0 .fardata.*0$)
-		. = ALIGN (16); } >fd0segvma AT >bseglma
-    .fardata.1$ : { *(.fardata.*1 .fardata.*1$)
-		. = ALIGN (16); } >fd1segvma AT >bseglma
-    .fardata.2$ : { *(.fardata.*2 .fardata.*2$)
-		. = ALIGN (16); } >fd2segvma AT >bseglma
-    .fardata.3$ : { *(.fardata.*3 .fardata.*3$)
-		. = ALIGN (16); } >fd3segvma AT >bseglma
-    .fardata.4$ : { *(.fardata.*4 .fardata.*4$)
-		. = ALIGN (16); } >fd4segvma AT >bseglma
-    .fardata.5$ : { *(.fardata.*5 .fardata.*5$)
-		. = ALIGN (16); } >fd5segvma AT >bseglma
-    .fardata.6$ : { *(.fardata.*6 .fardata.*6$)
-		. = ALIGN (16); } >fd6segvma AT >bseglma
-    .fardata.7$ : {
+	} >frXXsegvma AT >bseglma
+EPART6
+for x in 0 1 2 3 4 5 6 7; do
+  for y in 0 1 2 3 4 5 6 7; do
+    cat <<EPART7
+    .fardata.$x$y\$ : { *(.fardata.*$x$y .fardata.*$x$y\$)
+			. = ALIGN (16); } >fd$x${y}segvma AT >bseglma
+EPART7
+  done
+done
+cat <<'EPART8'
+    .fardata.XX$ : {
 		*(.fardata .fardata$ .fardata.*)
 		. = ALIGN (16);
-	} >fd7segvma AT >bseglma
+	} >fdXXsegvma AT >bseglma
 
     /* Target data sections.  */
     .data : {
@@ -328,4 +302,4 @@ SECTIONS
 
     /DISCARD/ : { *(.*) }
   }
-EOF
+EPART8
