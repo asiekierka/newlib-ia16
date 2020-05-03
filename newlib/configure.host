@@ -208,6 +208,7 @@ case "${host_cpu}" in
 	;;
   ia16)
 	machine_dir=ia16
+	newlib_cflags="${newlib_cflags} -DHAVE_RENAME"
 	;;
   ia64*)
 	;;
