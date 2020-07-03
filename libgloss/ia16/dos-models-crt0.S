@@ -25,14 +25,23 @@ _start:
 	.section .startupB, "ax"
 
 	# For a .com file, resize the program's memory control block to
-	# cover only the near code and data segments.  Ignore any failure.
+	# cover only the near code and data segments.  Abort on any failure.
 	#
 	# .exe files that are meant to fail properly under MS-DOS 1.x will
 	# also need to do this, but this is handled by dos-mxv1.S.
+	#
+	# TODO: maybe allow the MCB to be less than 64 KiB under certain
+	# conditions --- e.g. if it is enough for BSS and stack and perhaps
+	# a user-specified heap space.
 #ifdef TINY
 	movb	$0x4a,	%ah
 	movw	$__msdos_initial_alloc_paras, %bx
 	int	$0x21
+	jnc	.Lmcb_ok
+.Lbail:
+	movb	$-1,	%al
+	jmp	.Lexit
+.Lmcb_ok:
 #endif
 	# If we are building a multilib variant that assumes an 80186 CPU or
 	# above, do a quick check that we are indeed dealing with a 186+.
@@ -43,10 +52,14 @@ _start:
 	movw	%sp,	%ax
 	.byte	0x6a, 0x00
 	subw	%ax,	%sp
+# ifdef TINY
+	jz	.Lbail
+# else
 	jnz	.Lcpu_ok
 	decw	%ax
 	jmp	.Lexit
 .Lcpu_ok:
+# endif
 	popw	%ax
 #endif
 #ifndef TINY
