@@ -62,7 +62,8 @@ DOS_COMMON_OBJS = dos-chdir.o dos-close.o dos-cvt-file-time.o dos-dup.o \
 		  dos-dup2.o dos-fstat.o dos-getcwd.o dos-gettimeofday.o \
 		  dos-isatty.o dos-lseek.o dos-mkdir.o dos-open.o dos-read.o \
 		  dos-rename.o dos-rmdir.o dos-sbrk.o dos-stat.o dos-times.o \
-		  dos-unlink.o dos-usleep.o dos-write.o
+		  dos-unlink.o dos-usleep.o dos-write.o \
+		  dos-i086.o
 PROTECTED_MODE_P = $(filter -mprotected-mode -mdpmiable -melks%, \
 			    $(CC) $(CFLAGS) $(MULTILIB))
 CMODEL_MEDIUM_P = $(filter -mcmodel=medium,$(CC) $(CFLAGS) $(MULTILIB))
@@ -129,9 +130,7 @@ ISCANF_OBJS	= i-sscanf.o i-fscanf.o i-scanf.o i-vscanf.o i-vfscanf.o \
 		  i-vsscanf.o i-sscanfr.o i-fscanfr.o i-scanfr.o i-vscanfr.o \
 		  i-vfscanfr.o i-vsscanfr.o
 ISCANF_BSP	= iscnf-fw.a
-MSDOS_V1_OBJS	= msdos-handle-v1.o
-MSDOS_V1_BSP	= msv1-impl.a
-HELPER_SCRIPTS	= libastdio.a libanstdio.a libdosv1.a
+HELPER_SCRIPTS	= libastdio.a libanstdio.a libdosv1.a libck086.a
 
 ALL_SCRIPTS	= $(ELKS_SCRIPTS) $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS) \
 		  $(DOS_MEDIUM_SCRIPTS) $(DPMIABLE_TINY_SCRIPTS) \

@@ -43,25 +43,6 @@ _start:
 	jmp	.Lexit
 .Lmcb_ok:
 #endif
-	# If we are building a multilib variant that assumes an 80186 CPU or
-	# above, do a quick check that we are indeed dealing with a 186+.
-	#
-	# 0x6a is `pushw' on 186+, and an alias for 0x7a (`jpe') on the 8086
-	# (www.os2museum.com/wp/undocumented-8086-opcodes/).
-#ifdef __IA16_FEATURE_PUSH_IMM
-	movw	%sp,	%ax
-	.byte	0x6a, 0x00
-	subw	%ax,	%sp
-# ifdef TINY
-	jz	.Lbail
-# else
-	jnz	.Lcpu_ok
-	decw	%ax
-	jmp	.Lexit
-.Lcpu_ok:
-# endif
-	popw	%ax
-#endif
 #ifndef TINY
 	pushw	%ss
 	popw	%es
@@ -448,6 +429,8 @@ _exit:
 #else
 	xchgw	%ax,	%si
 #endif
+	.global	__msdos_crt_exit
+__msdos_crt_exit:
 .Lexit:
 	movb	$0x4c,	%ah
 	int	$0x21
