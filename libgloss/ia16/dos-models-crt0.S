@@ -47,10 +47,7 @@ _start:
 	pushw	%ss
 	popw	%es
 #endif
-#ifndef __IA16_FEATURE_PUSH_IMM
-	# In the 80186 case, %ax is already 0.
 	xorw	%ax, %ax
-#endif
 	movw	$__sbss, %di
 	movw	$__lbss, %cx
 	cld
