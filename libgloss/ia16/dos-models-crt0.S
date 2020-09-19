@@ -152,25 +152,31 @@ _start:
 	xorw	%cx,	%cx
 	movw	$__etext-1, %dx
 	int	$0x31
-	# Make %ss an expand-down descriptor, and limit it.
+	# Make %ss an expand-down descriptor, and limit it.  Use the area
+	# just after BSS (which will be the heap/stack area) to temporarily
+	# hold %ss's descriptor entry.
+	movw	$0x000b, %ax
 	movw	%ss,	%bx
-	larw	%bx,	%cx
-	xchgb	%cl,	%ch
-	or	$0x04,	%cl
-	movw	$0x0009, %ax
+# ifndef TINY
+	movw	%bx,	%es
+# endif
+	movw	$__ebss, %di
 	int	$0x31
 	jc	.Lcont_dpmi
-	movw	$0x0008, %ax
-	movw	%ss,	%bx
-	xorw	%cx,	%cx
 # ifdef TINY
-	movw	$0x2c-1, %dx
+	movw	$0x2c-1, (%di)
+	orb	$0x04,	5(%di)
+	andb	$0x30,	6(%di)
+# else
+	movw	$__sdata-1, %ss:(%di)
+	orb	$0x04,	%ss:5(%di)
+	andb	$0x30,	%ss:6(%di)
+# endif
+	movw	$0x000c, %ax
 	int	$0x31
+# ifdef TINY
 	pushw	%ss
 	popw	%ds
-# else
-	movw	$__sdata-1, %dx
-	int	$0x31
 # endif
 .Lcont_dpmi:
 .Lno_dpmi:
