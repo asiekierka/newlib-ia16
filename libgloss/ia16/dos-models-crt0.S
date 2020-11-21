@@ -79,7 +79,7 @@ _start:
 	#	 compiler tools don't check the return status and will hang
 	#	 the machine in this case.  So, I issue an error message and
 	#	 exit the image instead."
-	# We work around this workaround, and continue in real (or V86 mode)
+	# We work around this workaround, and continue in real (or V86) mode
 	# instead of quitting.
 	shrw	%bx
 	jnc	.L16bit_ok
