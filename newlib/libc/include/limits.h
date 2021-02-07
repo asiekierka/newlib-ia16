@@ -132,6 +132,10 @@
 # include_next <limits.h>
 #endif /* __GNUC__ && !_GCC_LIMITS_H_ */
 
+#ifndef __STRICT_ANSI__
+# include <sys/syslimits.h>
+#endif
+
 #ifndef _POSIX2_RE_DUP_MAX
 /* The maximum number of repeated occurrences of a regular expression
  *    permitted when using the interval notation `\{M,N\}'.  */
