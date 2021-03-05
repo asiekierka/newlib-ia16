@@ -11,10 +11,10 @@ _lseek:
 	MOV_ARG2W_BX_(%dx)
 	MOV_ARG4W_BX_(%cx)
 #ifndef __IA16_CALLCVT_REGPARMCALL
-	movb	8(%bx),	%al
-	movw	2(%bx),	%bx
+	MOV_ARG6B_BX_(%al)
+	MOV_ARG0W_BX_(%bx)
 #else
-	movb	2(%bx),	%bl
+	MOV_ARG6B_BX_(%bl)
 	xchg	%ax,	%bx
 #endif
 	movb	$0x42,	%ah
