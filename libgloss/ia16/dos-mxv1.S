@@ -20,12 +20,13 @@
 	.arch	i8086, jumps
 	.code16
 
-	.section .msdos_init, "ax"
+	.section .startupA, "ax"
 
-	/* Sanity check for MS-DOS version >= 2.  */
-	movb	$0x30,	%ah
-	int	$0x21
-	cmpb	$2,	%al
+	/*
+	 * Sanity check for MS-DOS version >= 2.  The flags should contain
+	 * the result of comparing the DOS version number with 2, & should
+	 * be preserved if we want to continue execution.
+	 */
 	jnb	0f
 	/*
 	 * If the MS-DOS is too old, return to the `int $0x20' command at the
@@ -36,6 +37,8 @@
 	pushw	%ax
 	lretw
 0:
+
+	.section .msdos_init, "ax"
 	/*
 	 * If -mmsdos-handle-v1 is on, then the .exe header will be set to
 	 * allocate the largest possible memory block to our program (see

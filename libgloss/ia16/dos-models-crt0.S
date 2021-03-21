@@ -19,10 +19,21 @@
 #include "call-cvt.h"
 
 	.section .startupA, "ax"
+
 	.global _start
 _start:
+	movb	$0x30,	%ah
+	int	$0x21
+	xorw	%bp,	%bp
+	cmpb	$2,	%al
 
 	.section .startupB, "ax"
+
+	jz	.Ldos_v2
+	incw	%bp			# bp is zero iff DOS version is v2.x
+.Ldos_v2:
+
+	.section .startupC, "ax"
 
 	# For a .com file, resize the program's memory control block to
 	# cover only the near code and data segments.  Abort on any failure.
@@ -106,8 +117,7 @@ _start:
 	repz cmpsb %es:(%di), %ss:(%si)
 # endif
 	jnz	.L16bit_ok
-	incw	%di
-	incw	%di
+	scasw
 	movb	$2b-1b,	%cl
 # ifdef TINY
 	repz cmpsb
@@ -197,7 +207,7 @@ _start:
 	.set	.Lpsp,	.Largv
 #endif
 
-	.section .startupC, "ax"
+	.section .startupD, "ax"
 
 	# Find length of environment + progname
 #ifndef TINY
@@ -213,9 +223,11 @@ _start:
 	repne	scasb
 	cmpw	$-2,	%cx
 	jne	.Lfind_env_end
-	incw	%di
-	incw	%di
+	testw	%bp,	%bp
+	jz	.Lno_argv0
+	scasw
 	repne	scasb
+.Lno_argv0:
 
 	# Copy environment + progname
 	pushw	%es
@@ -244,14 +256,19 @@ _start:
 	cmpw	$-2,	%cx
 	jne	.Lpush_env_pointers
 	popw	%cx		# don't include the final empty string
+	testw	%bp,	%bp
 	movw	%sp,	%bp	# bp is envp
-	pushw	%ax		# argv[argc] = null
-	lea	2(%di),	%ax
-	pushw	%ax		# argb[0] will be first after reversal
+	pushw	%ax		# argv[argc] = NULL
+	jnz	.Largv0
+	movw	%sp,	%di	# if no progname, use the null byte in the
+				# null pointer we just pushed as argv[0]
+	.byte	0x3c		# eat up the `scasw'
+.Largv0:
+	scasw			# advance di to progname
+	pushw	%di		# argv[0] will be first after reversal
 	movw	%sp,	%dx	# dx points to last item of argv
 
 	# Parse command tail and push argument pointers
-	xorw	%bx,	%bx	# argc
 	movw	$0x81,	%si
 #ifdef TINY
 	movw	%si,	%di
@@ -259,7 +276,7 @@ _start:
 	movw	$.Largv, %di
 	movw	%ss:(.Lpsp-.Largv)(%di), %ds
 #endif
-	movw	$1,	%cx
+	movw	$1,	%cx	# argc
 
 .Lspace:
 	movw	%di,	%bx
@@ -311,7 +328,7 @@ _start:
 	movw	%bp,	environ
 #ifndef __IA16_CALLCVT_REGPARMCALL
 	pushw	%bp		# envp
-	pushw	%ax		# argp
+	pushw	%ax		# argv
 	pushw	%dx		# argc
 #else
 	xchgw	%ax,	%dx
@@ -421,7 +438,7 @@ _exit:
 	xchgw	%ax,	%si
 #endif
 
-	.section .startupD, "ax"
+	.section .startupE, "ax"
 
 #ifndef __IA16_CALLCVT_REGPARMCALL
 	popw	%bx

@@ -20,12 +20,13 @@
 	.arch	i8086, jumps
 	.code16
 
-	.section .msdos_init, "ax"
+	.section .startupA, "ax"
 
-	/* Sanity check for MS-DOS version >= 2.  */
-	movb	$0x30,	%ah
-	int	$0x21
-	cmpb	$2,	%al
+	/*
+	 * Sanity check for MS-DOS version >= 2.  The flags should contain
+	 * the result of comparing the DOS version number with 2, & should
+	 * be preserved if we want to continue execution.
+	 */
 	jnb	0f
 	ret
 0:
