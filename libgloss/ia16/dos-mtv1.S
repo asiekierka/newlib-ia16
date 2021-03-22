@@ -23,9 +23,9 @@
 	.section .startupA, "ax"
 
 	/*
-	 * Sanity check for MS-DOS version >= 2.  The flags should contain
-	 * the result of comparing the DOS version number with 2, & should
-	 * be preserved if we want to continue execution.
+	 * Exit immediately if the MS-DOS version is less than 2.  At
+	 * this point the flags should contain the result of comparing the
+	 * DOS major version number with 2.
 	 */
 	jnb	0f
 	ret

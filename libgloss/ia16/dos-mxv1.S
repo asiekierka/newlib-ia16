@@ -23,15 +23,14 @@
 	.section .startupA, "ax"
 
 	/*
-	 * Sanity check for MS-DOS version >= 2.  The flags should contain
-	 * the result of comparing the DOS version number with 2, & should
-	 * be preserved if we want to continue execution.
+	 * At this point the flags should contain the result of comparing the
+	 * DOS major version number with 2.
+	 *
+	 * If the MS-DOS is too old (< 2), return to the `int $0x20' command
+	 * at the PSP start --- we cannot just say `int $0x20' here, as %cs
+	 * is wrong.
 	 */
 	jnb	0f
-	/*
-	 * If the MS-DOS is too old, return to the `int $0x20' command at the
-	 * PSP start --- we cannot just say `int $0x20' here, as %cs is wrong.
-	 */
 	pushw	%es
 	xorw	%ax,	%ax
 	pushw	%ax
@@ -39,6 +38,7 @@
 0:
 
 	.section .msdos_init, "ax"
+
 	/*
 	 * If -mmsdos-handle-v1 is on, then the .exe header will be set to
 	 * allocate the largest possible memory block to our program (see

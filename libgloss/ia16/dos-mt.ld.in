@@ -49,13 +49,12 @@ SECTIONS
     .text : {
 		__stext = .;
 		*(.startupA)
-		*(.startupB)
 		*(.msdos_init) *(.msdos_init.*)
-		*(.startupC)
+		*(.startupB)
 		*(.init)
-		*(.startupD)
+		*(.startupC)
 		*(.fini)
-		*(.startupE)
+		*(.startupD)
 		*(.text) *(.text.*)
 		__etext = .;
 	}

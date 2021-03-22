@@ -22,18 +22,19 @@
 
 	.global _start
 _start:
+	# Get the MS-DOS version number & see if it is 2 or above.
 	movb	$0x30,	%ah
 	int	$0x21
-	xorw	%bp,	%bp
-	cmpb	$2,	%al
+	subb	$2,	%al
+	cbtw
+	# Set bp to zero iff the MS-DOS version is 2.x.  DOS 3+ gives us the
+	# program's name in the environment segment, but DOS 2.x does not.
+	xchgw	%ax,	%bp
+	# At this point, the flags should contain the result of comparing the
+	# DOS major version number with 2.  dos-mtv1.S & dos-mxv1.S make use
+	# of this.
 
 	.section .startupB, "ax"
-
-	jz	.Ldos_v2
-	incw	%bp			# bp is zero iff DOS version is v2.x
-.Ldos_v2:
-
-	.section .startupC, "ax"
 
 	# For a .com file, resize the program's memory control block to
 	# cover only the near code and data segments.  Abort on any failure.
@@ -207,7 +208,7 @@ _start:
 	.set	.Lpsp,	.Largv
 #endif
 
-	.section .startupD, "ax"
+	.section .startupC, "ax"
 
 	# Find length of environment + progname
 #ifndef TINY
@@ -216,7 +217,6 @@ _start:
 #endif
 	movw	0x2c,	%es
 	xorw	%di,	%di
-	cld
 	xorw	%ax,	%ax
 .Lfind_env_end:
 	movw	$-1,	%cx
@@ -256,15 +256,15 @@ _start:
 	cmpw	$-2,	%cx
 	jne	.Lpush_env_pointers
 	popw	%cx		# don't include the final empty string
+	incw	%di		# advance di to progname (if there is a
+	incw	%di		# progname)
 	testw	%bp,	%bp
 	movw	%sp,	%bp	# bp is envp
 	pushw	%ax		# argv[argc] = NULL
 	jnz	.Largv0
 	movw	%sp,	%di	# if no progname, use the null byte in the
 				# null pointer we just pushed as argv[0]
-	.byte	0x3c		# eat up the `scasw'
 .Largv0:
-	scasw			# advance di to progname
 	pushw	%di		# argv[0] will be first after reversal
 	movw	%sp,	%dx	# dx points to last item of argv
 
@@ -276,7 +276,8 @@ _start:
 	movw	$.Largv, %di
 	movw	%ss:(.Lpsp-.Largv)(%di), %ds
 #endif
-	movw	$1,	%cx	# argc
+	xchgw	%ax,	%cx
+	incw	%cx		# initialize argc in cx to 1 (from ax = 0)
 
 .Lspace:
 	movw	%di,	%bx
@@ -438,7 +439,7 @@ _exit:
 	xchgw	%ax,	%si
 #endif
 
-	.section .startupE, "ax"
+	.section .startupD, "ax"
 
 #ifndef __IA16_CALLCVT_REGPARMCALL
 	popw	%bx
