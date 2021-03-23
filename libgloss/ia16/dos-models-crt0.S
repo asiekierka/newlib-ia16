@@ -284,6 +284,8 @@ _start:
 	lodsb
 	cmpb	$' ',	%al
 	je	.Lspace
+	cmpb	$9,	%al
+	je	.Lspace
 	cmpb	$'\"',	%al
 	je	.Linside
 	cmpb	$13,	%al
@@ -296,6 +298,8 @@ _start:
 .Loutside:
 	lodsb
 	cmpb	$' ',	%al
+	je	.Lend_argument
+	cmpb	$9,	%al
 	je	.Lend_argument
 	cmpb	$'\"',	%al
 	je	.Loutside_quote
@@ -385,6 +389,8 @@ _start:
 .Loutside_backslash:
 	lodsb
 	cmpb	$' ',	%al
+	je	.Loutside_backslash_space
+	cmpb	$9,	%al
 	je	.Loutside_backslash_space
 	cmpb	$'\"',	%al
 	je	.Loutside_backslash_quote
