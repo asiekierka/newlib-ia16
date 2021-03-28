@@ -1,7 +1,7 @@
 /* dos-open.c basic open file for DOS
  *
  * Copyright (c) 2018 Bart Oldeman
- * Copyright (c) 2019 TK Chia
+ * Copyright (c) 2019--2021 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -97,7 +97,8 @@ dos_truncate_fd (int fd)
 int
 _open (const char *pathname, int flags, ...)
 {
-  int fd = -1, ret;
+  int fd = -1;
+  off_t ret;
 
   if (flags & O_CREAT)
     {

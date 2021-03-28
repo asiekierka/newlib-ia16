@@ -221,7 +221,8 @@ _start:
 .Lfind_env_end:
 	movw	$-1,	%cx
 	repne	scasb
-	cmpw	$-2,	%cx
+	incw	%cx
+	incw	%cx
 	jne	.Lfind_env_end
 	testw	%bp,	%bp
 	jz	.Lno_argv0
@@ -253,7 +254,8 @@ _start:
 	pushw	%di
 	movw	$-1,	%cx
 	repne	scasb
-	cmpw	$-2,	%cx
+	incw	%cx
+	incw	%cx
 	jne	.Lpush_env_pointers
 	popw	%cx		# don't include the final empty string
 	incw	%di		# advance di to progname (if there is a
