@@ -227,6 +227,7 @@ _start:
 	testw	%bp,	%bp
 	jz	.Lno_argv0
 	scasw
+	decw	%cx
 	repne	scasb
 .Lno_argv0:
 
