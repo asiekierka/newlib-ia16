@@ -19,51 +19,7 @@
 #include <unistd.h>
 #include "pmode.h"
 
-#ifndef FP_SEG
-#define FP_SEG(x) \
-  __builtin_ia16_selector ((unsigned)((unsigned long)(void __far *)(x) >> 16))
-#endif
-
-static unsigned char
-__msdos_getdrive (void)
-{
-  unsigned ax;
-  asm volatile ("int $0x21" : "=a" (ax)
-			    : "Rah" ((unsigned char) 0x19)
-			    : "cc", "bx", "cx", "dx");
-  return (unsigned char) ax;
-}
-
-static char *
-__msdos_getcwd (char buf[PATH_MAX])
-{
-  int err, carry, xx1, xx2;
-  unsigned char drive;
-
-  /*
-   * First get the current directory for the current drive, sans drive
-   * letter.  If that fails, bail out.
-   */
-  asm volatile (RMODE_DOS_CALL_ "; sbbw %1, %1"
-		: "=a" (err), "=bcd" (carry), "=bcd" (xx1), "=bcd" (xx2)
-		: "Rah" ((unsigned char) 0x47), "Rdl" ((unsigned char)0),
-		  "Rds" (FP_SEG (buf + 3)), "S" (buf + 3)
-		: "cc", "memory");
-  if (carry)
-    {
-      errno = err;
-      return NULL;
-    }
-
-  /* If there was no failure, get the drive letter. */
-  drive = __msdos_getdrive ();
-
-  /* Plug in the drive letter. */
-  buf[0] = 'A' + drive;
-  buf[1] = ':';
-  buf[2] = '\\';
-  return buf;
-}
+extern char *__msdos_getcwd (char[PATH_MAX], unsigned char);
 
 char *
 getcwd (char *buf, size_t size)
@@ -72,19 +28,19 @@ getcwd (char *buf, size_t size)
     {
       char our_buf[PATH_MAX];
 
-      if (! __msdos_getcwd (our_buf))
+      if (! __msdos_getcwd (our_buf, 0))
 	return NULL;
 
       return strdup (our_buf);
     }
   else if (size >= PATH_MAX)
-    return __msdos_getcwd (buf);
+    return __msdos_getcwd (buf, 0);
   else
     {
       char our_buf[PATH_MAX];
       size_t our_len;
 
-      if (! __msdos_getcwd (our_buf))
+      if (! __msdos_getcwd (our_buf, 0))
 	return NULL;
 
       our_len = strlen (our_buf);
