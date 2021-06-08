@@ -136,10 +136,7 @@ realpath (const char *path, char *out_path)
   size_t n_comps, comp_start[PATH_MAX / 2];
 
   if (! path || ! path[0])
-    {
-      errno = EINVAL;
-      return NULL;
-    }
+    goto invalid;
 
   if (! out_path)
     {
@@ -173,8 +170,7 @@ realpath (const char *path, char *out_path)
 	  drive -= 'a' - 1;
 	  break;
 	default:
-	  errno = EINVAL;
-	  return NULL;
+	  goto invalid;
 	}
 
       i = 2;
@@ -269,10 +265,7 @@ realpath (const char *path, char *out_path)
 
       if (__msdos_parse_to_fcb (path + i, &fcb) != path + i + k
 	  || fcb.drive != 0)
-	{
-	  errno = EINVAL;
-	  goto bail;
-	}
+	goto invalid;
 
       i += k;
 
@@ -281,6 +274,9 @@ realpath (const char *path, char *out_path)
 
       while (ext_len && fcb.ext[ext_len - 1] == ' ')
 	--ext_len;
+
+      if (! name_len)
+	goto invalid;
 
       COPY (fcb.name, name_len);
       if (ext_len)
@@ -301,6 +297,8 @@ realpath (const char *path, char *out_path)
 
   return out_path;
 
+invalid:
+  errno = EINVAL;
 bail:
   if (out_path_alloced)
     free (out_path);
