@@ -5,3 +5,4 @@
 #
 
 load_lib standard.exp
+load_lib newlib.exp
