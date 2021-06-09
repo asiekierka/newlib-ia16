@@ -81,7 +81,8 @@ int main(int argc, char **argv)
     
     for (i = 0; i < sizeof(bad_names)/sizeof(char *); i++)
     {
-        printf("Trying iconv(%s, \"%s\")", good_names[0], bad_names[i]);
+        printf("Trying iconv(%s, \"%s\")", good_names[0],
+               bad_names[i] ? bad_names[i] : "(null)");
         fflush(stdout);
 
         cd = iconv_open(good_names[0], bad_names[i]);
