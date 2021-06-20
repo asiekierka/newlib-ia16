@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 TK Chia
+ * Copyright (c) 2019--2021 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -13,9 +13,11 @@
  */
 
 /*
- * Invoke the near routine pointed to by %bx, in real or V86 mode.  The
- * routine should accept arguments and pass return values --- if any ---
- * through %ax, %dx, and/or %cx.
+ * Invoke the routine pointed to by %bx, in real or V86 mode.  The routine
+ * should accept arguments and pass return values --- if any --- through
+ * %ax, %dx, and/or %cx.  The routine's farness follows the memory model
+ * setting; however, the routine should always be in the .text (or .text.*)
+ * segment.
  *
  * This is used by the _times (.) implementation (dos-times.S) to run its
  * constructor and destructor routines in real mode.
@@ -75,6 +77,9 @@ __ia16_rmode_func_call_bx:
 	call	abort
 
 .Lthunk:
+#ifdef __IA16_CMODEL_IS_FAR_TEXT
+	pushw	%cs
+#endif
 	callw	*%bx
 	lretw
 

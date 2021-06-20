@@ -1,4 +1,4 @@
-/* dos-getcwd.c basic getcwd for MS-DOS which factors in drive letters
+/* dos-getcwd-impl.c internal implementation bits for getcwd and realpath
  *
  * Copyright (c) 2021 TK Chia
  *
