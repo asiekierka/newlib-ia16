@@ -7,11 +7,7 @@
 
 #undef errno
 extern int errno;
-
-/* Force _heaplen to be given actual bytes in the output executable, in case
-   some tools want to patch it statically (e.g. tools/ptchsize.c for FreeDOS
-   command.com).  */
-size_t _heaplen __attribute__ ((nocommon, section (".data"))) = 0;
+extern size_t _heaplen;
 
 void *
 _sbrk (int incr)
