@@ -18,10 +18,28 @@
 
 #include "call-cvt.h"
 
+	.global	_start
+
+#ifdef TSR
+	.section .startupA.tsr, "ax"
+
+_start:
+	jmp	__stext_startup_load
+#endif
+
 	.section .startupA, "ax"
 
-	.global _start
+#ifndef TSR
 _start:
+#else
+	# If this is a TSR, copy the code after .startupA from their load
+	# address (LMA) to their runtime address (VMA).
+	movw	$__edata_startup_load-2, %si
+	movw	$__edata_startup-2, %di
+	movw	$__lstartup_to_copy, %cx
+	std
+	rep	movsw
+#endif
 	# Get the MS-DOS version number & see if it is 2 or above.
 	movb	$0x30,	%ah
 	int	$0x21
@@ -30,6 +48,13 @@ _start:
 	# Set bp to zero iff the MS-DOS version is 2.x.  DOS 3+ gives us the
 	# program's name in the environment segment, but DOS 2.x does not.
 	xchgw	%ax,	%bp
+#ifdef TSR
+	# If this is a TSR, we are still running our startup code at the
+	# LMA.  The subsequent code has been copied to the VMA; jump there.
+	# 0xe9 is a near relative `jmp'.
+	.byte	0xe9
+	.word	__text_startup_leap
+#endif
 	# At this point, the flags should contain the result of comparing the
 	# DOS major version number with 2.  dos-mtv1.S & dos-mxv1.S make use
 	# of this.
@@ -60,10 +85,20 @@ _start:
 	popw	%es
 #endif
 	xorw	%ax, %ax
+#ifndef TSR
 	movw	$__sbss, %di
 	movw	$__lbss, %cx
 	cld
 	rep	stosw
+#else
+	movw	$__sbss_keep, %di
+	movw	$__lbss_keep, %cx
+	cld
+	rep	stosw
+	movw	$__sbss_startup, %di
+	movw	$__lbss_startup, %cx
+	rep	stosw
+#endif
 #ifdef DPMIABLE
 	# We still have segment registers pointing to the code segment, data
 	# segment, and PSP; and we have not invoked the program's

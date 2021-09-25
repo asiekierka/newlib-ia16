@@ -1,0 +1,156 @@
+#!/bin/sh
+
+set -e
+cmd1='#'
+cmd2='#'
+w1=with
+w2=with
+case "$1" in
+  -nostdlib)
+    cmd1='/^@if_starts@/,/^@endif@/ d'
+    cmd2='/^@if_libs@/,/^@endif@/ d'
+    w1=without
+    w2=without;;
+  -nostartfiles)
+     cmd1='/^@if_starts@/,/^@endif@/ d'
+     w1=without;;
+  -nodefaultlibs)
+     cmd2='/^@if_libs@/,/^@endif@/ d'
+     w2=without;;
+esac
+sed -e "$cmd1" -e "$cmd2" -e "s;@crt0@;$crt0;g" \
+    -e "s;@withstarts@;$w1;g" -e "s;@withlibs@;$w2;g" \
+    -e "s/@self@/`basename "$0"`/g" -e "/^@if/ d" -e "/^@endif@/ d" <<'EOF'
+/*
+ * Linker script for terminate-and-stay-resident (TSR) DOS executables with
+ * combined data and text segment, @withstarts@ startup files, and @withlibs@
+ * default libraries.
+ *
+ * Generated from @self@.
+ */
+
+OUTPUT_FORMAT(binary)
+ENTRY(_start)
+@if_starts@
+INPUT(-l:crtbegin.o -l:crtend.o -l:dtr-t-c0.o)
+@endif@
+@if_libs@
+GROUP(-lc -lgcc -ldos-t -lm)
+@endif@
+
+SECTIONS
+  {
+    . = SEGMENT_START ("text-segment", 0x100);
+
+    /* Target resident text sections.  */
+    .text : {
+		__stext_keep = .;
+		*(.startupA.tsr)
+		*(.text) *(.text. .text.[^s]* .text.s[^t]* .text.st[^a]*
+			   .text.sta[^r]* .text.star[^t]* .text.start[^u]*
+			   .text.startu[^p]* .text.startup[^.]*)
+		__etext_keep = .;
+	}
+	__ltext_keep = __etext_keep - __stext_keep;
+
+    /* Target resident data sections.  */
+    .data : {
+		__sdata_keep = .;
+		*(.rodata) *(.rodata. .rodata.[^s]* .rodata.s[^t]*
+			     .rodata.st[^a]* .rodata.sta[^r]*
+			     .rodata.star[^t]* .rodata.start[^u]*
+			     .rodata.startu[^p]* .rodata.startup[^.]*)
+		*(.data) *(.data. .data.[^s]* .data.s[^t]* .data.st[^a]*
+			   .data.sta[^r]* .data.star[^t]* .data.start[^u]*
+			   .data.startu[^p]* .data.startup[^.]*)
+		*(.gcc_except_table)
+		__edata_keep = .;
+	}
+
+    .bss (NOLOAD) : {
+		__sbss_keep = .;
+                *(.bss) *(.bss. .bss.[^s]* .bss.s[^t]* .bss.st[^a]*
+			  .bss.sta[^r]* .bss.star[^t]* .bss.start[^u]*
+			  .bss.startu[^p]* .bss.startup[^.]*)
+                *(COMMON)
+                __ebss_keep = .;
+	}
+
+	__ldata_keep = __edata_keep - __sdata_keep;
+	__lbss_keep = (__ebss_keep - __sbss_keep + 1) / 2;
+
+    /*
+     * Target transient text sections.
+     *
+     * I use the name .text.startup because this is the (input) section name
+     * GCC uses by default for startup functions (e.g. static constructors,
+     * main (...)).
+     */
+    .text.startup ADDR (.bss) + SIZEOF (.bss) : AT (__sbss_keep) {
+		__stext_startup_load = LOADADDR (.text.startup);
+		__stext_startup = .;
+		*(.startupA)
+		__stext_startup_to_copy = .;
+		*(.msdos_init) *(.msdos_init.*)
+		*(.startupB)
+		*(.init)
+		*(.startupC)
+		*(.fini)
+		*(.startupD)
+		*(.text.startup) *(.text.startup.*)
+		__etext_startup = .;
+        }
+	/*
+	 * Distance which the startup code to jump forward by, after we have
+	 * copied the code from the LMA to the VMA.
+	 */
+	__text_startup_leap = __stext_startup - __stext_startup_load;
+
+    /* Target transient data sections.  */
+    .data.startup : {
+		__sdata_startup_load = LOADADDR (.data.startup);
+		__sdata_startup = .;
+
+		/* Build lists of constructors and destructors.  */
+		KEEP (*crtbegin*.o(.ctors))
+		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
+		KEEP (*(SORT(.ctors.*)))
+		KEEP (*(.ctors))
+
+		KEEP (*crtbegin*.o(.dtors))
+		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
+		KEEP (*(SORT(.dtors.*)))
+		KEEP (*(.dtors))
+
+		*(.rodata.startup) *(.rodata.startup.*)
+		*(.data.startup) *(.data.startup.*)
+
+		__edata_startup = .;
+	}
+	__edata_startup_load = . + (__sdata_startup_load
+				    - __sdata_startup);
+	__lstartup_to_copy = (__edata_startup
+			      - __stext_startup_to_copy + 1) / 2;
+
+    .bss.startup (NOLOAD) : {
+		__sbss_startup = .;
+                *(.bss.startup) *(.bss.startup.*)
+                __ebss_startup = .;
+
+                /* Minimum address allowed for sbrk() to use.  */
+                __heap_end_minimum = ALIGN(8);
+	}
+	__lbss_startup = (__ebss_startup - __sbss_startup + 1) / 2;
+
+	__startup_end_maximum = 0xfd00;
+
+    ASSERT(. <= __startup_end_maximum, "Error: too large for a .com file.")
+    /*
+     * Used by the memory resizing and DPMI initialization code in
+     * dos-models-crt0.S.
+     */
+    __msdos_initial_alloc_paras = 0x1000;
+
+    /DISCARD/ : { *(.*) }
+  }
+EOF
