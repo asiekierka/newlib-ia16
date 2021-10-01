@@ -45,10 +45,11 @@ SECTIONS
     /* Target resident text sections.  */
     .text : {
 		__stext_keep = .;
-		*(.startupA.tsr)
-		*(.text) *(.text. .text.[^s]* .text.s[^t]* .text.st[^a]*
+		*(.startupA)
+		*(.text) *(.text. .text.[^se]* .text.s[^t]* .text.st[^a]*
 			   .text.sta[^r]* .text.star[^t]* .text.start[^u]*
-			   .text.startu[^p]* .text.startup[^.]*)
+			   .text.startu[^p]* .text.startup[^.]* .text.e[^x]*
+			   .text.ex[^i]* .text.exi[^t] .text.exit[^.]*)
 		__etext_keep = .;
 	}
 	__ltext_keep = __etext_keep - __stext_keep;
@@ -56,24 +57,28 @@ SECTIONS
     /* Target resident data sections.  */
     .data : {
 		__sdata_keep = .;
-		*(.rodata) *(.rodata. .rodata.[^s]* .rodata.s[^t]*
+		*(.rodata) *(.rodata. .rodata.[^se]* .rodata.s[^t]*
 			     .rodata.st[^a]* .rodata.sta[^r]*
 			     .rodata.star[^t]* .rodata.start[^u]*
-			     .rodata.startu[^p]* .rodata.startup[^.]*)
-		*(.data) *(.data. .data.[^s]* .data.s[^t]* .data.st[^a]*
+			     .rodata.startu[^p]* .rodata.startup[^.]*
+			     .rodata.e[^x]* .rodata.ex[^i]* .rodata.exi[^t]*
+			     .rodata.exit[^.]*)
+		*(.data) *(.data. .data.[^se]* .data.s[^t]* .data.st[^a]*
 			   .data.sta[^r]* .data.star[^t]* .data.start[^u]*
-			   .data.startu[^p]* .data.startup[^.]*)
+			   .data.startu[^p]* .data.startup[^.]* .data.e[^x]*
+			   .data.ex[^i]* .data.exi[^t]* .data.exit[^.]*)
 		*(.gcc_except_table)
 		__edata_keep = .;
 	}
 
     .bss (NOLOAD) : {
 		__sbss_keep = .;
-                *(.bss) *(.bss. .bss.[^s]* .bss.s[^t]* .bss.st[^a]*
+		*(.bss) *(.bss. .bss.[^se]* .bss.s[^t]* .bss.st[^a]*
 			  .bss.sta[^r]* .bss.star[^t]* .bss.start[^u]*
-			  .bss.startu[^p]* .bss.startup[^.]*)
-                *(COMMON)
-                __ebss_keep = .;
+			  .bss.startu[^p]* .bss.startup[^.]* .bss.e[^x]*
+			  .bss.ex[^i]* .bss.exi[^t]* .bss.exit[^.]*)
+		*(COMMON)
+		__ebss_keep = .;
 	}
 
 	__ldata_keep = __edata_keep - __sdata_keep;
@@ -87,64 +92,77 @@ SECTIONS
      * main (...)).
      */
     .text.startup ADDR (.bss) + SIZEOF (.bss) : AT (__sbss_keep) {
-		__stext_startup_load = LOADADDR (.text.startup);
-		__stext_startup = .;
-		*(.startupA)
-		__stext_startup_to_copy = .;
-		*(.msdos_init) *(.msdos_init.*)
+		__stext_nokeep_load = LOADADDR (.text.startup);
+		__stext_nokeep = .;
 		*(.startupB)
-		*(.init)
+		__stext_nokeep_to_copy = .;
+		*(.msdos_init) *(.msdos_init.*)
 		*(.startupC)
-		*(.fini)
+		*(.init)
 		*(.startupD)
 		*(.text.startup) *(.text.startup.*)
-		__etext_startup = .;
-        }
+	}
 	/*
 	 * Distance which the startup code to jump forward by, after we have
 	 * copied the code from the LMA to the VMA.
 	 */
-	__text_startup_leap = __stext_startup - __stext_startup_load;
+	__text_nokeep_leap = __stext_nokeep - __stext_nokeep_load;
+
+    .text.exit : {
+		*(.exitA)
+		*(.fini)
+		*(.exitB)
+		*(.text.exit) *(.text.exit.*)
+		__etext_nokeep = .;
+	}
 
     /* Target transient data sections.  */
     .data.startup : {
-		__sdata_startup_load = LOADADDR (.data.startup);
-		__sdata_startup = .;
+		__sdata_nokeep_load = LOADADDR (.data.startup);
+		__sdata_nokeep = .;
 
-		/* Build lists of constructors and destructors.  */
+		/* Build lists of constructors.  */
 		KEEP (*crtbegin*.o(.ctors))
 		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
 		KEEP (*(SORT(.ctors.*)))
 		KEEP (*(.ctors))
 
+		*(.rodata.startup) *(.rodata.startup.*)
+		*(.data.startup) *(.data.startup.*)
+	}
+
+    .data.exit : {
+		/* Build lists of destructors.  */
 		KEEP (*crtbegin*.o(.dtors))
 		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
 		KEEP (*(SORT(.dtors.*)))
 		KEEP (*(.dtors))
 
-		*(.rodata.startup) *(.rodata.startup.*)
-		*(.data.startup) *(.data.startup.*)
+		*(.rodata.exit) *(.rodata.exit.*)
+		*(.data.exit) *(.data.exit.*)
 
-		__edata_startup = .;
+		__edata_nokeep = .;
 	}
-	__edata_startup_load = . + (__sdata_startup_load
-				    - __sdata_startup);
-	__lstartup_to_copy = (__edata_startup
-			      - __stext_startup_to_copy + 1) / 2;
+	__edata_nokeep_load = . + (__sdata_nokeep_load - __sdata_nokeep);
+	__lnokeep_to_copy = (__edata_nokeep - __stext_nokeep_to_copy + 1) / 2;
 
     .bss.startup (NOLOAD) : {
-		__sbss_startup = .;
-                *(.bss.startup) *(.bss.startup.*)
-                __ebss_startup = .;
-
-                /* Minimum address allowed for sbrk() to use.  */
-                __heap_end_minimum = ALIGN(8);
+		__sbss_nokeep = .;
+		*(.bss.startup) *(.bss.startup.*)
 	}
-	__lbss_startup = (__ebss_startup - __sbss_startup + 1) / 2;
 
-	__startup_end_maximum = 0xfd00;
+    .bss.exit (NOLOAD) : {
+		*(.bss.exit) *(.bss.exit.*)
+		__ebss_nokeep = .;
 
-    ASSERT(. <= __startup_end_maximum, "Error: too large for a .com file.")
+		/* Minimum address allowed for sbrk() to use.  */
+		__heap_end_minimum = ALIGN(8);
+	}
+	__lbss_nokeep = (__ebss_nokeep - __sbss_nokeep + 1) / 2;
+
+	__nokeep_end_maximum = 0xfd00;
+
+    ASSERT(. <= __nokeep_end_maximum, "Error: too large for a .com file.")
     /*
      * Used by the memory resizing and DPMI initialization code in
      * dos-models-crt0.S.

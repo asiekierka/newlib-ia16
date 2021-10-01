@@ -21,22 +21,23 @@
 	.global	_start
 
 #ifdef TSR
-	.section .startupA.tsr, "ax"
+	.section .startupA, "ax"
 
 _start:
-	jmp	__stext_startup_load
+	jmp	__stext_nokeep_load
 #endif
 
-	.section .startupA, "ax"
+	.section .startupB, "ax"
 
 #ifndef TSR
 _start:
 #else
-	# If this is a TSR, copy the code after .startupA from their load
-	# address (LMA) to their runtime address (VMA).
-	movw	$__edata_startup_load-2, %si
-	movw	$__edata_startup-2, %di
-	movw	$__lstartup_to_copy, %cx
+	# If this is a TSR, copy the transient code & data after .startup
+	# from their load address (LMA) to their runtime address (VMA).
+
+	movw	$__edata_nokeep_load-2, %si
+	movw	$__edata_nokeep-2, %di
+	movw	$__lnokeep_to_copy, %cx
 	std
 	rep	movsw
 #endif
@@ -53,13 +54,13 @@ _start:
 	# LMA.  The subsequent code has been copied to the VMA; jump there.
 	# 0xe9 is a near relative `jmp'.
 	.byte	0xe9
-	.word	__text_startup_leap
+	.word	__text_nokeep_leap
 #endif
 	# At this point, the flags should contain the result of comparing the
 	# DOS major version number with 2.  dos-mtv1.S & dos-mxv1.S make use
 	# of this.
 
-	.section .startupB, "ax"
+	.section .startupC, "ax"
 
 	# For a .com file, resize the program's memory control block to
 	# cover only the near code and data segments.  Abort on any failure.
@@ -95,8 +96,8 @@ _start:
 	movw	$__lbss_keep, %cx
 	cld
 	rep	stosw
-	movw	$__sbss_startup, %di
-	movw	$__lbss_startup, %cx
+	movw	$__sbss_nokeep, %di
+	movw	$__lbss_nokeep, %cx
 	rep	stosw
 #endif
 #ifdef DPMIABLE
@@ -243,7 +244,7 @@ _start:
 	.set	.Lpsp,	.Largv
 #endif
 
-	.section .startupC, "ax"
+	.section .startupD, "ax"
 
 	# Find length of environment + progname
 #ifndef TINY
@@ -477,13 +478,15 @@ _start:
 	jmp	.Loutside_other
 
 
+	.section .exitA, "ax"
+
 	.global _exit
 _exit:
 #ifdef __IA16_CALLCVT_REGPARMCALL
 	xchgw	%ax,	%si
 #endif
 
-	.section .startupD, "ax"
+	.section .exitB, "ax"
 
 #ifndef __IA16_CALLCVT_REGPARMCALL
 	popw	%bx

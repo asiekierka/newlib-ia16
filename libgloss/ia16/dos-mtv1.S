@@ -20,7 +20,7 @@
 	.arch	i8086, jumps
 	.code16
 
-	.section .startupA, "ax"
+	.section .startupB, "ax"
 
 	/*
 	 * Exit immediately if the MS-DOS version is less than 2.  At
