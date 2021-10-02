@@ -34,7 +34,6 @@ _start:
 #else
 	# If this is a TSR, copy the transient code & data after .startup
 	# from their load address (LMA) to their runtime address (VMA).
-
 	movw	$__edata_nokeep_load-2, %si
 	movw	$__edata_nokeep-2, %di
 	movw	$__lnokeep_to_copy, %cx
@@ -62,6 +61,10 @@ _start:
 
 	.section .startupC, "ax"
 
+#ifdef TSR
+	# If this is a TSR, switch to the transient stack.
+	movw	$__stack_end_nokeep, %sp
+#endif
 	# For a .com file, resize the program's memory control block to
 	# cover only the near code and data segments.  Abort on any failure.
 	#

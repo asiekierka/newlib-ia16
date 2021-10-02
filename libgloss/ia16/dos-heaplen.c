@@ -2,7 +2,9 @@
 
 #include <stdlib.h>
 
-/* Force _heaplen to be given actual bytes in the output executable, in case
-   some tools want to patch it statically (e.g. tools/ptchsize.c for FreeDOS
-   command.com).  */
-size_t _heaplen __attribute__ ((nocommon, section (".data"))) = 0;
+/*
+ * If the linker script or the user defines a symbol __heaplen_val, use that
+ * as the maximum heap size.  Otherwise, use 0.
+ */
+extern char __heaplen_val[] __attribute__ ((weak));
+size_t _heaplen = (size_t) __heaplen_val;
