@@ -93,7 +93,8 @@ SECTIONS
     PROVIDE (__stklen_val_nokeep = 0x300);
 
     /*
-     * Size of the heap, if the user does not specify one.
+     * Size of the heap, if the user does not specify one.  If the user
+     * explicitly specifies a heap size of 0, force a non-zero value.
      *
      * Unfortunately the linker script language does not allow one to say
      * e.g. "allocate a .bss.startup section in such a way that the section
@@ -106,7 +107,8 @@ SECTIONS
      * space into two equal parts, & allocate the higher part to the transient
      * portion.  FIXME.
      */
-    PROVIDE (__heaplen_val = (__nokeep_end_maximum - .) / 2);
+    PROVIDE (__heaplen_val = (__nokeep_end_maximum - __heap_end_minimum) / 2);
+    __heaplen_val = __heaplen_val ? __heaplen_val : 1;
 
     /*
      * Target transient text sections.
