@@ -85,7 +85,7 @@ SECTIONS
 	}
 
 	__ldata_keep = __edata_keep - __sdata_keep;
-	__lbss_keep = (__ebss_keep - __sbss_keep + 1) / 2;
+	__lbss_keep2 = (__ebss_keep - __sbss_keep + 1) / 2;
 
     __nokeep_end_maximum = 0xff00;
 
@@ -96,19 +96,21 @@ SECTIONS
      * Size of the heap, if the user does not specify one.  If the user
      * explicitly specifies a heap size of 0, force a non-zero value.
      *
-     * Unfortunately the linker script language does not allow one to say
-     * e.g. "allocate a .bss.startup section in such a way that the section
-     * _ends_ at a particular address or thereabouts" --- such a feature will
-     * allow us to make the heap as large as possible.
+     * FIXME?  This tries to compute the heap size by calculating section
+     * start & end offsets before the sections have been fully laid out ---
+     * Andrew Bird has discovered that this method seems to work
+     * (https://github.com/tkchia/gcc-ia16/issues/81#issuecomment-932956379).
+     * I subtract 0x20 in the final computed heap size to allow some leeway
+     * for error.
      *
-     * Because of this limitation, we need to kind of divine a "good" default
-     * heap size based on the text & data we have seen so far, without knowing
-     * the transient text & data size.  For now, just divide up the remaining
-     * space into two equal parts, & allocate the higher part to the transient
-     * portion.  FIXME.
+     * I am not sure if we can really rely on this calculation, but it will
+     * have to do for now.  -- tkchia 20211003
      */
-    PROVIDE (__heaplen_val = (__nokeep_end_maximum - __heap_end_minimum) / 2);
+    PROVIDE (__heaplen_val = __nokeep_end_maximum - __heap_end_minimum
+			     - __lbss_nokeep - __lnokeep - __stklen_val_nokeep
+			     - 0x20);
     __heaplen_val = __heaplen_val ? __heaplen_val : 1;
+    ASSERT (__heaplen_val > 0, "Error: no space for resident heap.")
 
     /*
      * Target transient text sections.
@@ -121,10 +123,10 @@ SECTIONS
 					    + __stklen_val_nokeep, 2)
 		  : AT (__sbss_keep)
 	{
-		__stack_end_nokeep = .;
 		__stext_nokeep_load = LOADADDR (.text.startup);
 		__stext_nokeep = .;
 		*(.startupB)
+		__stack_end_nokeep = . & -0x10;
 		__stext_nokeep_to_copy = .;
 		*(.msdos_init) *(.msdos_init.*)
 		*(.startupC)
@@ -174,7 +176,9 @@ SECTIONS
 		__edata_nokeep = .;
 	}
 	__edata_nokeep_load = . + (__sdata_nokeep_load - __sdata_nokeep);
-	__lnokeep_to_copy = (__edata_nokeep - __stext_nokeep_to_copy + 1) / 2;
+	__lnokeep = __edata_nokeep - __stext_nokeep;
+	__lnokeep_to_copy = __edata_nokeep - __stext_nokeep_to_copy;
+	__lnokeep_to_copy2 = (__lnokeep_to_copy + 1) / 2;
 
     .bss.startup (NOLOAD) : {
 		__sbss_nokeep = .;
@@ -185,7 +189,8 @@ SECTIONS
 		*(.bss.exit) *(.bss.exit.*)
 		__ebss_nokeep = .;
 	}
-	__lbss_nokeep = (__ebss_nokeep - __sbss_nokeep + 1) / 2;
+	__lbss_nokeep = __ebss_nokeep - __sbss_nokeep;
+	__lbss_nokeep2 = (__lbss_nokeep + 1) / 2;
 
     ASSERT(. <= __nokeep_end_maximum, "Error: too large for a .com file.")
     /*

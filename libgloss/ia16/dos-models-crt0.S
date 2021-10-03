@@ -36,7 +36,7 @@ _start:
 	# from their load address (LMA) to their runtime address (VMA).
 	movw	$__edata_nokeep_load-2, %si
 	movw	$__edata_nokeep-2, %di
-	movw	$__lnokeep_to_copy, %cx
+	movw	$__lnokeep_to_copy2, %cx
 	std
 	rep	movsw
 #endif
@@ -96,11 +96,11 @@ _start:
 	rep	stosw
 #else
 	movw	$__sbss_keep, %di
-	movw	$__lbss_keep, %cx
+	movw	$__lbss_keep2, %cx
 	cld
 	rep	stosw
 	movw	$__sbss_nokeep, %di
-	movw	$__lbss_nokeep, %cx
+	movw	$__lbss_nokeep2, %cx
 	rep	stosw
 #endif
 #ifdef DPMIABLE
