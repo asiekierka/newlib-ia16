@@ -13,7 +13,8 @@ dup2:
 	movb	$0x46,	%ah
 	int	$0x21
 	jnc	.noerror
-	movw	%ax,	errno
+	movw	_impure_ptr, %bx
+	movw	%ax,	(%bx)
 	sbbw	%cx,	%cx
 .noerror:
 	movw	%cx,	%ax

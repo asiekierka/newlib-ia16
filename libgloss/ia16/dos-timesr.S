@@ -1,5 +1,5 @@
 /*
- * Implementation of _times for DOS which should be relatively fast, if a
+ * Implementation of _times_r for DOS which should be relatively fast, if a
  * tad hacky.
  *
  * To avoid having to deal with discontinuities in the system timer --- due
@@ -30,10 +30,10 @@
 #define _CLOCKS_PER_SEC_ 1000
 #endif
 
-	TEXT_ (dos_times.S.LIBGLOSS)
+	TEXT_ (dos_timesr.S.LIBGLOSS)
 	.section .text
 
-.Lctor_times:
+.Lctor_timesr:
 #ifdef __IA16_FEATURE_PROTECTED_MODE
 	movw	$0f,	%bx
 	jmp	__ia16_rmode_func_call_bx
@@ -54,7 +54,7 @@
 	popw	%es
 	RET_ (0)
 
-.Ldtor_times:
+.Ldtor_timesr:
 #ifdef __IA16_FEATURE_PROTECTED_MODE
 	movw	$0f,	%bx
 	jmp	__ia16_rmode_func_call_bx
@@ -81,10 +81,10 @@
 0:	popw	%es
 	RET_ (0)
 
-	.global	_times
-_times:
-	ENTER_BX_(2)
-	MOV_ARG0W_BX_(%bx)
+	.global	_times_r
+_times_r:
+	ENTER_BX_(4)
+	MOV_ARG2W_BX_(%bx)
 #ifndef __IA16_FEATURE_PROTECTED_MODE
 	movw	%es,	%cx
 	/* Fill ->tms_utime.  */
@@ -120,7 +120,7 @@ _times:
 	addw	%dx,	%ax
 	movw	6(%bx),	%dx
 	adcw	2(%bx),	%dx
-	RET_(2)
+	RET_(4)
 
 	.section .data
 
@@ -154,12 +154,12 @@ _times:
 	.section .ctors.65535
 
 	.balign	2
-	TEXT_PTR_ (.Lctor_times)
+	TEXT_PTR_ (.Lctor_timesr)
 
 	.section .dtors.65535
 
 	.balign	2
-	TEXT_PTR_ (.Ldtor_times)
+	TEXT_PTR_ (.Ldtor_timesr)
 
 	.lcomm	.Lp_orig_int_0x1c, 4
 	.lcomm	.Lp_indos, 4

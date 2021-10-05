@@ -59,15 +59,21 @@
  *   the 2-byte `movw ..., %ax' or `movw %ax, ...'), and clobber the original
  *   argument.  This is useful when we are optimizing for size (-Os).
  *
- * - MOV_ARG8W2_BX_(REG) does the same as MOV_ARG8W_BX_ (REG), except that
- *   for the `regparmcall' convention, it assumes that the function uses
- *   only two registers (%ax and %dx) to hold parameters.
+ * - MOV_ARG4W2_BX_ (REG), MOV_ARG6W2_BX_ (REG), and MOV_ARG8W2_BX_ (REG) do
+ *   the same as MOV_ARG4W_BX_ (REG), MOV_ARG6W_BX_ (REG), and MOV_ARG8W_BX_
+ *   (REG) respectively, except that for the `regparmcall' convention, they
+ *   assume that the function uses only two registers (%ax and %dx) to hold
+ *   parameters.
  *
  * - MOV_ARG0B_BX_ (REG), MOV_ARG2B_BX_ (REG), MOV_ARG4B_BX_ (REG), or
  *   MOV_ARG6B_BX_ (REG), or MOV_ARG8B_BX_ (REG) moves the low byte of the
  *   first, second, third, fourth, or fifth argument shortword into REG,
  *   respectively, if necessary.  Each of these macros should be used only
  *   after ENTER_BX_.
+ *
+ * - MOV_ARG8B2_BX_ (REG) does the same as MOV_ARG8B_BX_(REG), except that
+ *   for the `regparmcall' convention, they assume that the function uses
+ *   only two registers (%ax and %dx) to hold parameters.
  *
  * - LDS_ARG0W_BX_ (REG) moves the first shortword into REG, and the second
  *   into %ds; LES_ARG0W_BX_ (REG) moves the shortwords into REG and %es.
@@ -141,7 +147,9 @@
 # define MOV_ARG4W_BX_(reg)	.ifnc %cx, reg; \
 				movw %cx, reg; \
 				.endif
+# define MOV_ARG4W2_BX_(reg)	movw FAR_ADJ__+2(%bx), reg
 # define MOV_ARG6W_BX_(reg)	movw FAR_ADJ__+2(%bx), reg
+# define MOV_ARG6W2_BX_(reg)	movw FAR_ADJ__+4(%bx), reg
 # define MOV_ARG8W_BX_(reg)	movw FAR_ADJ__+4(%bx), reg
 # define MOV_ARG8W2_BX_(reg)	movw FAR_ADJ__+6(%bx), reg
 # ifdef __OPTIMIZE_SIZE__
@@ -181,6 +189,7 @@
 				.endif
 # define MOV_ARG6B_BX_(reg)	movb FAR_ADJ__+2(%bx), reg
 # define MOV_ARG8B_BX_(reg)	movb FAR_ADJ__+4(%bx), reg
+# define MOV_ARG8B2_BX_(reg)	movb FAR_ADJ__+6(%bx), reg
 # define LDS_ARG0W_BX_(reg)	movw %dx, %ds; \
 				.ifnc %ax, reg; \
 				movw %ax, reg; \
@@ -212,7 +221,9 @@
 # define MOV_ARG0W_BX_(reg)	movw FAR_ADJ__+2(%bx), reg
 # define MOV_ARG2W_BX_(reg)	movw FAR_ADJ__+4(%bx), reg
 # define MOV_ARG4W_BX_(reg)	movw FAR_ADJ__+6(%bx), reg
+# define MOV_ARG4W2_BX_(reg)	movw FAR_ADJ__+6(%bx), reg
 # define MOV_ARG6W_BX_(reg)	movw FAR_ADJ__+8(%bx), reg
+# define MOV_ARG6W2_BX_(reg)	movw FAR_ADJ__+8(%bx), reg
 # define MOV_ARG8W_BX_(reg)	movw FAR_ADJ__+10(%bx), reg
 # define MOV_ARG8W2_BX_(reg)	movw FAR_ADJ__+10(%bx), reg
 # define MOV_ARG0W_BX_CLOBBER_(reg) MOV_ARG0W_BX_(reg)
@@ -223,6 +234,7 @@
 # define MOV_ARG4B_BX_(reg)	movb FAR_ADJ__+6(%bx), reg
 # define MOV_ARG6B_BX_(reg)	movb FAR_ADJ__+8(%bx), reg
 # define MOV_ARG8B_BX_(reg)	movb FAR_ADJ__+10(%bx), reg
+# define MOV_ARG8B2_BX_(reg)	movb FAR_ADJ__+10(%bx), reg
 # define LDS_ARG0W_BX_(reg)	ldsw FAR_ADJ__+2(%bx), reg
 # define LES_ARG0W_BX_(reg)	lesw FAR_ADJ__+2(%bx), reg
 # define LDS_ARG4W2_BX_(reg)	ldsw FAR_ADJ__+6(%bx), reg

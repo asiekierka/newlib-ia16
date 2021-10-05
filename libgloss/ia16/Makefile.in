@@ -58,13 +58,13 @@ ELKS_SCRIPTS	= elk-mt.ld elk-mts.ld elk-mtl.ld elk-mtsl.ld \
 ELKS_BSP	= libelks.a
 ELKS_CRT0	= elks-crt0.o
 
-DOS_COMMON_OBJS = dos-chdir.o dos-close.o dos-cvt-file-time.o dos-dup.o \
-		  dos-dup2.o dos-fstat.o dos-getcwd.o dos-getcwd-impl.o \
-		  dos-gettimeofday.o dos-isatty.o dos-lseek.o dos-mkdir.o \
-		  dos-open.o dos-read.o dos-realpath.o dos-rename.o \
-		  dos-rmdir.o dos-sbrk.o dos-stat.o dos-times.o dos-uname.o \
-		  dos-uname-impl.o dos-unlink.o dos-usleep.o dos-write.o \
-		  dos-heaplen.o dos-i086.o
+DOS_COMMON_OBJS = dos-chdir.o dos-closer.o dos-cvt-file-time.o dos-dup.o \
+		  dos-dup2.o dos-fstatr.o dos-getcwd.o dos-getcwd-impl.o \
+		  dos-gettimeofdayr.o dos-heaplen.o dos-i086.o dos-isattyr.o \
+		  dos-lseekr.o dos-mkdirr.o dos-openr.o dos-readr.o \
+		  dos-realpath.o dos-renamer.o dos-rmdir.o dos-sbrkr.o \
+		  dos-statr.o dos-timesr.o dos-uname.o dos-uname-impl.o \
+		  dos-unlinkr.o dos-usleep.o dos-writer.o
 PROTECTED_MODE_P = $(filter -mprotected-mode -mdpmiable -melks%, \
 			    $(CC) $(CFLAGS) $(MULTILIB))
 CMODEL_MEDIUM_P = $(filter -mcmodel=medium,$(CC) $(CFLAGS) $(MULTILIB))
@@ -176,7 +176,9 @@ INSTALL_FILES += $(if $(PROTECTED_MODE_P), \
 # Building Newlib for the ELKS target is currently disabled.  To properly
 # build Newlib/ELKS, we will probably need to at least add Newlib/ELKS as a
 # multilib combination under GCC, _and_ fix newlib/libc/machine/ia16/sys/
-# errno.h so that it knows about ELKS error codes.  TODO.  -- tkchia 20191129
+# errno.h so that it knows about ELKS error codes, _and_ update the ELKS
+# syscall routines to work with REENTRANT_SYSCALLS_PROVIDED.  TODO.
+#	-- tkchia 20211005
 #
 # INSTALL_FILES += $(if $(PROTECTED_MODE_P), \
 # 		      $(if $(CMODEL_NOT_MEDIUM_P), \
@@ -316,20 +318,20 @@ $(DPMIABLE_SMALL_CRT0) : dos-models-crt0.S
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
 dos-chdir.o: dos-chdir.S call-cvt.h pmode.h
-dos-close.o: dos-close.S call-cvt.h
+dos-closer.o: dos-closer.S call-cvt.h
 dos-getcwd.o: dos-getcwd.S call-cvt.h pmode.h
-dos-isatty.o: dos-isatty.S call-cvt.h
-dos-lseek.o: dos-lseek.S call-cvt.h
+dos-isattyr.o: dos-isattyr.S call-cvt.h
+dos-lseekr.o: dos-lseekr.S call-cvt.h
 dos-mkdir.o: dos-mkdir.S call-cvt.h pmode.h
-dos-read.o: dos-read.S call-cvt.h pmode.h
-dos-rename.o: dos-rename.S call-cvt.h pmode.h
+dos-readr.o: dos-readr.S call-cvt.h pmode.h
+dos-renamer.o: dos-renamer.S call-cvt.h pmode.h
 dos-rmdir.o: dos-rmdir.S call-cvt.h pmode.h
-dos-unlink.o: dos-unlink.S call-cvt.h pmode.h
-dos-write.o: dos-write.S call-cvt.h pmode.h
+dos-unlinkr.o: dos-unlinkr.S call-cvt.h pmode.h
+dos-writer.o: dos-writer.S call-cvt.h pmode.h
 
-# (!) dos-times.S uses the division operator.
-dos-times.o: override CFLAGS += -Wa,--divide
-dos-times.o: dos-times.S call-cvt.h
+# (!) dos-timesr.S uses the division operator.
+dos-timesr.o: override CFLAGS += -Wa,--divide
+dos-timesr.o: dos-timesr.S call-cvt.h
 
 libnosys.a:
 	$(MAKE) -C ../libnosys/ libnosys.a

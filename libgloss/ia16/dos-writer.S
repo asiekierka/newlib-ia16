@@ -5,11 +5,15 @@
 	.code16
 	.att_syntax prefix
 
-	TEXT_ (dos_write.S.LIBGLOSS)
-	.global		_write
-_write:
-	ENTER_BX_(6)
-	MOV_ARG4W_BX_(%cx)
+	TEXT_ (dos_writer.S.LIBGLOSS)
+	.global		_write_r
+_write_r:
+	ENTER_BX_(8)
+	pushw	ARG0W_BX_
+#ifdef __IA16_CALLCVT_REGPARMCALL
+	MOV_ARG2W_BX_CLOBBER_(%ax)
+	MOV_ARG4W_BX_(%dx)
+	MOV_ARG6W_BX_(%cx)
 	/*
 	 * int $0x21 with %ah == 0x40 and %cx == 0 will truncate or extend
 	 * the file to the current position (www.ctyme.com/intr/rb-2791.htm).
@@ -21,14 +25,20 @@ _write:
 	 * it specially.
 	 */
 	jcxz	.nowrite
-	MOV_ARG2W_BX_(%dx)
-	MOV_ARG0W_BX_(%bx)
+	xchgw	%ax,	%bx
+#else
+	MOV_ARG6W_BX_(%cx)
+	jcxz	.nowrite
+	MOV_ARG4W_BX_(%dx)
+	MOV_ARG2W_BX_(%bx)
+#endif
 	movb	$0x40,	%ah
 	RMODE_DOS_CALL_
+	popw	%bx
 	jnc	.noerror
-	movw	%ax,	errno
+	movw	%ax,	(%bx)
 	sbbw	%cx,	%cx
 .nowrite:
 	xchgw	%ax,	%cx
 .noerror:
-	RET_(6)
+	RET_(8)

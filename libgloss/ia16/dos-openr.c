@@ -1,4 +1,4 @@
-/* dos-open.c basic open file for DOS
+/* dos-openr.c basic open file for DOS
  *
  * Copyright (c) 2018 Bart Oldeman
  * Copyright (c) 2019--2021 TK Chia
@@ -14,15 +14,12 @@
  * they apply.
  */
 
-#include <stdarg.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
+#include <reent.h>
 #include <_syslist.h>
 #include "pmode.h"
-
-#undef errno
-extern int errno;
 
 #ifndef FP_SEG
 #define FP_SEG(x) \
@@ -49,7 +46,8 @@ static int dos_exists (const char *pathname)
   return carry + 1;
 }
 
-static int dos_open (const char *pathname, unsigned char flags)
+static int dos_open (struct _reent *reent, const char *pathname,
+		     unsigned char flags)
 {
   int ret, carry;
   asm volatile (RMODE_DOS_CALL_ "; sbb %0, %0" :
@@ -58,13 +56,14 @@ static int dos_open (const char *pathname, unsigned char flags)
 		"Rds"(FP_SEG(pathname)) : "cc");
   if (carry)
     {
-      errno = ret;
+      reent->_errno = ret;
       return carry;
     }
   return ret;
 }
 
-static int dos_creat (const char *pathname, unsigned char attr)
+static int dos_creat (struct _reent *reent, const char *pathname,
+		      unsigned char attr)
 {
   int ret, carry;
   asm volatile (RMODE_DOS_CALL_ "; sbb %0, %0" :
@@ -73,14 +72,14 @@ static int dos_creat (const char *pathname, unsigned char attr)
 		"Rds"(FP_SEG(pathname)) : "cc");
   if (carry)
     {
-      errno = ret;
+      reent->_errno = ret;
       return carry;
     }
   return ret;
 }
 
 static int
-dos_truncate_fd (int fd)
+dos_truncate_fd (struct _reent *reent, int fd)
 {
   int ret, carry;
   asm volatile ("int $0x21; sbb %0, %0" :
@@ -88,14 +87,14 @@ dos_truncate_fd (int fd)
 		"Rah" ((char)0x40), "b" (fd), "c" (0u) : "cc");
   if (carry)
     {
-      errno = ret;
+      reent->_errno = ret;
       return carry;
     }
   return ret;
 }
 
 int
-_open (const char *pathname, int flags, ...)
+_open_r (struct _reent *reent, const char *pathname, int flags, int mode)
 {
   int fd = -1;
   off_t ret;
@@ -110,19 +109,13 @@ _open (const char *pathname, int flags, ...)
 	  fileexists = dos_exists(pathname);
 	  if (fileexists && (flags & O_EXCL))
 	    {
-	      errno = EEXIST;
+	      reent->_errno = EEXIST;
 	      return -1;
 	    }
 	}
       if (!fileexists)
 	{
-	  va_list ap;
-	  mode_t mode;
-
-	  va_start(ap, flags);
-	  mode = va_arg(ap, mode_t);
-	  fd = dos_creat(pathname, (mode & S_IWUSR) ? 0 : 1);
-	  va_end(ap);
+	  fd = dos_creat(reent, pathname, (mode & S_IWUSR) ? 0 : 1);
 	  if (fd != -1)
 	    {
 	      if ((flags & O_ACCMODE) == O_WRONLY)
@@ -135,14 +128,14 @@ _open (const char *pathname, int flags, ...)
 
   /* try to open file with mode */
   if (fd == -1)
-    fd = dos_open(pathname, flags & O_ACCMODE);
+    fd = dos_open(reent, pathname, flags & O_ACCMODE);
   if (fd == -1)
     return fd;
   ret = 0;
   if (flags & O_TRUNC)
-    ret = dos_truncate_fd (fd);
+    ret = dos_truncate_fd (reent, fd);
   else if (flags & O_APPEND)
-    ret = _lseek(fd, 0, SEEK_END);
+    ret = _lseek_r(reent, fd, 0, SEEK_END);
   if (ret == -1)
     {
       close(fd);

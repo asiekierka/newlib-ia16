@@ -12,7 +12,8 @@ dup:
 	movb	$0x45,	%ah
 	int	$0x21
 	jnc	.noerror
-	movw	%ax,	errno
+	movw	_impure_ptr, %bx
+	movw	%ax,	(%bx)
 	sbbw	%ax,	%ax
 .noerror:
 	RET_(2)

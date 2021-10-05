@@ -1,21 +1,22 @@
 #include "call-cvt.h"
-#include "pmode.h"
 
 	.arch i8086,jumps
 	.code16
 	.att_syntax prefix
 
-	TEXT_ (dos_mkdir.S.LIBGLOSS)
-	.global		_mkdir
-_mkdir:
+	TEXT_ (dos_closer.S.LIBGLOSS)
+	.global		_close_r
+_close_r:
 	ENTER_BX_(4)
-	MOV_ARG0W_BX_(%dx)
-	movb	$0x39,	%ah
-	RMODE_DOS_CALL_
+	pushw	ARG0W_BX_
+	MOV_ARG2W_BX_(%bx)
+	movb	$0x3e,	%ah
+	int	$0x21
+	popw	%bx
 	jc	.error
 	xorw	%ax,	%ax
 	RET_(4)
 .error:
-	movw	%ax,	errno
+	movw	%ax,	(%bx)
 	movw	$-1,	%ax
 	RET_(4)

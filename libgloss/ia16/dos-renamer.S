@@ -5,26 +5,27 @@
 	.code16
 	.att_syntax prefix
 
-	TEXT_ (dos_rename.S.LIBGLOSS)
-	.global		_rename
-_rename:
-	ENTER_BX_(4)
+	TEXT_ (dos_renamer.S.LIBGLOSS)
+	.global		_rename_r
+_rename_r:
+	ENTER_BX_(6)
 	pushw	%es
 	pushw	%di
 	movw	%ds,	%di
 	movw	%di,	%es
-	MOV_ARG2W_BX_(%di)
-	MOV_ARG0W_BX_(%dx)
+	MOV_ARG4W_BX_(%di)
+	MOV_ARG2W_BX_(%dx)
+	MOV_ARG0W_BX_(%bx)
 	movb	$0x56,	%ah
 	RMODE_DOS_CALL_
 	jc	.error
 	xorw	%ax,	%ax
 	popw	%di
 	popw	%es
-	RET_(4)
+	RET_(6)
 .error:
-	movw	%ax,	errno
-	movw	$-1,	%ax
+	movw	%ax,	(%bx)
+	sbbw	%ax,	%ax
 	popw	%di
 	popw	%es
-	RET_(4)
+	RET_(6)

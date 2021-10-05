@@ -1,8 +1,8 @@
 /*
- * Version of _gettimeofday for DOS.  This is slow and stupid, but probably
+ * Version of _gettimeofday_r for DOS.  This is slow and stupid, but probably
  * does not take up too much space.
  *
- * Copyright (c) 2017--2018 TK Chia
+ * Copyright (c) 2017--2021 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -16,11 +16,12 @@
  */
 
 #include <_syslist.h>
+#include <reent.h>
 #include <time.h>
 #include <sys/time.h>
 
 int
-_gettimeofday (struct timeval *tv, void *tzvp)
+_gettimeofday_r (struct _reent *reent, struct timeval *tv, void *tzvp)
 {
   static volatile char tz_inited = 0;
   unsigned ax, bx, cx, dx, old_cx, old_dx;

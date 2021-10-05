@@ -5,17 +5,19 @@
 	.code16
 	.att_syntax prefix
 
-	TEXT_ (dos_read.S.LIBGLOSS)
-	.global		_read
-_read:
+	TEXT_ (dos_mkdirr.S.LIBGLOSS)
+	.global		_mkdir_r
+_mkdir_r:
 	ENTER_BX_(6)
+	pushw	ARG0W_BX_
 	MOV_ARG2W_BX_(%dx)
-	MOV_ARG4W_BX_(%cx)
-	MOV_ARG0W_BX_(%bx)
-	movb	$0x3f,	%ah
+	movb	$0x39,	%ah
 	RMODE_DOS_CALL_
-	jnc	.noerror
-	movw	%ax,	errno
+	popw	%bx
+	jc	.error
+	xorw	%ax,	%ax
+	RET_(6)
+.error:
+	movw	%ax,	(%bx)
 	movw	$-1,	%ax
-.noerror:
 	RET_(6)

@@ -1,6 +1,6 @@
-/* dos-fstat.c basic fstat for DOS
+/* dos-fstatr.c basic _fstat_r for DOS
  *
- * Copyright (c) 2018 TK Chia
+ * Copyright (c) 2018--2021 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -19,9 +19,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <_syslist.h>
-
-#undef errno
-extern int errno;
+#include <reent.h>
 
 extern time_t __msdos_cvt_file_time (unsigned, unsigned);
 
@@ -41,7 +39,7 @@ extern time_t __msdos_cvt_file_time (unsigned, unsigned);
  */
 
 static int
-dos_ioctl_get_fd_info (int fd, unsigned *p_diw)
+dos_ioctl_get_fd_info (struct _reent *reent, int fd, unsigned *p_diw)
 {
   int ret, carry;
   unsigned diw;
@@ -50,7 +48,7 @@ dos_ioctl_get_fd_info (int fd, unsigned *p_diw)
 		: "1" (0x4400u), "b" (fd) : "cc");
   if (carry)
     {
-      errno = ret;
+      reent->_errno = ret;
       return carry;
     }
   *p_diw = diw;
@@ -58,7 +56,8 @@ dos_ioctl_get_fd_info (int fd, unsigned *p_diw)
 }
 
 static int
-dos_lseek (int fd, off_t offset, int whence, off_t *p_new_offset)
+dos_lseek (struct _reent *reent, int fd, off_t offset, int whence,
+	   off_t *p_new_offset)
 {
   int carry;
   unsigned ax, dx;
@@ -69,7 +68,7 @@ dos_lseek (int fd, off_t offset, int whence, off_t *p_new_offset)
 		: "cc");
   if (carry)
     {
-      errno = (int) ax;
+      reent->_errno = (int) ax;
       return carry;
     }
   if (p_new_offset)
@@ -78,7 +77,7 @@ dos_lseek (int fd, off_t offset, int whence, off_t *p_new_offset)
 }
 
 static time_t
-dos_get_fd_mtime (int fd)
+dos_get_fd_mtime (struct _reent *reent, int fd)
 {
   int ret, carry;
   unsigned cx, dx;
@@ -89,7 +88,7 @@ dos_get_fd_mtime (int fd)
 		: "cc");
   if (carry)
     {
-      errno = ret;
+      reent->_errno = ret;
       return carry;
     }
 
@@ -97,14 +96,14 @@ dos_get_fd_mtime (int fd)
 }
 
 int
-_fstat (int fd, struct stat * restrict buf)
+_fstat_r (struct _reent *reent, int fd, struct stat * restrict buf)
 {
   unsigned diw;
   off_t save_offset, eof_offset;
 
   memset (buf, 0, sizeof *buf);
 
-  if (dos_ioctl_get_fd_info (fd, &diw) != 0)
+  if (dos_ioctl_get_fd_info (reent, fd, &diw) != 0)
     return -1;
 
   if ((diw & 0x0080u) != 0)
@@ -115,20 +114,20 @@ _fstat (int fd, struct stat * restrict buf)
     }
   else
     {					/* regular file */
-      if (dos_lseek (fd, (off_t) 0, 1, &save_offset) != 0
-	  || dos_lseek (fd, (off_t) 0, 2, &eof_offset) != 0)
+      if (dos_lseek (reent, fd, (off_t) 0, 1, &save_offset) != 0
+	  || dos_lseek (reent, fd, (off_t) 0, 2, &eof_offset) != 0)
 	return -1;			/* if we cannot get the file size,
 					   return with an error rather than
 					   silently returning a 0 file size */
 
-      dos_lseek (fd, save_offset, 0, NULL);
+      dos_lseek (reent, fd, save_offset, 0, NULL);
       buf->st_size = eof_offset;
 
       buf->st_mode = S_IFREG | S_IRWXU | S_IRWXG | S_IRWXO;
       buf->st_dev = diw & 0x3fu;
     }
 
-  buf->st_mtime = buf->st_atime = buf->st_ctime = dos_get_fd_mtime (fd);
+  buf->st_mtime = buf->st_atime = buf->st_ctime = dos_get_fd_mtime (reent, fd);
   buf->st_nlink = 1;
   return 0;
 }

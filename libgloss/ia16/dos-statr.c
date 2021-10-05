@@ -1,7 +1,7 @@
-/* dos-stat.c basic stat for DOS
+/* dos-statr.c basic _stat_r for DOS
  *
  * Copyright (c) 2018 Bart Oldeman
- * Copyright (c) 2019 TK Chia
+ * Copyright (c) 2019--2021 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -20,10 +20,8 @@
 #include <sys/stat.h>
 #include <errno.h>
 #include <_syslist.h>
+#include <reent.h>
 #include "pmode.h"
-
-#undef errno
-extern int errno;
 
 #ifndef FP_SEG
 #define FP_SEG(x) \
@@ -62,7 +60,8 @@ static unsigned char dos_getdrive (void)
   return ret;
 }
 
-static int dos_findfirst (const char *path, struct _find_t *findbuf)
+static int dos_findfirst (struct _reent *reent, const char *path,
+			  struct _find_t *findbuf)
 {
   int ret, carry;
   dos_set_dta (findbuf);
@@ -72,14 +71,15 @@ static int dos_findfirst (const char *path, struct _find_t *findbuf)
 		"d"(path), "Rds"(FP_SEG(path)) : "cc", "memory");
   if (carry)
     {
-      errno = ret;
+      reent->_errno = ret;
       return carry;
     }
   return ret;
 }
 
 int
-_stat (const char * restrict path, struct stat * restrict buf)
+_stat_r (struct _reent *reent, const char * restrict path,
+	 struct stat * restrict buf)
 {
   struct _find_t findbuf;
   unsigned char attr;
@@ -89,11 +89,11 @@ _stat (const char * restrict path, struct stat * restrict buf)
      these anyway.)  */
   if (path[strcspn (path, "*?")] != 0)
     {
-      errno = ENOENT;
+      reent->_errno = ENOENT;
       return -1;
     }
 
-  if (dos_findfirst (path, &findbuf))
+  if (dos_findfirst (reent, path, &findbuf))
     return -1;
 
   /* zero any fields that don't really apply to DOS,

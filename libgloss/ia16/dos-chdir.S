@@ -16,6 +16,7 @@ chdir:
 	xorw	%ax,	%ax
 	RET_(2)
 .error:
-	movw	%ax,	errno
+	movw	_impure_ptr, %bx
+	movw	%ax,	(%bx)
 	movw	$-1,	%ax
 	RET_(2)
