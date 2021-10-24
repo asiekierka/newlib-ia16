@@ -37,8 +37,10 @@ _write_r:
 	popw	%bx
 	jnc	.noerror
 	movw	%ax,	(%bx)
-	sbbw	%cx,	%cx
-.nowrite:
-	xchgw	%ax,	%cx
+	sbbw	%ax,	%ax
 .noerror:
+	RET_(8)
+.nowrite:
+	popw	%bx
+	xchgw	%ax,	%cx
 	RET_(8)
