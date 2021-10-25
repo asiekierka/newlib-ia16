@@ -31,14 +31,6 @@ _start:
 
 #ifndef TSR
 _start:
-#else
-	# If this is a TSR, copy the transient code & data after .startup
-	# from their load address (LMA) to their runtime address (VMA).
-	movw	$__edata_nokeep_load-2, %si
-	movw	$__edata_nokeep-2, %di
-	movw	$__lnokeep_to_copy2, %cx
-	std
-	rep	movsw
 #endif
 	# Get the MS-DOS version number & see if it is 2 or above.
 	movb	$0x30,	%ah
@@ -48,32 +40,27 @@ _start:
 	# Set bp to zero iff the MS-DOS version is 2.x.  DOS 3+ gives us the
 	# program's name in the environment segment, but DOS 2.x does not.
 	xchgw	%ax,	%bp
-#ifdef TSR
-	# If this is a TSR, we are still running our startup code at the
-	# LMA.  The subsequent code has been copied to the VMA; jump there.
-	# 0xe9 is a near relative `jmp'.
-	.byte	0xe9
-	.word	__text_nokeep_leap
-#endif
 	# At this point, the flags should contain the result of comparing the
 	# DOS major version number with 2.  dos-mtv1.S & dos-mxv1.S make use
 	# of this.
 
 	.section .startupC, "ax"
 
-#ifdef TSR
-	# If this is a TSR, switch to the transient stack.
-	movw	$__stack_end_nokeep, %sp
-#endif
 	# For a .com file, resize the program's memory control block to
 	# cover only the near code and data segments.  Abort on any failure.
 	#
 	# .exe files that are meant to fail properly under MS-DOS 1.x will
 	# also need to do this, but this is handled by dos-mxv1.S.
 	#
-	# TODO: maybe allow the MCB to be less than 64 KiB under certain
-	# conditions --- e.g. if it is enough for BSS and stack and perhaps
-	# a user-specified heap space.
+	# TODO: for non-TSRs, maybe allow the MCB to be less than 64 KiB
+	# under certain conditions --- e.g. if it is enough for BSS and
+	# stack and perhaps a user-specified heap space.
+#ifdef TSR
+	movw	$__entry_stack_end_minimum, %ax
+	cmpw	%ax,	%sp
+	jb	.Lbail
+	xchgw	%ax,	%sp
+#endif
 #ifdef TINY
 	movb	$0x4a,	%ah
 	movw	$__msdos_initial_alloc_paras, %bx
@@ -88,6 +75,27 @@ _start:
 	pushw	%ss
 	popw	%es
 #endif
+#ifdef TSR
+	# If this is a TSR, copy the transient code & data after .startup
+	# from their load address (LMA) to their runtime address (VMA).
+	movw	$__edata_nokeep_load-2, %si
+	movw	$__edata_nokeep-2, %di
+	movw	$__lnokeep_to_copy2, %cx
+	std
+	rep	movsw
+	# We are still running our startup code at the LMA.  The subsequent
+	# code has been copied to the VMA; jump there.  0xe9 is a near
+	# relative `jmp'.
+	# 0xe9 is a near relative `jmp'.
+	.byte	0xe9
+	.word	__text_nokeep_leap
+	# (This label is used by the linker script.)
+	.global	__stext_nokeep_to_copy
+__stext_nokeep_to_copy:
+	# OK, we are now running at the VMA.  Switch to the transient stack.
+	movw	$__stack_end_nokeep, %sp
+#endif
+	# Clear the BSS area(s).
 	xorw	%ax, %ax
 #ifndef TSR
 	movw	$__sbss, %di

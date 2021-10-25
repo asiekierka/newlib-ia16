@@ -87,7 +87,8 @@ SECTIONS
 	__ldata_keep = __edata_keep - __sdata_keep;
 	__lbss_keep2 = (__ebss_keep - __sbss_keep + 1) / 2;
 
-    __nokeep_end_maximum = 0xff00;
+    __entry_stklen = 0x100;
+    __nokeep_end_maximum = 0x10000 - __entry_stklen;
 
     /* Size of the transient stack, if the user does not specify one. */
     PROVIDE (__stklen_val_nokeep = 0x300);
@@ -127,7 +128,6 @@ SECTIONS
 		__stext_nokeep = .;
 		*(.startupB)
 		__stack_end_nokeep = . & -0x10;
-		__stext_nokeep_to_copy = .;
 		*(.msdos_init) *(.msdos_init.*)
 		*(.startupC)
 		*(.init)
@@ -192,12 +192,15 @@ SECTIONS
 	__lbss_nokeep = __ebss_nokeep - __sbss_nokeep;
 	__lbss_nokeep2 = (__lbss_nokeep + 1) / 2;
 
+	__entry_stack_end_minimum
+	  = MIN (ALIGN (__ebss_nokeep + __entry_stklen, 0x10), 0xfffe);
+
     ASSERT(. <= __nokeep_end_maximum, "Error: too large for a .com file.")
     /*
      * Used by the memory resizing and DPMI initialization code in
      * dos-models-crt0.S.
      */
-    __msdos_initial_alloc_paras = 0x1000;
+    __msdos_initial_alloc_paras = (__entry_stack_end_minimum + 15) / 16;
 
     /DISCARD/ : { *(.*) }
   }
