@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 TK Chia
+ * Copyright (c) 2019--2021 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -13,30 +13,31 @@
  */
 
 /*
- * Implementation of -mmsdos-handle-v1 for the tiny memory model.  This works
- * in conjunction with libdosv1.a.
+ * Implementation of -mhandle-non-i186 for the tiny memory model.  This works
+ * in conjunction with libck086.a.
  */
 
-	.arch	i8086, jumps
+	.arch	i8086, nojumps
 	.code16
 
-	.section .msdos_init, "ax"
+	.section .msdos_init.handle_non_i186, "ax"
 
 	/*
-	 * Exit immediately if the MS-DOS version is less than 2.  At
-	 * this point the flags should contain the result of comparing the
-	 * DOS major version number with 2.
+	 * Do a quick check that we are indeed dealing with a 186+.
+	 *
+	 * 0x6a is `pushw' on 186+, and as alias for 0x7a (`jpe') on the
+	 * 8086 (www.os2museum.com/wp/undocumented-8086-opcodes/).
 	 */
-	jnb	0f
+	movw	%sp,	%ax
+	.byte	0x6a, 0x00
+	subw	%sp,	%ax
 	movw	$1f,	%dx
-	movb	$9,	%ah
-	int	$0x21
-	ret
-0:
+	jz	__msdos_crt_bail
+	popw	%ax
 
 	.section .rodata.startup, "a"
 
-1:	.ascii	"Bad DOS$"
+1:	.ascii	"No 186+$"
 
-	.globl	__msdos_handle_v1
-	.set	__msdos_handle_v1, 2
+	.globl	__msdos_handle_non_i186
+	.set	__msdos_handle_non_i186, 1

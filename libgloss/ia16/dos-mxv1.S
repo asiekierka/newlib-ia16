@@ -20,7 +20,7 @@
 	.arch	i8086, jumps
 	.code16
 
-	.section .startupA, "ax"
+	.section .msdos_init, "ax"
 
 	/*
 	 * At this point the flags should contain the result of comparing the
@@ -31,14 +31,16 @@
 	 * is wrong.
 	 */
 	jnb	0f
+	movb	$9,	%ah
+	cwtd
 	pushw	%es
-	xorw	%ax,	%ax
-	pushw	%ax
+	pushw	%dx
+	movw	$1f,	%dx
+	pushw	%ss
+	popw	%ds
+	int	$0x21
 	lretw
 0:
-
-	.section .msdos_init, "ax"
-
 	/*
 	 * If -mmsdos-handle-v1 is on, then the .exe header will be set to
 	 * allocate the largest possible memory block to our program (see
@@ -47,6 +49,10 @@
 	movb	$0x4a,	%ah
 	movw	$__msdos_initial_alloc_paras, %bx
 	int	$0x21
+
+	.section .rodata.startup, "a"
+
+1:	.ascii	"Bad DOS$"
 
 	.globl	__msdos_handle_v1
 	.set	__msdos_handle_v1, 2

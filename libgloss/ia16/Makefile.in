@@ -60,7 +60,7 @@ ELKS_CRT0	= elks-crt0.o
 
 DOS_COMMON_OBJS = dos-chdir.o dos-closer.o dos-cvt-file-time.o dos-dup.o \
 		  dos-dup2.o dos-fstatr.o dos-getcwd.o dos-getcwd-impl.o \
-		  dos-gettimeofdayr.o dos-heaplen.o dos-i086.o dos-isattyr.o \
+		  dos-gettimeofdayr.o dos-heaplen.o dos-isattyr.o \
 		  dos-lseekr.o dos-mkdirr.o dos-openr.o dos-readr.o \
 		  dos-realpath.o dos-renamer.o dos-rmdir.o dos-sbrkr.o \
 		  dos-statr.o dos-timesr.o dos-uname.o dos-uname-impl.o \
@@ -76,7 +76,7 @@ DOS_COMMON_OBJS += $(if $(PROTECTED_MODE_P), \
 
 DOS_TINY_OBJS	= $(DOS_COMMON_OBJS)
 DOS_TINY_OBJS	+= $(if $(PROTECTED_MODE_P),dpm-mtds.o,dos-mtabort.o) \
-		   dos-mtv1.o
+		   dos-mti0.o dos-mtv1.o
 DOS_TINY_CFLAGS	= -mseparate-code-segment -g -Os
 DOS_TINY_ASFLAGS =
 DOS_TINY_SCRIPTS = dos-com.ld dos-mt.ld dos-mts.ld dos-mtl.ld dos-mtsl.ld \
@@ -88,7 +88,7 @@ DOS_TSR_TINY_CRT0 = dtr-t-c0.o
 DOS_SMALL_OBJS	= $(DOS_COMMON_OBJS)
 DOS_SMALL_OBJS	+= $(if $(PROTECTED_MODE_P),dpm-mscs.o dpm-msds.o, \
 			dos-msmmabort.o) \
-		   dos-mxv1.o
+		   dos-mxi0.o dos-mxv1.o
 DOS_SMALL_CFLAGS = $(DOS_TINY_CFLAGS)
 DOS_SMALL_ASFLAGS = $(DOS_TINY_ASFLAGS)
 DOS_SMALL_SCRIPTS = dos-exe-small.ld dos-ms.ld dos-mss.ld dos-msl.ld \

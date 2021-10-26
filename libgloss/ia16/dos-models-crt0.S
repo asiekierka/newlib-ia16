@@ -55,20 +55,30 @@ _start:
 	# TODO: for non-TSRs, maybe allow the MCB to be less than 64 KiB
 	# under certain conditions --- e.g. if it is enough for BSS and
 	# stack and perhaps a user-specified heap space.
-#ifdef TSR
+#ifdef TINY
+# ifdef TSR
 	movw	$__entry_stack_end_minimum, %ax
 	cmpw	%ax,	%sp
-	jb	.Lbail
+	jb	.Lno_room
 	xchgw	%ax,	%sp
-#endif
-#ifdef TINY
+# endif
 	movb	$0x4a,	%ah
 	movw	$__msdos_initial_alloc_paras, %bx
 	int	$0x21
 	jnc	.Lmcb_ok
-.Lbail:
+.Lno_room:
+	movw	$.Lno_room_msg, %dx
+	.global	__msdos_crt_bail
+__msdos_crt_bail:
+	movb	$9,	%ah
+	int	$0x21
 	movb	$-1,	%al
 	jmp	.Lexit
+	.pushsection .rodata.startup, "a"
+.Lno_room_msg:
+	.ascii	"No room$"
+	.balign	2
+	.popsection
 .Lmcb_ok:
 #endif
 #ifndef TINY
@@ -86,7 +96,6 @@ _start:
 	# We are still running our startup code at the LMA.  The subsequent
 	# code has been copied to the VMA; jump there.  0xe9 is a near
 	# relative `jmp'.
-	# 0xe9 is a near relative `jmp'.
 	.byte	0xe9
 	.word	__text_nokeep_leap
 	# (This label is used by the linker script.)
@@ -142,7 +151,7 @@ __stext_nokeep_to_copy:
 	# instead of quitting.
 	shrw	%bx
 	jnc	.L16bit_ok
-	.pushsection .rodata
+	.pushsection .rodata.startup, "a"
 0:
 	.byte	0xa8,0x01	#	"test	al,1"
 	.byte	0x75,0x29	#	"jnz	short ok_32"

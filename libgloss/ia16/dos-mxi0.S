@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 TK Chia
+ * Copyright (c) 2019--2021 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -13,14 +13,14 @@
  */
 
 /*
- * Implementation of -mhandle-non-i186 for all memory models.  This works
- * in conjunction with libck086.a.
+ * Implementation of -mhandle-non-i186 for memory models other than the tiny
+ * model.  This works in conjunction with libck086.a.
  */
 
-	.arch	i8086, jumps
+	.arch	i8086, nojumps
 	.code16
 
-	.section .msdos_init.handle_i186, "ax"
+	.section .msdos_init.handle_non_i186, "ax"
 
 	/*
 	 * Do a quick check that we are indeed dealing with a 186+.
@@ -32,10 +32,19 @@
 	.byte	0x6a, 0x00
 	subw	%sp,	%ax
 	jnz	0f
-	decw	%ax
+	movw	$1f,	%dx
+	movb	$9,	%ah
+	pushw	%ss
+	popw	%ds
+	int	$0x21
+	movb	$-1,	%ah
 	jmp	__msdos_crt_exit
 0:
 	popw	%ax
+
+	.section .rodata.startup, "a"
+
+1:	.ascii	"No 186+$"
 
 	.globl	__msdos_handle_non_i186
 	.set	__msdos_handle_non_i186, 1
