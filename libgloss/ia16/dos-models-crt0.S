@@ -74,7 +74,7 @@ __msdos_crt_bail:
 	int	$0x21
 	movb	$-1,	%al
 	jmp	.Lexit
-	.pushsection .rodata.startup, "a"
+	.pushsection .msdos_init_rodata, "a"
 .Lno_room_msg:
 	.ascii	"No room$"
 	.balign	2
@@ -86,7 +86,7 @@ __msdos_crt_bail:
 	popw	%es
 #endif
 #ifdef TSR
-	# If this is a TSR, copy the transient code & data after .startup
+	# If this is a TSR, copy the transient code & data after .startupC
 	# from their load address (LMA) to their runtime address (VMA).
 	movw	$__edata_nokeep_load-2, %si
 	movw	$__edata_nokeep-2, %di

@@ -34,7 +34,7 @@
 	ret
 0:
 
-	.section .rodata.startup, "a"
+	.section .msdos_init_rodata, "a"
 
 1:	.ascii	"Bad DOS$"
 

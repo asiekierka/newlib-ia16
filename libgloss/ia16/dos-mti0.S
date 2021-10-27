@@ -35,7 +35,7 @@
 	jz	__msdos_crt_bail
 	popw	%ax
 
-	.section .rodata.startup, "a"
+	.section .msdos_init_rodata, "a"
 
 1:	.ascii	"No 186+$"
 

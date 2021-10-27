@@ -114,6 +114,16 @@ SECTIONS
     ASSERT (__heaplen_val > 0, "Error: no space for resident heap.")
 
     /*
+     * .msdos_init_rodata contains error messages which may be used before
+     * we move our transient code & data higher up.  Thus it should have VMA
+     * == LMA even at program entry.
+     */
+    .msdos_init_rodata __sbss_keep : {
+		*(.msdos_init_rodata) *(.msdos_init_rodata.*)
+		__stext_nokeep_load = .;
+	}
+
+    /*
      * Target transient text sections.
      *
      * I use the name .text.startup because this is the (input) section name
@@ -122,9 +132,8 @@ SECTIONS
      */
     .text.startup ALIGN (__heap_end_minimum + __heaplen_val
 					    + __stklen_val_nokeep, 2)
-		  : AT (__sbss_keep)
+		  : AT (__stext_nokeep_load)
 	{
-		__stext_nokeep_load = LOADADDR (.text.startup);
 		__stext_nokeep = .;
 		*(.startupB)
 		__stack_end_nokeep = . & -0x10;

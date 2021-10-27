@@ -50,7 +50,7 @@
 	movw	$__msdos_initial_alloc_paras, %bx
 	int	$0x21
 
-	.section .rodata.startup, "a"
+	.section .msdos_init_rodata, "a"
 
 1:	.ascii	"Bad DOS$"
 

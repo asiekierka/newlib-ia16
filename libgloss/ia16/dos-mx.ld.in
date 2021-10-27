@@ -250,6 +250,7 @@ cat <<'EPART8'
 		KEEP (*(SORT(.dtors.*)))
 		KEEP (*(.dtors))
 
+		*(.msdos_init_rodata)
 		*(.rodata) *(.rodata.*)
 		*(.data) *(.data.*)
 		*(.gcc_except_table)
