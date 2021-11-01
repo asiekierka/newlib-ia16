@@ -7,22 +7,25 @@ w1=with
 w2=with
 w3=without
 crt0=-l:dos-t-c0.o
-case "$1" in
-  -nostdlib)
-    cmd1='/^@if_starts@/,/^@endif@/ d'
-    cmd2='/^@if_libs@/,/^@endif@/ d'
-    w1=without
-    w2=without;;
-  -nostartfiles)
-     cmd1='/^@if_starts@/,/^@endif@/ d'
-     w1=without;;
-  -nodefaultlibs)
-     cmd2='/^@if_libs@/,/^@endif@/ d'
-     w2=without;;
-  -mdpmiable)
-     crt0=-l:dpm-t-c0.o
-     w3=with;;
-esac
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -nostdlib)
+      cmd1='/^@if_starts@/,/^@endif@/ d'
+      cmd2='/^@if_libs@/,/^@endif@/ d'
+      w1=without
+      w2=without;;
+    -nostartfiles)
+       cmd1='/^@if_starts@/,/^@endif@/ d'
+       w1=without;;
+    -nodefaultlibs)
+       cmd2='/^@if_libs@/,/^@endif@/ d'
+       w2=without;;
+    -mdpmiable)
+       crt0=-l:dpm-t-c0.o
+       w3=with;;
+  esac
+  shift
+done
 sed -e "$cmd1" -e "$cmd2" -e "s;@crt0@;$crt0;g" \
     -e "s;@withstarts@;$w1;g" -e "s;@withlibs@;$w2;g" \
     -e "s;@withdpmiable@;$w3;g" \
