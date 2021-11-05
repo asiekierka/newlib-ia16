@@ -63,9 +63,9 @@ _gettimeofday_r (struct _reent *reent, struct timeval *tv, void *tzvp)
     }
   while (cx != old_cx || dx != old_dx);
 
-  tm.tm_year = cx - 1900;
-  tm.tm_mon = (dx >> 8) - 1;
-  tm.tm_mday = dx & 0xff;
+  tm.tm_year = old_cx - 1900;
+  tm.tm_mon = (old_dx >> 8) - 1;
+  tm.tm_mday = old_dx & 0xff;
   tm.tm_isdst = -1;
 
   tim = mktime (&tm);
