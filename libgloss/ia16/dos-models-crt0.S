@@ -264,8 +264,6 @@ __stext_nokeep_to_copy:
 	.set	.Lpsp,	.Largv
 #endif
 
-	.section .startupD, "ax"
-
 	# Find length of environment + progname
 #ifndef TINY
 	popw	%ds
@@ -388,15 +386,22 @@ __stext_nokeep_to_copy:
 	decw	%bx
 	loop	.Ldo_reverse
 .Lno_reverse:
-	movw	%sp,	%ax
 	movw	%bp,	environ
 #ifndef __IA16_CALLCVT_REGPARMCALL
+	movw	%sp,	%ax
 	pushw	%bp		# envp
 	pushw	%ax		# argv
 	pushw	%dx		# argc
 #else
-	xchgw	%ax,	%dx
-	movw	%bp,	%cx
+	pushw	%dx
+#endif
+
+	.section .startupD, "ax"
+
+#ifdef __IA16_CALLCVT_REGPARMCALL
+	popw	%ax		# argc
+	movw	%sp,	%dx	# argv
+	movw	%bp,	%cx	# envp
 #endif
 	CALL_ (main)
 #if defined __IA16_CALLCVT_CDECL
