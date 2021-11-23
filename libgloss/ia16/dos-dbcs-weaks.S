@@ -38,6 +38,9 @@
  * Return a far pointer to the currently active double-byte character set
  * (DBCS) lead byte table.  If there is no lead byte table or the table is
  * empty, return 0:0.
+ *
+ * The routine name _dos_get_dbcs_lead_table () comes from Open Watcom's
+ * library internal interfaces.
  */
 	.weak	_dos_get_dbcs_lead_table
 _dos_get_dbcs_lead_table:
@@ -53,38 +56,49 @@ _dos_get_dbcs_lead_table:
 	 */
 	movw	%ax,	%bx
 	orw	%dx,	%bx
-	jz	9f
+	jz	8f
 	/*
 	 * Ugh.  We need to allocate an LDT descriptor for the lead byte
 	 * table's segment.
 	 */
 	pushw	%ax
-	xorw	%ax,	%ax		/* allocate descriptor: %ax := 0 */
+	xorw	%ax,	%ax		/* allocate descriptor(s): %ax := 0 */
 	movw	$1,	%cx
 	int	$0x31
-	jc	8f
-	movb	$0x07,	%al		/* set segment base: %ax := 0x0007 */
+	jc	9f
+	xchgw	%ax,	%bx
+	pushw	%es
+	pushw	%di
+	pushw	%ss
+	popw	%es
+	movw	$0x000b, %ax		/* get descriptor: %ax := 0x000b */
+	subw	$8,	%sp
+	movw	%sp,	%di
+	int	$0x31
+	jc	9f
+	movw	$0xffff, (%di)		/* change limit to 0xffff */
 	movb	$4,	%cl
 	rolw	%cl,	%dx
 	movw	%dx,	%cx
 	andb	$-16,	%dl
-	xorw	%dx,	%cx
+	xorb	%dl,	%cl		/* %cl:%dx now gives segment base */
+	movw	%dx,	2(%di)		/* fill in segment base */
+	movb	%cl,	4(%di)
+					/* make segment non-executable,
+					   read-only, 16-bit, expand-up */
+	andw	$0b0011000011110001, 5(%di)
+	incw	%ax			/* set descriptor: %ax := 0x000c */
 	int	$0x31
-	jc	8f
-	incw	%ax			/* set segment limit: %ax := 0x0008 */
-	xorw	%cx,	%cx
-	movw	$-1,	%dx
-	int	$0x31
-	jc	8f
+	jc	9f
+	addw	$8,	%sp
+	popw	%di
+	popw	%es
 	popw	%ax
 	movw	%bx,	%dx
-	RET_ (0)
 8:
-	popw	%ax
-	xorw	%ax,	%ax
-	cbtw
-9:
 	RET_ (0)
+9:
+	call	abort
 10:
 #endif
 	pushw	%bx
