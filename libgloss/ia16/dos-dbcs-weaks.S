@@ -101,8 +101,6 @@ _dos_get_dbcs_lead_table:
 	call	abort
 10:
 #endif
-	pushw	%bx
-	pushw	%cx
 	pushw	%bp
 	pushw	%si
 	pushw	%di
@@ -129,8 +127,6 @@ _dos_get_dbcs_lead_table:
 	popw	%di
 	popw	%si
 	popw	%bp
-	popw	%cx
-	popw	%bx
 	RET_ (0)
 18:
 	stc
