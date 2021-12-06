@@ -42,18 +42,13 @@ extern char *__msdos_getcwd (char[PATH_MAX], unsigned char);
 static bool
 __msdos_truename (const char *path, char *out_path)
 {
-  /*
-   * Make doubly sure that the input & output buffers do not overlap for the
-   * "truename" syscall...
-   */
-  char buf[PATH_MAX];
   int err, carry;
 
   __asm volatile (RMODE_DOS_CALL_ "; sbbw %1, %1"
 		  : "=a" (err), "=r" (carry)
 		  : "Rah" ((uint8_t) 0x60),
 		    "Rds" (FP_SEG (path)), "S" (FP_OFF (path)),
-		    "e" (FP_SEG (buf)), "D" (FP_OFF (buf))
+		    "e" (FP_SEG (out_path)), "D" (FP_OFF (out_path))
 		  : "cc", "memory");
 
   if (carry)
@@ -62,7 +57,6 @@ __msdos_truename (const char *path, char *out_path)
       return false;
     }
 
-  strcpy (out_path, buf);
   return true;
 }
 
