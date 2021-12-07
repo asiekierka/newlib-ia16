@@ -24,6 +24,6 @@
  */
 
 INPUT ((DEFINED (__ia16_use_printf_nofloat.v1)
-	&& ! DEFINED (__ia16_printf_use_float.v1) : -l:iprtf-fw.a))
+	&& ! DEFINED (__ia16_use_printf_float.v1) : -l:iprtf-fw.a))
 INPUT ((DEFINED (__ia16_use_scanf_nofloat.v1)
-	&& ! DEFINED (__ia16_scanf_use_float.v1) : -l:iscnf-fw.a))
+	&& ! DEFINED (__ia16_use_scanf_float.v1) : -l:iscnf-fw.a))
