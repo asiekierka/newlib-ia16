@@ -96,7 +96,7 @@ __msdos_path_sep_p (char c)
 #define COPY(chrs, len) \
 	do \
 	  { \
-	    if (j > PATH_MAX - (len)) \
+	    if (j >= PATH_MAX - (len)) \
 	      { \
 		errno = ENAMETOOLONG; \
 		goto bail; \
@@ -108,7 +108,7 @@ __msdos_path_sep_p (char c)
 #define COPY1(chr) \
 	do \
 	  { \
-	    if (j >= PATH_MAX) \
+	    if (j >= PATH_MAX - 1) \
 	      { \
 		errno = ENAMETOOLONG; \
 		goto bail; \
