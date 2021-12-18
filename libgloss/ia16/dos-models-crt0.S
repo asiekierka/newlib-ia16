@@ -125,6 +125,15 @@ __stext_nokeep_to_copy:
 	# segment, and PSP; and we have not invoked the program's
 	# constructor routines yet.  This is a good time to switch to
 	# protected mode if we want to.
+	#
+	# (Note however that MS-DOS 2.x does not provide a default interrupt
+	# 0x2f handler.  So first we must check if there is indeed such a
+	# handler...)
+	movw	$0x352f, %ax
+	int	$0x21
+	movw	%es,	%ax
+	orw	%bx,	%ax
+	jz	.Lno_dpmi
 	movw	$0x1687, %ax
 	int	$0x2f
 	testw	%ax,	%ax
