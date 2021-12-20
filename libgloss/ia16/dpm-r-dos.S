@@ -66,6 +66,8 @@ __ia16_rmode_dos_call:
 	pushw	%di
 	movw	$0x0300, %ax
 	movw	$0x0021, %bx
+	movw	%ss,	%di		/* point %es:%di to call structure */
+	movw	%di,	%es
 	movw	%sp,	%di
 	int	$0x31			/* %cx == 0 here :) */
 	movw	%sp,	%bx
