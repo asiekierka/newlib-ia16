@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 TK Chia
+ * Copyright (c) 2020--2021 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -13,11 +13,11 @@
  */
 
 /*
- * This "library" (linker script) is used by the -mhandle-non-i186 option
+ * This "library" (linker script) is used by the -mhandle-non-i286 option
  * of ia16-elf-gcc to alter the link process so that, if the output program
- * uses Intel 80186 CPU features, it will fail gracefully rather than crash
- * when run on an Intel 8086 or 8088.  This works in conjunction with
- * dos-mti0.S and dos-mxi0.S.  -- tkchia
+ * uses Intel 80286 CPU features, it will fail gracefully rather than crash
+ * when run on an Intel 8086, 8088, 80186, or 80188.  This works in
+ * conjunction with dos-mti1.S and dos-mxi1.S.  -- tkchia
  */
 
-EXTERN (__msdos_handle_non_i186)
+EXTERN (__msdos_handle_non_i286)
