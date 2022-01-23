@@ -46,6 +46,8 @@ SECTIONS
     .text : {
 		__stext_keep = .;
 		*(.startupA)
+		*(.head) *(.head.*)
+		*(.startupB)
 		*(.text) *(.text. .text.[^se]* .text.s[^t]* .text.st[^a]*
 			   .text.sta[^r]* .text.star[^t]* .text.start[^u]*
 			   .text.startu[^p]* .text.startup[^.]* .text.e[^x]*
@@ -135,12 +137,12 @@ SECTIONS
 		  : AT (__stext_nokeep_load)
 	{
 		__stext_nokeep = .;
-		*(.startupB)
+		*(.startupC)
 		__stack_end_nokeep = . & -0x10;
 		*(.msdos_init) *(.msdos_init.*)
-		*(.startupC)
-		*(.init)
 		*(.startupD)
+		*(.init)
+		*(.startupE)
 		*(.text.startup) *(.text.startup.*)
 	}
 	/*

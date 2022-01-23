@@ -20,18 +20,18 @@
 
 	.global	_start
 
-#ifdef TSR
 	.section .startupA, "ax"
 
 _start:
+
+#ifdef TSR
+	.section .startupB, "ax"
+
 	jmp	__stext_nokeep_load
 #endif
 
-	.section .startupB, "ax"
+	.section .startupC, "ax"
 
-#ifndef TSR
-_start:
-#endif
 	# Get the MS-DOS version number & see if it is 2 or above.
 	movb	$0x30,	%ah
 	int	$0x21
@@ -44,7 +44,7 @@ _start:
 	# DOS major version number with 2.  dos-mtv1.S & dos-mxv1.S make use
 	# of this.
 
-	.section .startupC, "ax"
+	.section .startupD, "ax"
 
 	# For a .com file, resize the program's memory control block to
 	# cover only the near code and data segments.  Abort on any failure.
@@ -86,7 +86,7 @@ __msdos_crt_bail:
 	popw	%es
 #endif
 #ifdef TSR
-	# If this is a TSR, copy the transient code & data after .startupC
+	# If this is a TSR, copy the transient code & data after .startupD
 	# from their load address (LMA) to their runtime address (VMA).
 	movw	$__edata_nokeep_load-2, %si
 	movw	$__edata_nokeep-2, %di
@@ -405,7 +405,7 @@ __stext_nokeep_to_copy:
 	pushw	%dx
 #endif
 
-	.section .startupD, "ax"
+	.section .startupE, "ax"
 
 #ifdef __IA16_CALLCVT_REGPARMCALL
 	popw	%ax		# argc

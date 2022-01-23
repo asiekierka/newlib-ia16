@@ -71,6 +71,10 @@ cat <<'EPART2'
 
 SECTIONS
   {
+    .head : {
+		*(.head) *(.head.*)
+	} >hdrvma AT>bseglma
+
     /* Fabricate a .exe header here.  Although libbfd does have an
        "i386msdos" back-end which produces an "MZ" exe header, it cannot do
        certain things (yet).  In particular, we would like to use the .exe
@@ -154,10 +158,11 @@ SECTIONS
 		__stext = .;
 		*(.startupA)
 		*(.startupB)
-		*(.msdos_init) *(.msdos_init.*)
 		*(.startupC)
-		*(.init)
+		*(.msdos_init) *(.msdos_init.*)
 		*(.startupD)
+		*(.init)
+		*(.startupE)
 		*(.exitA)
 		*(.fini)
 		*(.exitB)
