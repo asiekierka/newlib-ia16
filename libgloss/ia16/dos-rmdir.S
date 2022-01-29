@@ -6,8 +6,8 @@
 	.att_syntax prefix
 
 	TEXT_ (dos_rmdir.S.LIBGLOSS)
-	.global		_rmdir
-_rmdir:
+	.global	rmdir
+rmdir:
 	ENTER_BX_(2)
 	MOV_ARG0W_BX_(%dx)
 	movb	$0x3a,	%ah
