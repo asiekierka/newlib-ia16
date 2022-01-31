@@ -58,8 +58,9 @@ ELKS_SCRIPTS	= elk-mt.ld elk-mts.ld elk-mtl.ld elk-mtsl.ld \
 ELKS_BSP	= libelks.a
 ELKS_CRT0	= elks-crt0.o
 
-DOS_COMMON_OBJS = dos-chdir.o dos-closer.o dos-cvt-file-time.o dos-dbcs.o \
-		  dos-dbcs-strcspn.o dos-dbcs-weaks.o dos-dup.o dos-dup2.o \
+DOS_COMMON_OBJS = dos-access.o dos-chdir.o dos-chmod.o dos-closer.o \
+		  dos-cvt-file-time.o dos-dbcs.o dos-dbcs-strcspn.o \
+		  dos-dbcs-weaks.o dos-dup.o dos-dup2.o \
 		  dos-fstatr.o dos-getcwd.o dos-getcwd-impl.o \
 		  dos-gettimeofdayr.o dos-heaplen.o dos-isattyr.o \
 		  dos-lseekr.o dos-mkdir.o dos-mkdirr.o dos-openr.o \
