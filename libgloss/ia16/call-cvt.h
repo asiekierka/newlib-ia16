@@ -107,6 +107,7 @@
 #else
 # define SEG_RELOC_(place, sym) .reloc (place), R_386_OZSEG16, sym
 #endif
+#define AUX___(aux)		#aux
 #ifndef __IA16_CMODEL_IS_FAR_TEXT
 # define FAR_ADJ__		0
 # define RET__			ret
@@ -117,7 +118,6 @@
 #else
 # define FAR_ADJ__		2
 # define RET__			lret
-# define AUX___(aux)		#aux
 # define JMP_(func)		SEG_RELOC_ (.+3, func); \
 				ljmp $0, $func
 # define CALL_(func)		SEG_RELOC_ (.+3, func); \
