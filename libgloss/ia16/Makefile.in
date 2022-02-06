@@ -109,7 +109,8 @@ DOS_MEDIUM_CRT0	= dos-m-c0.o
 DPMIABLE_TINY_SCRIPTS = dpm-mt.ld dpm-mts.ld dpm-mtl.ld dpm-mtsl.ld
 DPMIABLE_TINY_CRT0 = dpm-t-c0.o
 
-DPMIABLE_SMALL_SCRIPTS = dpm-ms.ld dpm-mss.ld dpm-msl.ld dpm-mssl.ld
+DPMIABLE_SMALL_SCRIPTS = dpm-ms.ld dpm-mss.ld dpm-msl.ld dpm-mssl.ld \
+			 d3p-ms.ld d3p-mss.ld d3p-msl.ld d3p-mssl.ld
 DPMIABLE_SMALL_CRT0 = dpm-s-c0.o
 
 # This is a hack to allow us to build Newlib's nano formatted I/O functions
@@ -508,6 +509,18 @@ dpm-msl.ld: dos-mx.ld.in
 
 dpm-mssl.ld: dos-mx.ld.in
 	$(GEN_LD_SCRIPT) -mdpmiable >$@
+
+d3p-ms.ld: d3p-ms.ld.in
+	$(GEN_LD_SCRIPT) -nostdlib >$@
+
+d3p-mss.ld: d3p-ms.ld.in
+	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
+
+d3p-msl.ld: d3p-ms.ld.in
+	$(GEN_LD_SCRIPT) -nostartfiles >$@
+
+d3p-mssl.ld: d3p-ms.ld.in
+	$(GEN_LD_SCRIPT) >$@
 
 elk-mt.ld: elk-mt.ld.in
 	$(GEN_LD_SCRIPT) -nostdlib >$@
