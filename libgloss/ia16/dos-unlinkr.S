@@ -1,5 +1,4 @@
 #include "call-cvt.h"
-#include "pmode.h"
 
 	.arch i8086,jumps
 	.code16
@@ -12,7 +11,7 @@ _unlink_r:
 	pushw	ARG0W_BX_
 	MOV_ARG2W_BX_(%dx)
 	movb	$0x41,	%ah
-	RMODE_DOS_CALL_
+	int	$0x21
 	popw	%bx
 	jc	.error
 	xorw	%ax,	%ax

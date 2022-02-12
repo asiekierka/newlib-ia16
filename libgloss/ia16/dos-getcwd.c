@@ -17,7 +17,6 @@
 #include <limits.h>
 #include <string.h>
 #include <unistd.h>
-#include "pmode.h"
 
 extern char *__msdos_getcwd (char[PATH_MAX], unsigned char);
 

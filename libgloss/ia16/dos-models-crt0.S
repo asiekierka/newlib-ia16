@@ -6,10 +6,18 @@
        data segment.  */
 
 #if !defined TINY && !defined SMALL && !defined MEDIUM
-#error "no memory model defined -- please use -DTINY, -DSMALL or -DMEDIUM"
+# error "no memory model defined -- please use -DTINY, -DSMALL or -DMEDIUM"
 #endif
 
-#ifdef DPMIABLE
+#if defined TINY && defined DOSX
+# error "tiny model in DOS extender mode not supported"
+#endif
+
+#if !defined TINY && defined TSR
+# error "non-tiny model TSR not supported"
+#endif
+
+#ifdef DOSX
 	.arch i286
 #else
 	.arch i8086
@@ -120,114 +128,7 @@ __stext_nokeep_to_copy:
 	movw	$__lbss_nokeep2, %cx
 	rep	stosw
 #endif
-#ifdef DPMIABLE
-	# We still have segment registers pointing to the code segment, data
-	# segment, and PSP; and we have not invoked the program's
-	# constructor routines yet.  This is a good time to switch to
-	# protected mode if we want to.
-	#
-	# (Note however that MS-DOS 2.x does not provide a default interrupt
-	# 0x2f handler.  So first we must check if there is indeed such a
-	# handler...)
-	movw	$0x352f, %ax
-	int	$0x21
-	movw	%es,	%ax
-	orw	%bx,	%ax
-	jz	.Lno_dpmi
-	movw	$0x1687, %ax
-	int	$0x2f
-	testw	%ax,	%ax
-	jnz	.Lno_dpmi
-	# Plug in the DPMI entry point address.  This is self-modifying code
-	# (!) --- rely on the `int $0x21' later to get the instruction cache
-	# flushed, before we reach the `lcallw'.
-# ifdef TINY
-	movw	%di,	.Ldpmi_lcall+1
-	movw	%es,	.Ldpmi_lcall+3
-# else
-	movw	%di,	%cs:.Ldpmi_lcall+1
-	movw	%es,	%cs:.Ldpmi_lcall+3
-# endif
-	# If we have a 32-bit DPMI host, try to see if we are running under
-	# Sandmann's CWSDPMI, which works around a bug in some DPMI clients:
-	#	"Ideally, on the request to enter DPMI's PM with a 16-bit
-	#	 request, we would just fail the call setting the carry bit
-	#	 like the DPMI specification describes.  Some buggy 16-bit
-	#	 compiler tools don't check the return status and will hang
-	#	 the machine in this case.  So, I issue an error message and
-	#	 exit the image instead."
-	# We work around this workaround, and continue in real (or V86) mode
-	# instead of quitting.
-	shrw	%bx
-	jnc	.L16bit_ok
-	.pushsection .rodata.startup, "a"
-0:
-	.byte	0xa8,0x01	#	"test	al,1"
-	.byte	0x75,0x29	#	"jnz	short ok_32"
-	.byte	0xba		#	"mov	dx,"...
-1:
-	.byte	0x0e		#	"push	cs"
-	.byte	0x1f		#	"pop	ds"
-	.byte	0xb4,0x09	#	"mov	ah,9"
-	.byte	0xcd,0x21	#	"int	21h"
-	.byte	0xb8,0x01,0x4c	#	"mov	ax,4c01h"
-	.byte	0xcd,0x21	#	"int	21h"
-2:
-	.balign	2
-	.popsection
-	movw	$0b,	%si
-	movw	$1b-0b,	%cx
-# ifdef TINY
-	repz cmpsb
-# else
-	repz cmpsb %es:(%di), %ss:(%si)
-# endif
-	jnz	.L16bit_ok
-	scasw
-	movb	$2b-1b,	%cl
-# ifdef TINY
-	repz cmpsb
-# else
-	repz cmpsb %es:(%di), %ss:(%si)
-# endif
-	jz	.Lno_dpmi
-.L16bit_ok:
-	# Allocate space for the DPMI private data area.  Do this by
-	# adjusting the size of our own DOS memory control block.
-	pushw	%ds
-	popw	%es
-	movw	%si,	%bx
-	addw	$__msdos_initial_alloc_paras, %bx
-	movb	$0x4a,	%ah
-	int	$0x21
-	jc	.Lno_dpmi
-	# Try to switch to protected mode.
-	movw	%es,	%ax
-	addw	$__msdos_initial_alloc_paras, %ax
-	movw	%ax,	%es
-	xorw	%ax,	%ax
-# ifndef TINY
-	movw	%cs,	%cx
-# endif
-	movw	%ss,	%dx
-.Ldpmi_lcall:
-	lcallw	$0,	$0
-	jc	.Lno_dpmi
-	# Success!  Quickly store the real mode value of %ss, which may come
-	# in useful later.
-# ifdef TINY
-	movw	%dx,	__ia16_dpmi_rmode_ds
-# else
-	movw	%cx,	%ss:__ia16_dpmi_rmode_cs
-	movw	%dx,	%ss:__ia16_dpmi_rmode_ds
-# endif
-	# Limit %cs so that it does not go beyond the end of our actual
-	# code.  Note that %ax == 0 is preserved from above.
-	movb	$0x08,	%al
-	movw	%cs,	%bx
-	xorw	%cx,	%cx
-	movw	$__etext-1, %dx
-	int	$0x31
+#ifdef DOSX
 	# Make %ss an expand-down descriptor, and limit it.  Use the area
 	# just after BSS (which will be the heap/stack area) to temporarily
 	# hold %ss's descriptor entry.
@@ -238,7 +139,7 @@ __stext_nokeep_to_copy:
 # endif
 	movw	$__ebss, %di
 	int	$0x31
-	jc	.Lcont_dpmi
+	jc	.Lcont_dosx
 # ifdef TINY
 	movw	$0x2c-1, (%di)
 	orb	$0x04,	5(%di)
@@ -254,30 +155,13 @@ __stext_nokeep_to_copy:
 	pushw	%ss
 	popw	%ds
 # endif
-.Lcont_dpmi:
-.Lno_dpmi:
+.Lcont_dosx:
 #endif
 #ifndef TINY
-	pushw	%ds
-	pushw	%ss
-	popw	%ds
-#endif
-
-#ifndef TINY
-	# For the small memory model, we need to copy the command line
-	# arguments out to the data segment, rather than modify them in
-	# place in DOS's PSP --- since the PSP is outside the data segment.
-	.lcomm	.Largv,	128
-	# We currently do not use the PSP segment value after startup, so we
-	# can overlap .Lpsp with .Largv.  This may change in the future.
-	.set	.Lpsp,	.Largv
+	movw	%ds, %ss:.Lpsp
 #endif
 
 	# Find length of environment + progname
-#ifndef TINY
-	popw	%ds
-	movw	%ds, %ss:.Lpsp
-#endif
 	movw	0x2c,	%es
 	xorw	%di,	%di
 	xorw	%ax,	%ax
@@ -536,3 +420,14 @@ __msdos_crt_exit:
 .Lexit:
 	movb	$0x4c,	%ah
 	int	$0x21
+
+#ifndef TINY
+	# For non-tiny memory models, we need to copy the command line
+	# arguments out to the data segment, rather than modify them in
+	# place in DOS's PSP --- since the PSP is outside the data segment.
+	.lcomm	.Largv, 128
+
+	# We currently do not use the PSP segment value after startup, so we
+	# can overlap .Lpsp with .Largv.  This may change in the future.
+	.set	.Lpsp, .Largv
+#endif

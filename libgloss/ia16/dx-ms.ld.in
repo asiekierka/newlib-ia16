@@ -1,0 +1,269 @@
+#!/bin/sh
+
+set -e
+cmd1='#'
+cmd2='#'
+w1=with
+w2=with
+crt0='-l:dx-@cmodel@-c0.o'
+cm=s
+cml=small
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -nostdlib)
+      cmd1='/^@if_starts@/,/^@endif@/ d'
+      cmd2='/^@if_libs@/,/^@endif@/ d'
+      w1=without
+      w2=without;;
+    -nostartfiles)
+       cmd1='/^@if_starts@/,/^@endif@/ d'
+       w1=without;;
+    -nodefaultlibs)
+       cmd2='/^@if_libs@/,/^@endif@/ d'
+       w2=without;;
+    -mcmodel=medium)
+       cm=m
+       cml=medium;;
+  esac
+  shift
+done
+sed -e "$cmd1" -e "$cmd2" -e "s;@crt0@;$crt0;g" \
+    -e "s;@withstarts@;$w1;g" -e "s;@withlibs@;$w2;g" \
+    -e "s;@withdpmiable@;$w3;g" \
+    -e "s;@cmodel@;$cm;g" -e "s;@cmodel_long@;$cml;g" \
+    -e "s/@self@/`basename "$0"`/g" -e "/^@if/ d" -e "/^@endif@/ d" <<'EPART1'
+/*
+ * Linker script for @cmodel_long@-model CauseWay DOS extender 3P 16-bit
+ * executables, @withstarts@ startup files, and @withlibs@ default libraries.
+ *
+ * WARNING: the internals of this linker script are extremely experimental,
+ * and subject to change.
+ *
+ * Partly derived from elks-separate.ld .  Generated from @self@.
+ */
+
+OUTPUT_FORMAT(elf32-i386)
+ENTRY(_start)
+@if_starts@
+INPUT(-l:crtbegin.o -l:crtend.o @crt0@)
+@endif@
+@if_libs@
+GROUP(-lc -lgcc -ldos-@cmodel@ -lm)
+@endif@
+
+SECTIONS
+  {
+    .head 0x100000 - 0x50 : {
+		*(.head) *(.head.*)
+	}
+
+    /* Fabricate a CauseWay 3P header here. */
+    .3p_hdr . : {
+		HIDDEN (__3p_hdr_start = .);
+
+		/* Signature. */
+		SHORT (0x5033)
+		/* Size of this 3P module. */
+		LONG (ADDR (.data) + SIZEOF (.data) - ADDR (.3p_hdr))
+		/* Size of program image. */
+		LONG (ADDR (.data) + SIZEOF (.data) - ADDR (.text))
+		/* Program memory required. */
+		LONG (ADDR (.data) + 0x10000 - ADDR (.text))
+		/* Number of segment definitions. */
+		SHORT (2)
+		/* Number of relocation table entries. */
+		LONG (0)
+		/* Initial %cs:%eip. */
+		LONG (_start - "_start!")
+		SHORT (0)
+		/* Initial %ss:%esp. */
+		LONG (0xfffe)
+		SHORT (1)
+		/*
+		 * Executable flags:
+		 *   * bit 0: 16-bit interrupt stack frame
+		 *   * bit 7: use LDT, not GDT
+		 *   * bit 14: 16-bit default data size
+		 */
+		LONG (1 << 0 | 1 << 7 | 1 << 14)
+		/* Automatic stack size if initial %esp == 0. */
+		LONG (0)
+		/* Number of automatic data segments + 1, or 0 if none. */
+		SHORT (0)
+		/* Length of EXPORT section. */
+		LONG (0)
+		/* Length of IMPORT section. */
+		LONG (0)
+		/* Number of IMPORT modules. */
+		LONG (0)
+		/* Reserved. */
+		. = . + 10;
+
+		/* Segment definition for initial %cs. */
+		LONG ("__stext!" - __3p_load_start)
+		LONG (("__stext&" - "__stext!") | 0 << 21 | 1 << 25)
+
+		/* Segment definition for initial %ds == %ss. */
+		LONG ("__sdata!" - __3p_load_start)
+		LONG (0x10000 | 1 << 21 | 1 << 25)
+
+		HIDDEN (__3p_load_start = .);
+	}
+
+    /* segelf segment start markers for target text section.  */
+    ".text!" (. & -0x10) (NOLOAD) : {
+		/* segelf segment start markers. */
+		"__stext!" = .;
+		*(".startupA!*")
+		*(".startupB!*")
+		*(".startupC!*")
+		*(".msdos_init!*") *(".msdos_init.*!")
+		*(".startupD!*")
+		*(".init!*")
+		*(".startupE!*")
+		*(".exitA!*")
+		*(".fini!*")
+		*(".exitB!*")
+		*(".text!*") *(".text.*!")
+		"__etext!" = .;
+
+		ASSERT ("__stext!" == "__etext!",
+		    "Error: .text! section has non-zero length.");
+	}
+
+    /* Target text section.  */
+    .text __3p_load_start : {
+		__stext = .;
+		*(.startupA)
+		*(.startupB)
+		*(.startupC)
+		*(.msdos_init) *(.msdos_init.*)
+		*(.startupD)
+		*(.init)
+		*(.startupE)
+		*(.exitA)
+		*(.fini)
+		*(.exitB)
+		*(.text) *(.text.*)
+		__etext = .;
+
+		ASSERT (. - "__stext!" <= 0x10000,
+		    "Error: too large for a small-model CauseWay 3P file.");
+	}
+
+    /* segelf segment end markers for target text section.  */
+    ".text&" . : {
+		"__stext&" = .;
+		*(".startupA&*")
+		*(".startupB&*")
+		*(".startupC&*")
+		*(".msdos_init&*") *(".msdos_init.*&")
+		*(".startupD&*")
+		*(".init&*")
+		*(".startupE&*")
+		*(".exitA&*")
+		*(".fini&*")
+		*(".exitB&*")
+		*(".text&*") *(".text.*&")
+		"__etext&" = .;
+
+		ASSERT ("__stext&" == "__etext&",
+		    "Error: .text& section has non-zero length.");
+	}
+
+	__ltext = __etext - __stext;
+	"__ltext!" = 0;
+
+    /*
+     * segelf segment start markers for target data section.  Arrange for
+     * the actual data content to start at a non-zero offset, so that we
+     * can ask the DPMI host to designate offset 0 as an invalid address.
+     */
+    ".data!" ((. - 0x20) & -0x10) (NOLOAD) : {
+		"__sdata!" = .;
+		KEEP (*(".ctors!*" ".ctors.*!"))
+		KEEP (*(".dtors!*" ".dtors.*!"))
+		*(".msdos_init_rodata!*") *(".msdos_init_rodata.*!")
+		*(".rodata!*") *(".rodata.*!")
+		*(".data!*") *(".data.*!")
+		*(".gcc_except_table!*")
+		"__edata!" = .;
+		*(".bss!*") *(".bss.*!")
+		"__sbss!" = .;
+		"__ebss!" = .;
+		"__heap_end_minimum!" = .;
+
+		ASSERT ("__sdata!" == "__edata!",
+		    "Error: .data! section has non-zero length.");
+	}
+
+    /* Target data section.  */
+    .data ALIGN (__etext, 4) : {
+		__sdata = .;
+
+		/* Build lists of constructors and destructors.  */
+		KEEP (*crtbegin*.o(.ctors))
+		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
+		KEEP (*(SORT(.ctors.*)))
+		KEEP (*(.ctors))
+
+		KEEP (*crtbegin*.o(.dtors))
+		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
+		KEEP (*(SORT(.dtors.*)))
+		KEEP (*(.dtors))
+
+		*(.msdos_init_rodata) *(.msdos_init_rodata.*)
+		*(.rodata) *(.rodata.*)
+		*(.data) *(.data.*)
+		*(.gcc_except_table)
+		__edata = .;
+
+		. = (. == __sdata ? . + 1 : .);
+	}
+
+    /* Target BSS section.  */
+    .bss ALIGN (4) (NOLOAD) : {
+		__sbss = .;
+                *(.bss) *(.bss.*)
+                *(COMMON)
+                __ebss = .;
+
+                /* Minimum address allowed for sbrk() to use.  */
+                __heap_end_minimum = ALIGN(8);
+
+		ASSERT(. - "__sdata!" <= 0xfd00,
+		    "Error: too large for a small-model CauseWay 3P file.");
+		ASSERT (DEFINED ("main!"),
+		    "Error: using segelf ld script with non-segelf program.");
+		ASSERT (DEFINED ("environ!"),
+		    "Error: using segelf ld script with non-segelf library.");
+	}
+
+    /* segelf segment end markers for target data section.  */
+    ".data&" . : {
+		/* segelf segment end markers. */
+		"__sdata&" = .;
+		KEEP (*(".ctors&*" ".ctors.*&"))
+		KEEP (*(".dtors&*" ".dtors.*&"))
+		*(".msdos_init_rodata&*") *(".msdos_init_rodata.*&")
+		*(".rodata&*") *(".rodata.*&")
+		*(".data&*") *(".data.*&")
+		*(".gcc_except_table&*")
+		"__edata&" = .;
+		*(".bss&*") *(".bss.*&")
+		"__sbss&" = .;
+		"__ebss&" = .;
+		"__heap_end_minimum&" = .;
+
+		ASSERT ("__sdata&" == "__edata&",
+		    "Error: .data& section has non-zero length.");
+	}
+
+	__ldata = __edata - __sdata;
+	__lbss = (__ebss - __sbss + 1) / 2;
+	"__ldata!" = 0;
+	"__lbss!" = 0;
+
+    /DISCARD/ : { *(.*) }
+  }
+EPART1

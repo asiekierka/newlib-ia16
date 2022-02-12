@@ -29,13 +29,6 @@
 	.text
 	.global	__ia16_rmode_func_call_bx
 __ia16_rmode_func_call_bx:
-	pushw	%di
-	movw	__ia16_dpmi_rmode_ds, %di
-	test	%di,	%di
-	jnz	0f
-	popw	%di
-	jmpw	*%bx
-0:
 	pushw	%es			/* save %es */
 	pushw	%ss
 	popw	%es

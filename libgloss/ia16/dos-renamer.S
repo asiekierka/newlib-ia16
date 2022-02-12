@@ -1,5 +1,4 @@
 #include "call-cvt.h"
-#include "pmode.h"
 
 	.arch i8086,jumps
 	.code16
@@ -17,7 +16,7 @@ _rename_r:
 	MOV_ARG2W_BX_(%dx)
 	MOV_ARG0W_BX_(%bx)
 	movb	$0x56,	%ah
-	RMODE_DOS_CALL_
+	int	$0x21
 	jc	.error
 	xorw	%ax,	%ax
 	popw	%di

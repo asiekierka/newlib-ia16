@@ -50,13 +50,7 @@ abort:
 	call	__ia16_abort_impl
 
 .Lctor_abort:
-	call	__DPMI_hosted
-	decw	%ax
-	jz	1f
-	movw	%ss,	%cs:0b
-	ret
-1:
-	/* Oh well.  Patch the text segment the hard way...  */
+	/* Patch the text segment the hard way...  */
 	movb	$0x0a,	%al		/* %ah == 0 */
 	movw	%cs,	%bx
 	int	$0x31

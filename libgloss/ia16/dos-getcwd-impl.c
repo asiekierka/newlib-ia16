@@ -17,7 +17,6 @@
 #include <limits.h>
 #include <string.h>
 #include <unistd.h>
-#include "pmode.h"
 
 #ifndef FP_SEG
 #define FP_SEG(x) \
@@ -44,7 +43,7 @@ __msdos_getcwd (char buf[PATH_MAX], unsigned char drive)
    * First get the current directory for the specified drive, sans drive
    * letter.  If that fails, bail out.
    */
-  asm volatile (RMODE_DOS_CALL_ "; sbbw %1, %1"
+  asm volatile ("int $0x21; sbbw %1, %1"
 		: "=a" (err), "=r" (carry)
 		: "Rah" ((unsigned char) 0x47), "Rdl" ((unsigned char)drive),
 		  "Rds" (FP_SEG (buf + 3)), "S" (buf + 3)

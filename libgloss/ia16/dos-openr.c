@@ -1,7 +1,7 @@
 /* dos-openr.c basic open file for DOS
  *
  * Copyright (c) 2018 Bart Oldeman
- * Copyright (c) 2019--2021 TK Chia
+ * Copyright (c) 2019--2022 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -19,7 +19,6 @@
 #include <errno.h>
 #include <reent.h>
 #include <_syslist.h>
-#include "pmode.h"
 
 #ifndef FP_SEG
 #define FP_SEG(x) \
@@ -39,7 +38,7 @@
 static int dos_exists (const char *pathname)
 {
   int carry;
-  asm volatile (RMODE_DOS_CALL_ "; sbb %0, %0" :
+  asm volatile ("int $0x21; sbb %0, %0" :
 		"=a"(carry) :
 	        "a"(0x4300), "d"(pathname), "Rds"(FP_SEG(pathname)) :
 		"cx", "cc");
@@ -50,7 +49,7 @@ static int dos_open (struct _reent *reent, const char *pathname,
 		     unsigned char flags)
 {
   int ret, carry;
-  asm volatile (RMODE_DOS_CALL_ "; sbb %0, %0" :
+  asm volatile ("int $0x21; sbb %0, %0" :
 		"=r"(carry), "=a"(ret) :
 	        "Rah"((char)0x3d), "Ral"(flags), "d"(pathname),
 		"Rds"(FP_SEG(pathname)) : "cc");
@@ -66,7 +65,7 @@ static int dos_creat (struct _reent *reent, const char *pathname,
 		      unsigned char attr)
 {
   int ret, carry;
-  asm volatile (RMODE_DOS_CALL_ "; sbb %0, %0" :
+  asm volatile ("int $0x21; sbb %0, %0" :
 		"=r"(carry), "=a"(ret) :
 	        "Rah"((char)0x3c), "Rcl"(attr), "d"(pathname),
 		"Rds"(FP_SEG(pathname)) : "cc");

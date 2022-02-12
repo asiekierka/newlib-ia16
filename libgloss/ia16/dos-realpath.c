@@ -1,6 +1,6 @@
 /* dos-realpath.c canonicalize a pathname
  *
- * Copyright (c) 2021 TK Chia
+ * Copyright (c) 2021--2022 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -21,7 +21,6 @@
 #include <string.h>
 #include <unistd.h>
 #include "dbcs.h"
-#include "pmode.h"
 
 #ifndef FP_SEG
 #define FP_SEG(x) \
@@ -44,7 +43,7 @@ __msdos_truename (const char *path, char *out_path)
 {
   int err, carry;
 
-  __asm volatile (RMODE_DOS_CALL_ "; sbbw %1, %1"
+  __asm volatile ("int $0x21; sbbw %1, %1"
 		  : "=a" (err), "=r" (carry)
 		  : "Rah" ((uint8_t) 0x60),
 		    "Rds" (FP_SEG (path)), "S" (FP_OFF (path)),
@@ -67,7 +66,7 @@ static const char *__msdos_parse_to_fcb (const char *name, struct fcb *fcb)
 
   memset (fcb, 0, sizeof (struct fcb));
 
-  __asm volatile (RMODE_DOS_CALL_
+  __asm volatile ("int $0x21"
 		  : "=a" (ax), "=S" (end)
 		  : "0" (0x2900u),
 		    "Rds" (FP_SEG (name)), "1" (FP_OFF (name)),

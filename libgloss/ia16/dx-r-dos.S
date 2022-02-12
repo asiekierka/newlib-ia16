@@ -30,14 +30,6 @@
 	.text
 	.global	__ia16_rmode_dos_call
 __ia16_rmode_dos_call:
-	pushw	%di
-	movw	__ia16_dpmi_rmode_ds, %di
-	test	%di,	%di
-	jnz	0f
-	popw	%di
-	int	$0x21
-	ret
-0:
 	pushw	%es			/* save %es */
 	pushw	$0			/* blank %ss */
 	pushw	$0			/* blank %sp */

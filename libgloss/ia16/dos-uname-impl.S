@@ -14,7 +14,6 @@
  */
 
 #include "call-cvt.h"
-#include "pmode.h"
 #include "hw.h"
 
 	.arch i8086,jumps
@@ -24,17 +23,13 @@
 	TEXT_ (ia16_get_hw_cpu.S.LIBGLOSS)
 	.global	__ia16_get_hw_cpu
 __ia16_get_hw_cpu:
-#if defined __IA16_FEATURE_PROTECTED_MODE && ! defined __IA16_CMODEL_MEDIUM__
+#if defined __IA16_FEATURE_PROTECTED_MODE
 	/*
 	 * If we are already running under DPMI, then the CPU is obviously
 	 * a 286 or above.
 	 */
-	movw	__ia16_dpmi_rmode_ds, %ax
-	testw	%ax,	%ax
-	jnz	.i286
 #else
 	xorw	%ax,	%ax
-#endif
 	/*
 	 * Detect an NEC V20 or V30.  The opcode 0xd6 is `setalc'/`salc' on
 	 * Intel CPUs, but an alias of `xlat' on NEC (according to 86bugs.lst
@@ -56,7 +51,7 @@ __ia16_get_hw_cpu:
 	popw	%ax
 	cmpw	%ax,	%sp
 	jz	.i286
-#if ! defined _M_IX86 || _M_IX86 - 0 < 100
+# if ! defined _M_IX86 || _M_IX86 - 0 < 100
 	/*
 	 * Try to tell between an 8086 & a 186, while avoiding the use of
 	 * invalid instructions.  Use the fact that a word write at offset
@@ -84,13 +79,14 @@ __ia16_get_hw_cpu:
 	movb	$HW_I86, %al
 	.byte	0x3d
 .i186:
-#endif
+# endif
 	movb	$HW_I186, %al
 	.byte	0x3d
 .v20:
 	movb	$HW_V20, %al
 	.byte	0x3d
 .i286:
+#endif
 	movb	$HW_I286, %al
 	cbtw
 	RET_ (0)
@@ -99,11 +95,6 @@ __ia16_get_hw_cpu:
 
 	.global __msdos_get_kern_ver_str
 __msdos_get_kern_ver_str:
-#ifdef __IA16_FEATURE_PROTECTED_MODE
-	movw	$0f,	%bx
-	jmp	__ia16_rmode_func_call_bx
-0:
-#endif
 	pushw	%es
 	pushw	%si
 	pushw	%di

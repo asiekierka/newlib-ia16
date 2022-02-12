@@ -22,7 +22,6 @@
 #include <_syslist.h>
 #include <reent.h>
 #include "dbcs.h"
-#include "pmode.h"
 
 #ifndef FP_SEG
 #define FP_SEG(x) \
@@ -49,7 +48,7 @@ struct _find_t {
 
 static void dos_set_dta (void __far *dta)
 {
-  asm volatile (RMODE_DOS_CALL_ : :
+  asm volatile ("int $0x21" : :
 	        "Rah"((char)0x1a),
 		"d"((unsigned)(unsigned long)(dta)), "Rds"(FP_SEG(dta)));
 }

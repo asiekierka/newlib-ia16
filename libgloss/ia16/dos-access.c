@@ -15,7 +15,6 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "pmode.h"
 
 #ifndef FP_SEG
 #define FP_SEG(x) \
@@ -30,7 +29,7 @@ dos_getfileattr (const char *path, unsigned *attrs)
 {
   int carry, err, cx;
 
-  __asm volatile (RMODE_DOS_CALL_ "; sbbw %2, %2"
+  __asm volatile ("int $0x21; sbbw %2, %2"
 		  : "=a" (err), "=c" (cx), "=d" (carry)
 		  : "0" (0x4300U), "Rds" (FP_SEG (path)), "2" (path)
 		  : "bx", "cc", "memory");

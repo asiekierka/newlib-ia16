@@ -1,5 +1,4 @@
 #include "call-cvt.h"
-#include "pmode.h"
 
 #define P(x, y, z)	PP (x, y, z)
 #define PP(x, y, z)	x ## y ## z

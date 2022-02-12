@@ -1,6 +1,6 @@
 /* dos-uname.c return system information
  *
- * Copyright (c) 2021 TK Chia
+ * Copyright (c) 2021--2022 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -24,7 +24,6 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/utsname.h>
-#include "pmode.h"
 #include "hw.h"
 
 #ifndef FP_SEG
@@ -68,7 +67,7 @@ get_nodename (struct utsname *unm)
   memset (unm->nodename, 0, sizeof unm->nodename);
 
   /* Get the machine's network name using a sycall. */
-  __asm volatile (RMODE_DOS_CALL_ "; sbbw %0, %0"
+  __asm volatile ("int $0x21; sbbw %0, %0"
 		  : "=a" (carry), "=c" (cx)
 		  : "0" (0x5e00U),
 		    "Rds" (FP_SEG (unm->nodename)),
