@@ -72,8 +72,7 @@ PROTECTED_MODE_P = $(filter -mprotected-mode -mdpmi% -mdosx -melks%, \
 CMODEL_MEDIUM_P = $(filter -mcmodel=medium,$(CC) $(CFLAGS) $(MULTILIB))
 CMODEL_NOT_MEDIUM_P = $(if $(CMODEL_MEDIUM_P),,!)
 DOS_COMMON_OBJS += $(if $(PROTECTED_MODE_P), \
-			$(if $(CMODEL_NOT_MEDIUM_P), \
-			     dx-r-dos.o dx-r-func.o dx-abort.o))
+			$(if $(CMODEL_NOT_MEDIUM_P),dx-r-dos.o dx-abort.o))
 
 DOS_TINY_OBJS	= $(DOS_COMMON_OBJS)
 DOS_TINY_OBJS	+= dos-mti0.o dos-mti1.o dos-mtv1.o
@@ -129,7 +128,10 @@ ISCANF_OBJS	= i-sscanf.o i-fscanf.o i-scanf.o i-vscanf.o i-vfscanf.o \
 		  i-vsscanf.o i-sscanfr.o i-fscanfr.o i-scanfr.o i-vscanfr.o \
 		  i-vfscanfr.o i-vsscanfr.o
 ISCANF_BSP	= iscnf-fw.a
-HELPER_SCRIPTS	= libastdio.a libanstdio.a libdosv1.a libck086.a libck186.a
+HELPER_SCRIPTS	= libastdio.a libanstdio.a
+
+# Various other hacks.  -- tkchia 20220213
+HELPER_SCRIPTS	+= libdosv1.a libck086.a libck186.a elf2dosx
 
 ALL_SCRIPTS	= $(ELKS_SCRIPTS) $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS) \
 		  $(DOS_MEDIUM_SCRIPTS) $(DOSX_SMALL_SCRIPTS) $(HELPER_SCRIPTS)
@@ -161,12 +163,13 @@ CRT0		= $(if $(CMODEL_MEDIUM_P), \
 # Need to augment the definition from host_makefile_frag above.
 INCLUDES += -I$(srcdir) -I. -I$(srcdir)/.. -I../libnosys
 
-INSTALL_FILES = \
+INSTALL_DATA_FILES = \
   $(BSP) $(CRT0) $(NANO_STDIO_BSP) $(IPRINTF_BSP) $(ISCANF_BSP) \
   $(SCRIPTS) $(HELPER_SCRIPTS)
-INSTALL_FILES += $(if $(PROTECTED_MODE_P), \
-		      $(if $(CMODEL_NOT_MEDIUM_P), \
-			   $(DOSX_SMALL_CRT0) $(DOSX_SMALL_SCRIPTS)))
+INSTALL_DATA_FILES += $(if $(PROTECTED_MODE_P), \
+			   $(if $(CMODEL_NOT_MEDIUM_P), \
+				$(DOSX_SMALL_CRT0) $(DOSX_SMALL_SCRIPTS)))
+INSTALL_PROGRAM_FILES = elf2dosx
 # Building Newlib for the ELKS target is currently disabled.  To properly
 # build Newlib/ELKS, we will probably need to at least add Newlib/ELKS as a
 # multilib combination under GCC, _and_ fix newlib/libc/machine/ia16/sys/
@@ -174,16 +177,16 @@ INSTALL_FILES += $(if $(PROTECTED_MODE_P), \
 # syscall routines to work with REENTRANT_SYSCALLS_PROVIDED.  TODO.
 #	-- tkchia 20211005
 #
-# INSTALL_FILES += $(if $(PROTECTED_MODE_P), \
-# 		      $(if $(CMODEL_NOT_MEDIUM_P), \
-# 			   $(ELKS_BSP) $(ELKS_CRT0) $(ELKS_SCRIPTS)))
+# INSTALL_DATA_FILES += $(if $(PROTECTED_MODE_P), \
+#			     $(if $(CMODEL_NOT_MEDIUM_P), \
+#				  $(ELKS_BSP) $(ELKS_CRT0) $(ELKS_SCRIPTS)))
 
 #
 # build a test program for each target board. Just trying to get
 # it to link is a good test, so we ignore all the errors for now.
 #
 # all: ${MON_CRT0} ${MON_BSP}
-all: $(INSTALL_FILES) libnosys.a
+all: $(INSTALL_DATA_FILES) $(INSTALL_PROGRAM_FILES) libnosys.a
 #
 # Here's where we build the board support packages for each target.
 #
@@ -529,11 +532,18 @@ distclean maintainer-clean realclean: clean
 .PHONY: install info install-info clean-info
 install: 
 	$(mkinstalldirs) $(DESTDIR)${tooldir}/lib${MULTISUBDIR}
-	set -e; for x in ${INSTALL_FILES}; do\
+	set -e; for x in ${INSTALL_DATA_FILES}; do\
 	  if [ -f $$x ]; then \
 	    ${INSTALL_DATA} $$x $(DESTDIR)${tooldir}/lib${MULTISUBDIR}/$$x; \
 	  else \
 	    ${INSTALL_DATA} $(srcdir)/$$x $(DESTDIR)${tooldir}/lib${MULTISUBDIR}/$$x; \
+	  fi; \
+	done
+	set -e; for x in ${INSTALL_PROGRAM_FILES}; do\
+	  if [ -f $$x ]; then \
+	    ${INSTALL_PROGRAM} $$x $(DESTDIR)${tooldir}/bin/$$x; \
+	  else \
+	    ${INSTALL_PROGRAM} $(srcdir)/$$x $(DESTDIR)${tooldir}/bin/$$x; \
 	  fi; \
 	done
 

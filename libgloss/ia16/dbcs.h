@@ -22,7 +22,7 @@ typedef const unsigned short __attribute__ ((__aligned__ (1)))
 	__far *_dos_dbcs_lead_table_t;
 
 extern _dos_dbcs_lead_table_t _dos_get_dbcs_lead_table (void);
-#ifdef __IA16_FEATURE_PROTECTED_MODE
+#ifdef __IA16_FEATURE_DOSX
 extern void _dos_free_dbcs_lead_table (_dos_dbcs_lead_table_t);
 #else
 static inline void _dos_free_dbcs_lead_table (_dos_dbcs_lead_table_t dbcs)

@@ -44,7 +44,7 @@
  */
 	.weak	_dos_get_dbcs_lead_table
 _dos_get_dbcs_lead_table:
-#ifdef __IA16_FEATURE_PROTECTED_MODE
+#ifdef __IA16_FEATURE_DOSX
 	call	__DPMI_hosted
 	incw	%ax
 	jz	10f

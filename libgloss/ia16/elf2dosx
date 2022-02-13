@@ -1,0 +1,64 @@
+#!/bin/sh
+# Copyright (c) 2022 TK Chia
+#
+# The authors hereby grant permission to use, copy, modify, distribute,
+# and license this software and its documentation for any purpose, provided
+# that existing copyright notices are retained in all copies and that this
+# notice is included verbatim in any distributions. No written agreement,
+# license, or royalty fee is required for any of the authorized uses.
+# Modifications to this software may be copyrighted by their authors
+# and need not follow the licensing terms described here, provided that
+# the new terms are clearly indicated on the first page of each file where
+# they apply.
+
+# WARNING: the internals of this linker script are extremely experimental,
+# and subject to change.
+
+set -e
+me="`basename "$0"`"
+
+verbose=false
+if [ x-v = x"$1" ]; then
+  verbose=true
+  shift
+fi
+
+do_run () {
+  if $verbose; then
+    echo "$me: running:" ${1+"$@"} >&2
+  fi
+  ${1+"$@"}
+}
+
+if [ $# != 1 ]; then
+  echo "$me: usage: $me [-v] (a.out)" >&2
+  exit 1
+fi
+
+aout="$1"
+if [ ! -f "$aout" ]; then
+  echo "$me: input file $aout inaccessible" >&2
+  exit 2
+fi
+
+stub="`do_run ia16-elf-gcc -print-file-name=../lib/../bin/cwstub.exe`"
+if [ ! -f "$stub" ]; then
+  echo "$me: cannot find DOS extender loader stub" >&2
+  exit 2
+fi
+
+case "$aout" in
+  /*)
+    tmp="`mktemp "$aout".XXXXXXXXXX`";;
+  *)
+    tmp="`mktemp ./"$aout".XXXXXXXXXX`";;
+esac
+if [ -z "$tmp" ]; then
+  echo "$me: cannot create temporary file" >&2
+  exit 2
+fi
+trap 'rm -f "$tmp"' INT QUIT TERM
+
+do_run ia16-elf-objcopy -I elf32-i386 -O binary "$aout" "$tmp"
+do_run cat "$stub" "$tmp" >"$aout"
+do_run rm -f "$tmp"
