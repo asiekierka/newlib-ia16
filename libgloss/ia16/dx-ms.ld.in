@@ -233,10 +233,14 @@ SECTIONS
 
 		ASSERT(. - "__sdata!" <= 0xfd00,
 		    "Error: too large for a small-model CauseWay 3P file.");
+@if_starts@
 		ASSERT (DEFINED ("main!"),
 		    "Error: using segelf ld script with non-segelf program.");
+@endif@
+@if_libs@
 		ASSERT (DEFINED ("environ!"),
 		    "Error: using segelf ld script with non-segelf library.");
+@endif@
 	}
 
     /* segelf segment end markers for target data section.  */
