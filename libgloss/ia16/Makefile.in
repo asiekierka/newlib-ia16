@@ -75,7 +75,8 @@ DOS_COMMON_OBJS += $(if $(PROTECTED_MODE_P), \
 			$(if $(CMODEL_NOT_MEDIUM_P),dx-abort.o))
 
 DOS_TINY_OBJS	= $(DOS_COMMON_OBJS)
-DOS_TINY_OBJS	+= dos-mti0.o dos-mti1.o dos-mtv1.o
+DOS_TINY_OBJS	+= $(if $(PROTECTED_MODE_P),,dos-mtabort.o) \
+		   dos-mti0.o dos-mti1.o dos-mtv1.o
 DOS_TINY_CFLAGS	= -mseparate-code-segment -g -Os
 DOS_TINY_ASFLAGS =
 DOS_TINY_SCRIPTS = dos-com.ld dos-mt.ld dos-mts.ld dos-mtl.ld dos-mtsl.ld \
