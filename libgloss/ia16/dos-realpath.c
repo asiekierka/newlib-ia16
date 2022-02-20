@@ -21,6 +21,9 @@
 #include <string.h>
 #include <unistd.h>
 #include "dbcs.h"
+#ifdef __IA16_FEATURE_DOSX
+# include "dosx.h"
+#endif
 
 #ifndef FP_SEG
 #define FP_SEG(x) \
@@ -41,6 +44,7 @@ extern char *__msdos_getcwd (char[PATH_MAX], unsigned char);
 static bool
 __msdos_truename (const char *path, char *out_path)
 {
+#ifndef __IA16_FEATURE_DOSX
   int err, carry;
 
   __asm volatile ("int $0x21; sbbw %1, %1"
@@ -55,17 +59,61 @@ __msdos_truename (const char *path, char *out_path)
       errno = err;
       return false;
     }
+#else
+  /*
+   * The CauseWay DOS extender does not handle the "truename" MS-DOS
+   * syscall, so we need to invoke the real/V86 mode syscall ourselves.
+   */
+  rm_call_struct rmc;
+ __far char *tb = __dosx_tb (), *tb_end = __dosx_tb_end (),
+	    *path_copy = tb, *out_path_copy = tb + PATH_MAX, *p;
+
+  p = path_copy;
+  while ((*p++ = *path++) != 0)
+    if (p == out_path_copy)
+      {
+	errno = ENAMETOOLONG;
+	return false;
+      }
+
+  rmc.ss = rmc.sp = 0;
+  rmc.flags = 1 << 9 | 1;  /* set IF, CF */
+  rmc.ax = 0x6000;
+  rmc.ds = rmc.es = __dosx_tb_rm_seg;
+  rmc.si = 0;
+
+  if (_DPMISimulateRealModeInterrupt (0x21, 0, 0, &rmc) != 0)
+    {
+      errno = EIO;
+      return false;
+    }
+
+  if ((rmc.flags & 1) != 0)
+    {
+      errno = rmc.ax;
+      return false;
+    }
+
+  p = out_path_copy;
+  while ((*out_path++ = *p++) != 0)
+    if (p == tb_end)
+      {
+	errno = ENAMETOOLONG;
+	return false;
+      }
+#endif
 
   return true;
 }
 
 static const char *__msdos_parse_to_fcb (const char *name, struct fcb *fcb)
 {
-  uint16_t ax;
   const char *end;
 
-  memset (fcb, 0, sizeof (struct fcb));
+#ifndef __IA16_FEATURE_DOSX
+  uint16_t ax;
 
+  memset (fcb, 0, sizeof (struct fcb));
   __asm volatile ("int $0x21"
 		  : "=a" (ax), "=S" (end)
 		  : "0" (0x2900u),
@@ -75,6 +123,43 @@ static const char *__msdos_parse_to_fcb (const char *name, struct fcb *fcb)
 
   if ((uint8_t) ax > 1)
     return NULL;
+#else
+  rm_call_struct rmc;
+  __far void *tb = __dosx_tb (), *tb_end = __dosx_tb_end ();
+  __far struct fcb *fcb_copy = tb;
+  __far char *name_copy = (__far char *) tb + sizeof (struct fcb), *p;
+  const char *q;
+
+  p = name_copy;
+  q = name;
+  while ((*p++ = *q++) != 0)
+    if (p == tb_end)
+      {
+	errno = ENAMETOOLONG;
+	return false;
+      }
+
+  /* Blank the FCB. */
+  p = name_copy;
+  while (p-- != tb)
+    *p = 0;
+
+  rmc.ss = rmc.sp = 0;
+  rmc.flags = 1 << 9 | 1;
+  rmc.ax = 0x2900;
+  rmc.ds = rmc.es = __dosx_tb_rm_seg;
+  rmc.si = FP_OFF (name_copy);
+  rmc.di = FP_OFF (fcb_copy);
+
+  if (_DPMISimulateRealModeInterrupt (0x21, 0, 0, &rmc) != 0)
+    return NULL;
+
+  if ((uint8_t) rmc.ax > 1)
+    return NULL;
+
+  *fcb = *fcb_copy;
+  end = name + (rmc.si - FP_OFF (name_copy));
+#endif
 
   return end;
 }

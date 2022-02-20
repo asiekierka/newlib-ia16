@@ -72,7 +72,7 @@ PROTECTED_MODE_P = $(filter -mprotected-mode -mdpmi% -mdosx -melks%, \
 CMODEL_MEDIUM_P = $(filter -mcmodel=medium,$(CC) $(CFLAGS) $(MULTILIB))
 CMODEL_NOT_MEDIUM_P = $(if $(CMODEL_MEDIUM_P),,!)
 DOS_COMMON_OBJS += $(if $(PROTECTED_MODE_P), \
-			$(if $(CMODEL_NOT_MEDIUM_P),dx-abort.o))
+			$(if $(CMODEL_NOT_MEDIUM_P),dx-abort.o dx-tb.o))
 
 DOS_TINY_OBJS	= $(DOS_COMMON_OBJS)
 DOS_TINY_OBJS	+= $(if $(PROTECTED_MODE_P),,dos-mtabort.o) \
