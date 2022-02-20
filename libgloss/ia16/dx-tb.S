@@ -16,6 +16,7 @@
 #include "call-cvt.h"
 
 	.arch	i386
+	.code16
 
 /*
  * For programs that use a DOS extender, set up a "transfer buffer" in base
