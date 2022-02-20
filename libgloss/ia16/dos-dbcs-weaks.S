@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 TK Chia
+ * Copyright (c) 2021--2022 TK Chia
  *
  * The authors hereby grant permission to use, copy, modify, distribute,
  * and license this software and its documentation for any purpose, provided
@@ -32,7 +32,7 @@
 	incb	.Ldos2
 0:
 
-	.text
+	TEXT_ (dos_dbcs_weaks.S.LIBGLOSS)
 
 /*
  * Return a far pointer to the currently active double-byte character set
@@ -44,63 +44,6 @@
  */
 	.weak	_dos_get_dbcs_lead_table
 _dos_get_dbcs_lead_table:
-#ifdef __IA16_FEATURE_DOSX
-	call	__DPMI_hosted
-	incw	%ax
-	jz	10f
-	movw	$10f,	%bx
-	call	__ia16_rmode_func_call_bx
-	/*
-	 * We get a real mode far pointer in %dx:%ax.  If %dx == %ax == 0,
-	 * this is an invalid table; return immediately.
-	 */
-	movw	%ax,	%bx
-	orw	%dx,	%bx
-	jz	8f
-	/*
-	 * Ugh.  We need to allocate an LDT descriptor for the lead byte
-	 * table's segment.
-	 */
-	pushw	%ax
-	xorw	%ax,	%ax		/* allocate descriptor(s): %ax := 0 */
-	movw	$1,	%cx
-	int	$0x31
-	jc	9f
-	xchgw	%ax,	%bx
-	pushw	%es
-	pushw	%di
-	pushw	%ss
-	popw	%es
-	movw	$0x000b, %ax		/* get descriptor: %ax := 0x000b */
-	subw	$8,	%sp
-	movw	%sp,	%di
-	int	$0x31
-	jc	9f
-	movw	$0xffff, (%di)		/* change limit to 0xffff */
-	movb	$4,	%cl
-	rolw	%cl,	%dx
-	movw	%dx,	%cx
-	andb	$-16,	%dl
-	xorb	%dl,	%cl		/* %cl:%dx now gives segment base */
-	movw	%dx,	2(%di)		/* fill in segment base */
-	movb	%cl,	4(%di)
-					/* make segment non-executable,
-					   read-only, 16-bit, expand-up */
-	andw	$0b0011000011110001, 5(%di)
-	incw	%ax			/* set descriptor: %ax := 0x000c */
-	int	$0x31
-	jc	9f
-	addw	$8,	%sp
-	popw	%di
-	popw	%es
-	popw	%ax
-	movw	%bx,	%dx
-8:
-	RET_ (0)
-9:
-	call	abort
-10:
-#endif
 	pushw	%bp
 	pushw	%si
 	pushw	%di
@@ -137,26 +80,5 @@ _dos_get_dbcs_lead_table:
 	xorw	%ax,	%ax
 	cwtd
 	jmp	12b
-
-	TEXT_ (dos_dbcs_weaks.S.LIBGLOSS)
-
-#ifdef __IA16_FEATURE_PROTECTED_MODE
-/* Free any DPMI resources allocated by _dos_get_dbcs_lead_table (). */
-	.weak	_dos_free_dbcs_lead_table
-_dos_free_dbcs_lead_table:
-	ENTER_BX_ (4)
-	MOV_ARG2W_BX_ (%bx)
-	testw	%bx,	%bx
-	jz	39f
-	pushw	%bx
-	call	__DPMI_hosted
-	popw	%bx
-	incw	%ax
-	jz	39f
-	movw	$0x0001, %ax
-	int	$0x31
-39:
-	RET_ (4)
-#endif
 
 	.lcomm	.Ldos2, 1

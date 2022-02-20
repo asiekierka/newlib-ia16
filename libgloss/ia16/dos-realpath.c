@@ -420,6 +420,5 @@ invalid:
 bail:
   if (out_path_alloced)
     free (out_path);
-  _dos_free_dbcs_lead_table (dbcs);
   return NULL;
 }

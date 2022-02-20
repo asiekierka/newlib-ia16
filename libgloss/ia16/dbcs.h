@@ -29,6 +29,7 @@ static inline void _dos_free_dbcs_lead_table (_dos_dbcs_lead_table_t dbcs)
 {
 }
 #endif
+#define _null_dbcs_lt	((_dos_dbcs_lead_table_t) 0L)
 extern bool __msdos_dbcs_lead_byte_p (char, _dos_dbcs_lead_table_t);
 extern size_t __msdos_dbcs_strcspn (const char *, char, char,
 				    _dos_dbcs_lead_table_t);

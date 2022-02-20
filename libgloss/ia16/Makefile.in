@@ -60,7 +60,7 @@ ELKS_CRT0	= elks-crt0.o
 
 DOS_COMMON_OBJS = dos-access.o dos-chdir.o dos-chmod.o dos-closer.o \
 		  dos-cvt-file-time.o dos-dbcs.o dos-dbcs-strcspn.o \
-		  dos-dbcs-weaks.o dos-dup.o dos-dup2.o \
+		  dos-dup.o dos-dup2.o \
 		  dos-fstatr.o dos-getcwd.o dos-getcwd-impl.o \
 		  dos-gettimeofdayr.o dos-heaplen.o dos-isattyr.o \
 		  dos-lseekr.o dos-mkdir.o dos-mkdirr.o dos-openr.o \
@@ -72,7 +72,8 @@ PROTECTED_MODE_P = $(filter -mprotected-mode -mdpmi% -mdosx -melks%, \
 CMODEL_MEDIUM_P = $(filter -mcmodel=medium,$(CC) $(CFLAGS) $(MULTILIB))
 CMODEL_NOT_MEDIUM_P = $(if $(CMODEL_MEDIUM_P),,!)
 DOS_COMMON_OBJS += $(if $(PROTECTED_MODE_P), \
-			$(if $(CMODEL_NOT_MEDIUM_P),dx-abort.o dx-tb.o))
+			dx-abort.o dx-tb.o dx-dbcs-weaks.o, \
+			dos-dbcs-weaks.o)
 
 DOS_TINY_OBJS	= $(DOS_COMMON_OBJS)
 DOS_TINY_OBJS	+= $(if $(PROTECTED_MODE_P),,dos-mtabort.o) \

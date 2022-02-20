@@ -93,13 +93,11 @@ _stat_r (struct _reent *reent, const char * restrict path,
   if (path[wild_pos] != 0)
     {
       reent->_errno = ENOENT;
-      _dos_free_dbcs_lead_table (dbcs);
       return -1;
     }
 
   if (dos_findfirst (reent, path, &findbuf))
     {
-      _dos_free_dbcs_lead_table (dbcs);
       return -1;
     }
 
@@ -119,6 +117,5 @@ _stat_r (struct _reent *reent, const char * restrict path,
     buf->st_dev = dos_getdrive ();
   buf->st_nlink = 1;
 
-  _dos_free_dbcs_lead_table (dbcs);
   return 0;
 }

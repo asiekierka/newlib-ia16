@@ -87,6 +87,20 @@ typedef struct __attribute__ ((__packed__))
   }
 rm_call_struct;
 
+static inline int32_t
+_DPMISegmentToDescriptor (uint16_t __para)
+{
+  uint16_t __sel;
+  int __res;
+ __asm volatile ("int {$}0x31; sbb{w} %1, %1"
+		 : "=a" (__sel), "=br" (__res)
+		 : "0" (0x0002U), "b" (__para)
+		 : "cc", "memory");
+  if (__res < 0)
+    return -1L;
+  return (int32_t) __sel;
+}
+
 static inline int
 _DPMISimulateRealModeInterrupt (uint8_t __intr_no, uint8_t __flags,
 				uint16_t __words_to_copy,
