@@ -32,15 +32,16 @@
 #include "dbcs.h"
 #include "dosx.h"
 
-static volatile __segment cached_seg_rm = 0, cached_seg_pm = 0;
+static volatile __segment cached_seg_pm = 0;
+static volatile uint16_t cached_seg_rm = 0;
 
 _dos_dbcs_lead_table_t
 _dos_get_dbcs_lead_table (void)
 {
   rm_call_struct rmc;
   int res;
-  uint16_t off;
-  __segment seg_rm, seg_pm;
+  uint16_t seg_rm, off;
+  __segment seg_pm;
   int32_t res32;
   _dos_dbcs_lead_table_t lt;
 
@@ -57,7 +58,7 @@ _dos_get_dbcs_lead_table (void)
     return _null_dbcs_lt;
 
   off = rmc.si;
-  seg_rm = __builtin_ia16_selector (rmc.ds);
+  seg_rm = rmc.ds;
 
   if (off == 0xffffU)
     return _null_dbcs_lt;
