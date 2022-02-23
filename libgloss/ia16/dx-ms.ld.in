@@ -137,14 +137,15 @@ SECTIONS
 		*(.startupA)
 		*(.startupB)
 		*(.startupC)
-		*(.msdos_init) *(.msdos_init.*)
+		*(.msdos_init) *(.msdos_init$) *(.msdos_init.)
+		*(SORT (".msdos_init.*[^&]"))
 		*(.startupD)
 		*(.init)
 		*(.startupE)
 		*(.exitA)
 		*(.fini)
 		*(.exitB)
-		*(.text) *(.text.*)
+		*(.text) *(.text$) *(.text.) *(SORT (".text.*[^&]"))
 		__etext = .;
 
 		ASSERT (. - "__stext!" <= 0x10000,
@@ -175,6 +176,37 @@ SECTIONS
 	"__ltext!" = 0;
 
     /*
+     * Sections for far text, far read-only data, & far read/write data.
+     *
+     * FIXME: These output section definitions are not actually supported at
+     * the moment.  They are here to ease future expansion.  Hopefully a
+     * future ELF-to-3P converter can properly process such input far sections
+     * and turn them into output sections.
+     */
+
+    .fartext ALIGN (0x10) : SUBALIGN (0x10) {
+		*(SORT (".fartext!*"))
+		*(SORT (".fartext$*"))
+		*(SORT (".fartext&*"))
+		*(SORT (".fartext.*"))
+	}
+
+    .farrodata ALIGN (0x10) : SUBALIGN (0x10) {
+		*(SORT (".farrodata!*"))
+		*(SORT (".farrodata$*"))
+		*(SORT (".farrodata&*"))
+		*(SORT (".farrodata.*"))
+	}
+
+    .fardata ALIGN (0x10) : SUBALIGN (0x10) {
+		*(SORT (".fardata!*"))
+		*(SORT (".fardata$*"))
+		*(SORT (".fardata&*"))
+		*(SORT (".fardata.*"))
+		__efdata = .;
+	}
+
+    /*
      * segelf segment start markers for target data section.  Arrange for
      * the actual data content to start at a non-zero offset, so that we
      * can ask the DPMI host to designate offset 0 as an invalid address.
@@ -198,23 +230,36 @@ SECTIONS
 	}
 
     /* Target data section.  */
-    .data ALIGN (__etext, 4) : {
+    .data ALIGN (__efdata, 4) : {
 		__sdata = .;
 
 		/* Build lists of constructors and destructors.  */
 		KEEP (*crtbegin*.o(.ctors))
 		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors))
-		KEEP (*(SORT(.ctors.*)))
+		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors$))
+		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .ctors.))
+		KEEP (*(SORT (EXCLUDE_FILE (*crtend*.o ) ".ctors.*[^&]")))
 		KEEP (*(.ctors))
+		KEEP (*(.ctors$))
+		KEEP (*(.ctors.))
+		KEEP (*(SORT(".ctors.*[^&]")))
 
 		KEEP (*crtbegin*.o(.dtors))
 		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors))
-		KEEP (*(SORT(.dtors.*)))
+		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors$))
+		KEEP (*(EXCLUDE_FILE (*crtend*.o ) .dtors.))
+		KEEP (*(SORT (EXCLUDE_FILE (*crtend*.o ) ".dtors.*[^&]")))
 		KEEP (*(.dtors))
+		KEEP (*(.dtors$))
+		KEEP (*(.dtors.))
+		KEEP (*(SORT(".dtors.*[^&]")))
 
-		*(.msdos_init_rodata) *(.msdos_init_rodata.*)
-		*(.rodata) *(.rodata.*)
-		*(.data) *(.data.*)
+		*(.msdos_init_rodata)
+		*(.msdos_init_rodata$)
+		*(.msdos_init_rodata.)
+		*(SORT (".msdos_init_rodata.*[^&]"))
+		*(.rodata) *(.rodata$) *(.rodata.) *(SORT (".rodata.*[^&]"))
+		*(.data) *(.data$) *(.data.) *(SORT (".data.*[^&]"))
 		*(.gcc_except_table)
 		__edata = .;
 
@@ -224,7 +269,7 @@ SECTIONS
     /* Target BSS section.  */
     .bss ALIGN (4) (NOLOAD) : {
 		__sbss = .;
-                *(.bss) *(.bss.*)
+                *(.bss) *(.bss$) *(.bss.) *(SORT(".bss.*[^&]"))
                 *(COMMON)
                 __ebss = .;
 
