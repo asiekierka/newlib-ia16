@@ -126,10 +126,34 @@ IPRINTF_OBJS	= i-dprintf.o i-vdprintf.o i-sprintf.o i-fprintf.o i-printf.o \
 		  i-asnprintf.o i-vprintfr.o i-vfprintfr.o i-vsprintfr.o \
 		  i-vsnprintfr.o i-vasprintfr.o i-vasnprintfr.o
 IPRINTF_BSP	= iprtf-fw.a
+GPRINTF_OBJS	= g-dprintf.o g-vdprintf.o g-sprintf.o g-fprintf.o g-printf.o \
+		  g-snprintf.o g-asprintf.o g-asnprintf.o g-vprintf.o \
+		  g-vfprintf.o g-vsprintf.o g-vsnprintf.o g-vasprintf.o \
+		  g-vasnprintf.o g-dprintfr.o g-vdprintfr.o g-sprintfr.o \
+		  g-fprintfr.o g-printfr.o g-snprintfr.o g-asprintfr.o \
+		  g-asnprintf.o g-vprintfr.o g-vfprintfr.o g-vsprintfr.o \
+		  g-vsnprintfr.o g-vasprintfr.o g-vasnprintfr.o
+GPRINTF_BSP	= gprtf-fw.a
+TPRINTF_OBJS	= t-dprintf.o t-vdprintf.o t-sprintf.o t-fprintf.o t-printf.o \
+		  t-snprintf.o t-asprintf.o t-asnprintf.o t-vprintf.o \
+		  t-vfprintf.o t-vsprintf.o t-vsnprintf.o t-vasprintf.o \
+		  t-vasnprintf.o t-dprintfr.o t-vdprintfr.o t-sprintfr.o \
+		  t-fprintfr.o t-printfr.o t-snprintfr.o t-asprintfr.o \
+		  t-asnprintf.o t-vprintfr.o t-vfprintfr.o t-vsprintfr.o \
+		  t-vsnprintfr.o t-vasprintfr.o t-vasnprintfr.o
+TPRINTF_BSP	= tprtf-fw.a
 ISCANF_OBJS	= i-sscanf.o i-fscanf.o i-scanf.o i-vscanf.o i-vfscanf.o \
 		  i-vsscanf.o i-sscanfr.o i-fscanfr.o i-scanfr.o i-vscanfr.o \
 		  i-vfscanfr.o i-vsscanfr.o
 ISCANF_BSP	= iscnf-fw.a
+GSCANF_OBJS	= g-sscanf.o g-fscanf.o g-scanf.o g-vscanf.o g-vfscanf.o \
+		  g-vsscanf.o g-sscanfr.o g-fscanfr.o g-scanfr.o g-vscanfr.o \
+		  g-vfscanfr.o g-vsscanfr.o
+GSCANF_BSP	= gscnf-fw.a
+TSCANF_OBJS	= t-sscanf.o t-fscanf.o t-scanf.o t-vscanf.o t-vfscanf.o \
+		  t-vsscanf.o t-sscanfr.o t-fscanfr.o t-scanfr.o t-vscanfr.o \
+		  t-vfscanfr.o t-vsscanfr.o
+TSCANF_BSP	= tscnf-fw.a
 HELPER_SCRIPTS	= libastdio.a libanstdio.a
 
 # Various other hacks.  -- tkchia 20220213
@@ -139,7 +163,9 @@ ALL_SCRIPTS	= $(ELKS_SCRIPTS) $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS) \
 		  $(DOS_MEDIUM_SCRIPTS) $(DOSX_SMALL_SCRIPTS) $(HELPER_SCRIPTS)
 ALL_BSP		= $(ELKS_BSP) $(DOS_TINY_BSP) $(DOS_SMALL_BSP) \
 		  $(DOS_MEDIUM_BSP) \
-		  $(NANO_STDIO_BSP) $(IPRINTF_BSP) $(ISCANF_BSP)
+		  $(NANO_STDIO_BSP) \
+		  $(IPRINTF_BSP) $(GPRINTF_BSP) $(TPRINTF_BSP) \
+		  $(ISCANF_BSP) $(GSCANF_BSP) $(TSCANF_BSP)
 
 OBJS		= $(if $(CMODEL_MEDIUM_P), \
 		       $(DOS_MEDIUM_OBJS), \
@@ -166,7 +192,9 @@ CRT0		= $(if $(CMODEL_MEDIUM_P), \
 INCLUDES += -I$(srcdir) -I. -I$(srcdir)/.. -I../libnosys
 
 INSTALL_DATA_FILES = \
-  $(BSP) $(CRT0) $(NANO_STDIO_BSP) $(IPRINTF_BSP) $(ISCANF_BSP) \
+  $(BSP) $(CRT0) $(NANO_STDIO_BSP) \
+  $(IPRINTF_BSP) $(GPRINTF_BSP) $(TPRINTF_BSP) \
+  $(ISCANF_BSP) $(GSCANF_BSP) $(TSCANF_BSP) \
   $(SCRIPTS) $(HELPER_SCRIPTS)
 INSTALL_DATA_FILES += $(if $(PROTECTED_MODE_P), \
 			   $(if $(CMODEL_NOT_MEDIUM_P), \
@@ -251,29 +279,29 @@ CFLAGS_FOR_TARGET += ${MULTILIB} ${INCLUDES} ${NEWLIB_CFLAGS}
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $<
 
 nano-vfprintf.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf.c
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
-	  -o $@
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
+	  -D_NANO_FORMATTED_IO $< -o $@
 nano-vfprintf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf_i.c
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
-	  -o $@
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
+	  -D_NANO_FORMATTED_IO $< -o $@
 nano-vfprintf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf_float.c
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
-	  -o $@
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
+	  -D_NANO_FORMATTED_IO $< -o $@
 nano-vfscanf.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf.c
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
-	  -o $@
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
+	  -D_NANO_FORMATTED_IO $< -o $@
 nano-vfscanf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_i.c
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
-	  -o $@
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
+	  -D_NANO_FORMATTED_IO $< -o $@
 nano-vfscanf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_float.c
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
-	  -o $@
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
+	  -D_NANO_FORMATTED_IO $< -o $@
 nano-svfprintf.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
-	  -DSTRING_ONLY $< -o $@
+	  -D_NANO_FORMATTED_IO -DSTRING_ONLY $< -o $@
 nano-svfscanf.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
-	  -DSTRING_ONLY $< -o $@
+	  -D_NANO_FORMATTED_IO -DSTRING_ONLY $< -o $@
 elks-isatty.o: $(srcroot)/newlib/libc/posix/_isatty.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
 	  -o $@
@@ -384,38 +412,114 @@ $(IPRINTF_BSP): $(IPRINTF_OBJS)
 	$(AR) rcs $@ $+
 
 i-printf.o: i-stdio.S
-	$(CC) $(CFLAGS_FOR_TARGET) -DH= -DT=printf \
+	$(CC) $(CFLAGS_FOR_TARGET) -DH= -DT=printf -DA=printf \
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
 i-%printf.o: i-stdio.S
-	$(CC) $(CFLAGS_FOR_TARGET) -DH=$* -DT=printf \
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=$* -DT=printf -DA=printf \
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
 i-printfr.o: i-stdio.S
-	$(CC) $(CFLAGS_FOR_TARGET) -DH=_ -DT=printf_r \
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_ -DT=printf_r -DA=printf \
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
 i-%printfr.o: i-stdio.S
-	$(CC) $(CFLAGS_FOR_TARGET) -DH=_$* -DT=printf_r \
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_$* -DT=printf_r -DA=printf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+$(GPRINTF_BSP): $(GPRINTF_OBJS)
+	$(AR) rcs $@ $+
+
+g-printf.o: g-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH= -DT=printf -DA=printf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+g-%printf.o: g-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=$* -DT=printf -DA=printf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+g-printfr.o: g-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_ -DT=printf_r -DA=printf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+g-%printfr.o: g-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_$* -DT=printf_r -DA=printf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+$(TPRINTF_BSP): $(TPRINTF_OBJS)
+	$(AR) rcs $@ $+
+
+t-printf.o: t-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH= -DT=printf -DA=printf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+t-%printf.o: t-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=$* -DT=printf -DA=printf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+t-printfr.o: t-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_ -DT=printf_r -DA=printf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+t-%printfr.o: t-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_$* -DT=printf_r -DA=printf \
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
 $(ISCANF_BSP): $(ISCANF_OBJS)
 	$(AR) rcs $@ $+
 
 i-scanf.o: i-stdio.S
-	$(CC) $(CFLAGS_FOR_TARGET) -DH= -DT=scanf \
+	$(CC) $(CFLAGS_FOR_TARGET) -DH= -DT=scanf -DA=scanf \
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
 i-%scanf.o: i-stdio.S
-	$(CC) $(CFLAGS_FOR_TARGET) -DH=$* -DT=scanf \
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=$* -DT=scanf -DA=scanf \
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
 i-scanfr.o: i-stdio.S
-	$(CC) $(CFLAGS_FOR_TARGET) -DH=_ -DT=scanf_r \
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_ -DT=scanf_r -DA=scanf \
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
 i-%scanfr.o: i-stdio.S
-	$(CC) $(CFLAGS_FOR_TARGET) -DH=_$* -DT=scanf_r \
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_$* -DT=scanf_r -DA=scanf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+$(GSCANF_BSP): $(GSCANF_OBJS)
+	$(AR) rcs $@ $+
+
+g-scanf.o: g-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH= -DT=scanf -DA=scanf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+g-%scanf.o: g-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=$* -DT=scanf -DA=scanf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+g-scanfr.o: g-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_ -DT=scanf_r -DA=scanf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+g-%scanfr.o: g-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_$* -DT=scanf_r -DA=scanf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+$(TSCANF_BSP): $(TSCANF_OBJS)
+	$(AR) rcs $@ $+
+
+t-scanf.o: t-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH= -DT=scanf -DA=scanf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+t-%scanf.o: t-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=$* -DT=scanf -DA=scanf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+t-scanfr.o: t-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_ -DT=scanf_r -DA=scanf \
+	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
+
+t-%scanfr.o: t-stdio.S
+	$(CC) $(CFLAGS_FOR_TARGET) -DH=_$* -DT=scanf_r -DA=scanf \
 	  $(ASFLAGS_FOR_TARGET) $(ASFLAGS) -c $(CFLAGS) $< -o $@
 
 .c.S:
@@ -428,76 +532,76 @@ GEN_LD_SCRIPT = \
 # dos-com.ld and dos-exe-small.ld are "older" names for dos-mtsl.ld and
 # dos-mssl.ld which I am keeping around for backward compatibility.  -- tkchia
 
-dos-mt.ld: dos-mt.ld.in
+dos-mt.ld: dos-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nostdlib >$@
 
-dos-mts.ld: dos-mt.ld.in
+dos-mts.ld: dos-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
 
-dos-mtl.ld: dos-mt.ld.in
+dos-mtl.ld: dos-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nostartfiles >$@
 
-dos-mtsl.ld dos-com.ld: dos-mt.ld.in
+dos-mtsl.ld dos-com.ld: dos-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) >$@
 
-dos-ms.ld: dos-mx.ld.in
+dos-ms.ld: dos-mx.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nostdlib >$@
 
-dos-mss.ld: dos-mx.ld.in
+dos-mss.ld: dos-mx.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
 
-dos-msl.ld: dos-mx.ld.in
+dos-msl.ld: dos-mx.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nostartfiles >$@
 
-dos-mssl.ld dos-exe-small.ld: dos-mx.ld.in
+dos-mssl.ld dos-exe-small.ld: dos-mx.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) >$@
 
-dos-mm.ld: dos-mx.ld.in
+dos-mm.ld: dos-mx.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -mcmodel=medium -nostdlib >$@
 
-dos-mms.ld: dos-mx.ld.in
+dos-mms.ld: dos-mx.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -mcmodel=medium -nodefaultlibs >$@
 
-dos-mml.ld: dos-mx.ld.in
+dos-mml.ld: dos-mx.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -mcmodel=medium -nostartfiles >$@
 
-dos-mmsl.ld: dos-mx.ld.in
+dos-mmsl.ld: dos-mx.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -mcmodel=medium >$@
 
-dtr-mt.ld: dtr-mt.ld.in
+dtr-mt.ld: dtr-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nostdlib >$@
 
-dtr-mts.ld: dtr-mt.ld.in
+dtr-mts.ld: dtr-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
 
-dtr-mtl.ld: dtr-mt.ld.in
+dtr-mtl.ld: dtr-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nostartfiles >$@
 
-dtr-mtsl.ld: dtr-mt.ld.in
+dtr-mtsl.ld: dtr-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) >$@
 
-dx-mt.ld: dx-mt.ld.in
+dx-mt.ld: dx-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nostdlib >$@
 
-dx-mts.ld: dx-mt.ld.in
+dx-mts.ld: dx-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
 
-dx-mtl.ld: dx-mt.ld.in
+dx-mtl.ld: dx-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nostartfiles >$@
 
-dx-mtsl.ld: dx-mt.ld.in
+dx-mtsl.ld: dx-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) >$@
 
-dx-ms.ld: dx-ms.ld.in
+dx-ms.ld: dx-ms.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nostdlib >$@
 
-dx-mss.ld: dx-ms.ld.in
+dx-mss.ld: dx-ms.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
 
-dx-msl.ld: dx-ms.ld.in
+dx-msl.ld: dx-ms.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) -nostartfiles >$@
 
-dx-mssl.ld: dx-ms.ld.in
+dx-mssl.ld: dx-ms.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) >$@
 
 elk-mt.ld: elk-mt.ld.in

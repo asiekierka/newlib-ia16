@@ -17,13 +17,8 @@
  * option of ia16-elf-gcc to alter the link process when using the
  * "ordinary" formatted I/O routines, so that it links against the integer
  * versions of the stdio routines (iprintf (...) etc.) if the user's program
- * does not use floating-point stdio functionality.
- *
- * The script uses an extension to the ld scripting language I introduced to
- * allow modules to be included conditionally.  -- tkchia
+ * does not use floating-point stdio functionality.  -- tkchia
  */
 
-INPUT ((DEFINED (__ia16_use_printf_nofloat.v1)
-	&& ! DEFINED (__ia16_use_printf_float.v1) : -l:iprtf-fw.a))
-INPUT ((DEFINED (__ia16_use_scanf_nofloat.v1)
-	&& ! DEFINED (__ia16_use_scanf_float.v1) : -l:iscnf-fw.a))
+INPUT (-l:gprtf-fw.a -l:gscnf-fw.a -l:tprtf-fw.a -l:tscnf-fw.a
+       -l:iprtf-fw.a -l:iscnf-fw.a)

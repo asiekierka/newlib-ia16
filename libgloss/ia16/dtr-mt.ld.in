@@ -20,7 +20,7 @@ case "$1" in
 esac
 sed -e "$cmd1" -e "$cmd2" -e "s;@crt0@;$crt0;g" \
     -e "s;@withstarts@;$w1;g" -e "s;@withlibs@;$w2;g" \
-    -e "s/@self@/`basename "$0"`/g" -e "/^@if/ d" -e "/^@endif@/ d" <<'EOF'
+    -e "s/@self@/`basename "$0"`/g" -e "/^@if/ d" -e "/^@endif@/ d" <<'EPART1'
 /*
  * Linker script for terminate-and-stay-resident (TSR) DOS executables with
  * combined data and text segment, @withstarts@ startup files, and @withlibs@
@@ -35,7 +35,8 @@ ENTRY(_start)
 INPUT(-l:crtbegin.o -l:crtend.o -l:dtr-t-c0.o)
 @endif@
 @if_libs@
-GROUP(-lc -lgcc -ldos-t -lm)
+GROUP(-l:tprtf-fw.a -l:tscnf-fw.a -l:gprtf-fw.a -l:gscnf-fw.a
+      -lc -lgcc -ldos-t -lm)
 @endif@
 
 SECTIONS
@@ -65,6 +66,9 @@ SECTIONS
 			     .rodata.startu[^p]* .rodata.startup[^.]*
 			     .rodata.e[^x]* .rodata.ex[^i]* .rodata.exi[^t]*
 			     .rodata.exit[^.]*)
+EPART1
+"`dirname "$0"`"/autofloat.ld.in
+cat <<'EPART2'
 		*(.data) *(.data. .data.[^se]* .data.s[^t]* .data.st[^a]*
 			   .data.sta[^r]* .data.star[^t]* .data.start[^u]*
 			   .data.startu[^p]* .data.startup[^.]* .data.e[^x]*
@@ -215,4 +219,4 @@ SECTIONS
 
     /DISCARD/ : { *(.*) }
   }
-EOF
+EPART2

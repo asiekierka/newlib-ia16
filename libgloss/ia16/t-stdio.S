@@ -7,8 +7,8 @@
 	.code16
 	.att_syntax prefix
 
-	TEXT_ (i_stdio.S.LIBGLOSS)
-	.weak	P (H, , T.impl)
-	.type	P (H, , T.impl), @function
-P (H, , T.impl):
-	JMP_ (P (H, i, T))
+	TEXT_ (t_stdio.S.LIBGLOSS)
+	.global	P (H, , T)
+	.type	P (H, , T), @function
+P (H, , T):
+	JMP_ (P (H, , T.impl))

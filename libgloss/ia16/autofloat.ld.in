@@ -1,0 +1,26 @@
+#!/bin/sh
+
+# We are in the middle of the .data or .rodata output section.  Add
+# .autofloat_stdio.* sections as input sections at this point.  These input
+# sections should contain relocations that force the linker to import the
+# appropriate versions (floating-point vs. non-floating-point) of the stdio
+# routines.
+set -e
+for func in dprintf vdprintf sprintf fprintf printf snprintf asprnitf \
+	    asnprintf vprintf vfprintf vsprintf vsnprintf vasprintf vasnprintf
+do
+  cat <<END
+		*(.autofloat_stdio.__ia16_have_printf_float.${func}.v2)
+		*(.autofloat_stdio.__ia16_have_printf_float._${func}_r.v2)
+END
+done
+for func in sscanf fscanf scanf vscanf vfscanf vsscanf; do
+  cat <<END
+		*(.autofloat_stdio.__ia16_have_scanf_float.${func}.v2)
+		*(.autofloat_stdio.__ia16_have_scanf_float._${func}_r.v2)
+END
+done
+# Force output of the .data or .rodata section even if it is empty.
+cat << END
+		. = .;
+END

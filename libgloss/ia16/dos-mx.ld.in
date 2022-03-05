@@ -48,7 +48,8 @@ ENTRY(_start)
 INPUT(-l:crtbegin.o -l:crtend.o @crt0@)
 @endif@
 @if_libs@
-GROUP(-lc -lgcc -ldos-@cmodel@ -lm)
+GROUP(-l:tprtf-fw.a -l:tscnf-fw.a -l:gprtf-fw.a -l:gscnf-fw.a
+      -lc -lgcc -ldos-@cmodel@ -lm)
 @endif@
 
 MEMORY
@@ -257,6 +258,9 @@ cat <<'EPART8'
 
 		*(.msdos_init_rodata) *(.msdos_init_rodata.*)
 		*(.rodata) *(.rodata.*)
+EPART8
+"`dirname "$0"`"/autofloat.ld.in
+cat <<'EPART9'
 		*(.data) *(.data.*)
 		*(.gcc_except_table)
 		__edata = .;
@@ -310,4 +314,4 @@ cat <<'EPART8'
 
     /DISCARD/ : { *(.*) }
   }
-EPART8
+EPART9
