@@ -35,8 +35,7 @@ ENTRY(_start)
 INPUT(-l:crtbegin.o -l:crtend.o -l:dtr-t-c0.o)
 @endif@
 @if_libs@
-GROUP(-l:tprtf-fw.a -l:tscnf-fw.a -l:gprtf-fw.a -l:gscnf-fw.a
-      -lc -lgcc -ldos-t -lm)
+GROUP(-lc -lgcc -ldos-t -lm)
 @endif@
 
 SECTIONS

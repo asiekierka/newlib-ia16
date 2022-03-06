@@ -6,7 +6,7 @@
 # appropriate versions (floating-point vs. non-floating-point) of the stdio
 # routines.
 set -e
-for func in dprintf vdprintf sprintf fprintf printf snprintf asprnitf \
+for func in dprintf vdprintf sprintf fprintf printf snprintf asprintf \
 	    asnprintf vprintf vfprintf vsprintf vsnprintf vasprintf vasnprintf
 do
   cat <<END

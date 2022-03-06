@@ -7,8 +7,8 @@
 	.code16
 	.att_syntax prefix
 
-	TEXT_ (t_stdio.S.LIBGLOSS)
+	TEXT_ (autofloat_stdio.S.LIBGLOSS)
 	.global	P (H, , T)
 	.type	P (H, , T), @function
 P (H, , T):
-	JMP_ (P (H, , T.impl))
+	jmp	P (H, , T.impl)		/* note: near jmp */

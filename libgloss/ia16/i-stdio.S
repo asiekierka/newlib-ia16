@@ -7,7 +7,7 @@
 	.code16
 	.att_syntax prefix
 
-	TEXT_ (i_stdio.S.LIBGLOSS)
+	TEXT_ (autofloat_stdio.S.LIBGLOSS)
 	.weak	P (H, , T.impl)
 	.type	P (H, , T.impl), @function
 P (H, , T.impl):

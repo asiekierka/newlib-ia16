@@ -9,7 +9,7 @@
 	.code16
 	.att_syntax prefix
 
-	TEXT_ (g_stdio.S.LIBGLOSS)
+	TEXT_ (autofloat_stdio.S.LIBGLOSS)
 	.global	P (H, , T.impl)
 	.type	P (H, , T.impl), @function
 P (H, , T.impl):

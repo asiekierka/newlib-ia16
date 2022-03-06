@@ -113,8 +113,16 @@ DOSX_SMALL_CRT0 = dx-s-c0.o
 # without...  -- tkchia 20190201
 NANO_STDIO_OBJS = nano-vfprintf.o nano-vfprintf_i.o nano-vfprintf_float.o \
 		  nano-vfscanf.o nano-vfscanf_i.o nano-vfscanf_float.o \
-		  nano-svfprintf.o nano-svfscanf.o
+		  nano-svfprintf.o nano-svfscanf.o \
+		  nano-dprintf.o nano-vdprintf.o nano-sprintf.o \
+		  nano-fprintf.o nano-printf.o nano-snprintf.o \
+		  nano-asprintf.o nano-asnprintf.o nano-vprintf.o \
+		  nano-vsprintf.o nano-vsnprintf.o nano-vasprintf.o \
+		  nano-vasnprintf.o nano-sscanf.o nano-fscanf.o nano-scanf.o \
+		  nano-vscanf.o nano-vsscanf.o
 NANO_STDIO_BSP	= libnstdio.a
+AUTOFLOAT_NANO_STDIO_OBJS = an-printf.o an-scanf.o
+AUTOFLOAT_NANO_STDIO_BSP = libanstdio.a
 
 # Another hack, to support a mechanism to detect whether we need floating-point
 # printf (...) and/or scanf (...) support.  -- tkchia 20190407
@@ -154,7 +162,7 @@ TSCANF_OBJS	= t-sscanf.o t-fscanf.o t-scanf.o t-vscanf.o t-vfscanf.o \
 		  t-vsscanf.o t-sscanfr.o t-fscanfr.o t-scanfr.o t-vscanfr.o \
 		  t-vfscanfr.o t-vsscanfr.o
 TSCANF_BSP	= tscnf-fw.a
-HELPER_SCRIPTS	= libastdio.a libanstdio.a
+HELPER_SCRIPTS	= libastdio.a libfstdio.a
 
 # Various other hacks.  -- tkchia 20220213
 HELPER_SCRIPTS	+= libdosv1.a libck086.a libck186.a elf2dosx
@@ -163,7 +171,7 @@ ALL_SCRIPTS	= $(ELKS_SCRIPTS) $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS) \
 		  $(DOS_MEDIUM_SCRIPTS) $(DOSX_SMALL_SCRIPTS) $(HELPER_SCRIPTS)
 ALL_BSP		= $(ELKS_BSP) $(DOS_TINY_BSP) $(DOS_SMALL_BSP) \
 		  $(DOS_MEDIUM_BSP) \
-		  $(NANO_STDIO_BSP) \
+		  $(NANO_STDIO_BSP) $(AUTOFLOAT_NANO_STDIO_BSP) \
 		  $(IPRINTF_BSP) $(GPRINTF_BSP) $(TPRINTF_BSP) \
 		  $(ISCANF_BSP) $(GSCANF_BSP) $(TSCANF_BSP)
 
@@ -192,7 +200,7 @@ CRT0		= $(if $(CMODEL_MEDIUM_P), \
 INCLUDES += -I$(srcdir) -I. -I$(srcdir)/.. -I../libnosys
 
 INSTALL_DATA_FILES = \
-  $(BSP) $(CRT0) $(NANO_STDIO_BSP) \
+  $(BSP) $(CRT0) $(NANO_STDIO_BSP) $(AUTOFLOAT_NANO_STDIO_BSP) \
   $(IPRINTF_BSP) $(GPRINTF_BSP) $(TPRINTF_BSP) \
   $(ISCANF_BSP) $(GSCANF_BSP) $(TSCANF_BSP) \
   $(SCRIPTS) $(HELPER_SCRIPTS)
@@ -257,6 +265,8 @@ $(objroot)/newlib/$(ELKS_CRT0):
 	ln -s ../libgloss/ia16/$(ELKS_CRT0) $(objroot)/newlib
 $(objroot)/newlib/$(NANO_STDIO_BSP):
 	ln -s ../libgloss/ia16/$(NANO_STDIO_BSP) $(objroot)/newlib
+$(objroot)/newlib/$(AUTOFLOAT_NANO_STDIO_BSP):
+	ln -s ../libgloss/ia16/$(AUTOFLOAT_NANO_STDIO_BSP) $(objroot)/newlib
 $(objroot)/newlib/$(IPRINTF_BSP):
 	ln -s ../libgloss/ia16/$(IPRINTF_BSP) $(objroot)/newlib
 $(objroot)/newlib/$(ISCANF_BSP):
@@ -278,22 +288,16 @@ CFLAGS_FOR_TARGET += ${MULTILIB} ${INCLUDES} ${NEWLIB_CFLAGS}
 .c.o:
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $<
 
-nano-vfprintf.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf.c
+nano-vfprintf.o nano-vfprintf_i.o nano-vfprintf_float.o \
+  nano-vfscanf.o nano-vfscanf_i.o nano-vfscanf_float.o : \
+  %.o: $(srcroot)/newlib/libc/stdio/%.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
 	  -D_NANO_FORMATTED_IO $< -o $@
-nano-vfprintf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf_i.c
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
-	  -D_NANO_FORMATTED_IO $< -o $@
-nano-vfprintf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf_float.c
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
-	  -D_NANO_FORMATTED_IO $< -o $@
-nano-vfscanf.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf.c
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
-	  -D_NANO_FORMATTED_IO $< -o $@
-nano-vfscanf_i.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_i.c
-	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
-	  -D_NANO_FORMATTED_IO $< -o $@
-nano-vfscanf_float.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf_float.c
+nano-dprintf.o nano-vdprintf.o nano-sprintf.o nano-fprintf.o nano-printf.o \
+  nano-snprintf.o nano-asprintf.o nano-asnprintf.o nano-vprintf.o \
+  nano-vsprintf.o nano-vsnprintf.o nano-vasprintf.o nano-vasnprintf.o \
+  nano-sscanf.o nano-fscanf.o nano-scanf.o nano-vscanf.o nano-vsscanf.o :
+  nano-%.o: $(srcroot)/newlib/libc/stdio/%.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
 	  -D_NANO_FORMATTED_IO $< -o $@
 nano-svfprintf.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf.c
@@ -302,6 +306,7 @@ nano-svfprintf.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf.c
 nano-svfscanf.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
 	  -D_NANO_FORMATTED_IO -DSTRING_ONLY $< -o $@
+
 elks-isatty.o: $(srcroot)/newlib/libc/posix/_isatty.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
 	  -o $@
@@ -407,6 +412,9 @@ $(NANO_STDIO_BSP): $(objroot)/newlib/libc/libc.a $(NANO_STDIO_OBJS)
 	done
 	mv $@.1.tmp $@
 	rm -f $@.2.tmp $@.3.tmp $@.4.tmp $@.5.tmp $@.6.tmp
+
+$(AUTOFLOAT_NANO_STDIO_BSP): $(AUTOFLOAT_NANO_STDIO_OBJS)
+	$(AR) rcs $@ $+
 
 $(IPRINTF_BSP): $(IPRINTF_OBJS)
 	$(AR) rcs $@ $+
