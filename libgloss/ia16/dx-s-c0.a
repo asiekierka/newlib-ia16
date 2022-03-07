@@ -12,13 +12,4 @@
  * they apply.
  */
 
-/*
- * This "library" (linker script) is used by the -mnewlib-autofloat-stdio
- * option of ia16-elf-gcc to alter the link process when using the
- * "ordinary" formatted I/O routines, so that it links against the integer
- * versions of the stdio routines (iprintf (...) etc.) if the user's program
- * does not use floating-point stdio functionality.  -- tkchia
- */
-
-INPUT (-l:gprtf-fw.a -l:gscnf-fw.a -l:tprtf-fw.a -l:tscnf-fw.a
-       -l:iprtf-fw.a -l:iscnf-fw.a)
+INPUT(-l:crtbegin.o -l:crtend.o -l:dx-s-c0.o)

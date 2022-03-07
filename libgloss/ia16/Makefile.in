@@ -104,7 +104,7 @@ DOS_MEDIUM_SCRIPTS = dos-mm.ld dos-mms.ld dos-mml.ld dos-mmsl.ld
 DOS_MEDIUM_BSP	= libdos-m.a
 DOS_MEDIUM_CRT0	= dos-m-c0.o
 
-DOSX_SMALL_SCRIPTS = dx-ms.ld dx-mss.ld dx-msl.ld dx-mssl.ld
+DOSX_SMALL_SCRIPTS = dx-ms.ld dx-s-c0.a dx-s-lc.a
 DOSX_SMALL_CRT0 = dx-s-c0.o
 
 # This is a hack to allow us to build Newlib's nano formatted I/O functions
@@ -601,15 +601,6 @@ dx-mtsl.ld: dx-mt.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) >$@
 
 dx-ms.ld: dx-ms.ld.in autofloat.ld.in
-	$(GEN_LD_SCRIPT) -nostdlib >$@
-
-dx-mss.ld: dx-ms.ld.in autofloat.ld.in
-	$(GEN_LD_SCRIPT) -nodefaultlibs >$@
-
-dx-msl.ld: dx-ms.ld.in autofloat.ld.in
-	$(GEN_LD_SCRIPT) -nostartfiles >$@
-
-dx-mssl.ld: dx-ms.ld.in autofloat.ld.in
 	$(GEN_LD_SCRIPT) >$@
 
 elk-mt.ld: elk-mt.ld.in
