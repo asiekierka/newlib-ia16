@@ -51,7 +51,7 @@ abort:
 
 .Lctor_abort:
 	/* Patch the text segment the hard way...  */
-	movb	$0x0a,	%al		/* %ah == 0 */
+	movw	$0x000a, %ax
 	movw	%cs,	%bx
 	int	$0x31
 	jc	9f
