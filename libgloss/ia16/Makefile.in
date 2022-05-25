@@ -165,10 +165,9 @@ TSCANF_BSP	= tscnf-fw.a
 HELPER_SCRIPTS	= libastdio.a libfstdio.a
 
 # Various other hacks.  -- tkchia 20220213
-HELPER_SCRIPTS	+= libdosv1.a libck086.a libck186.a elf2dosx
+HELPER_SCRIPTS	+= libdosv1.a libck086.a libck186.a
+HELPER_SCRIPTS_NONMULTI =
 
-ALL_SCRIPTS	= $(ELKS_SCRIPTS) $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS) \
-		  $(DOS_MEDIUM_SCRIPTS) $(DOSX_SMALL_SCRIPTS) $(HELPER_SCRIPTS)
 ALL_BSP		= $(ELKS_BSP) $(DOS_TINY_BSP) $(DOS_SMALL_BSP) \
 		  $(DOS_MEDIUM_BSP) \
 		  $(NANO_STDIO_BSP) $(AUTOFLOAT_NANO_STDIO_BSP) \
@@ -184,7 +183,8 @@ ASFLAGS		= $(if $(CMODEL_MEDIUM_P), \
 		       $(DOS_MEDIUM_ASFLAGS), $(DOS_SMALL_ASFLAGS))
 SCRIPTS		= $(if $(CMODEL_MEDIUM_P), \
 		       $(DOS_MEDIUM_SCRIPTS), \
-		       $(sort $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS)))
+		       $(sort $(DOS_TINY_SCRIPTS) $(DOS_SMALL_SCRIPTS))) \
+		  $(HELPER_SCRIPTS)
 BSP		= $(if $(CMODEL_MEDIUM_P), \
 		       $(DOS_MEDIUM_BSP), \
 		       $(sort $(DOS_TINY_BSP) $(DOS_SMALL_BSP)))
@@ -203,10 +203,11 @@ INSTALL_DATA_FILES = \
   $(BSP) $(CRT0) $(NANO_STDIO_BSP) $(AUTOFLOAT_NANO_STDIO_BSP) \
   $(IPRINTF_BSP) $(GPRINTF_BSP) $(TPRINTF_BSP) \
   $(ISCANF_BSP) $(GSCANF_BSP) $(TSCANF_BSP) \
-  $(SCRIPTS) $(HELPER_SCRIPTS)
+  $(SCRIPTS)
 INSTALL_DATA_FILES += $(if $(PROTECTED_MODE_P), \
 			   $(if $(CMODEL_NOT_MEDIUM_P), \
 				$(DOSX_SMALL_CRT0) $(DOSX_SMALL_SCRIPTS)))
+INSTALL_DATA_FILES_NONMULTI = $(HELPER_SCRIPTS_NONMULTI)
 INSTALL_PROGRAM_FILES = elf2dosx
 # Building Newlib for the ELKS target is currently disabled.  To properly
 # build Newlib/ELKS, we will probably need to at least add Newlib/ELKS as a
@@ -645,13 +646,22 @@ install:
 	    ${INSTALL_DATA} $(srcdir)/$$x $(DESTDIR)${tooldir}/lib${MULTISUBDIR}/$$x; \
 	  fi; \
 	done
-	set -e; for x in ${INSTALL_PROGRAM_FILES}; do\
-	  if [ -f $$x ]; then \
-	    ${INSTALL_PROGRAM} $$x $(DESTDIR)${tooldir}/bin/$$x; \
-	  else \
-	    ${INSTALL_PROGRAM} $(srcdir)/$$x $(DESTDIR)${tooldir}/bin/$$x; \
-	  fi; \
-	done
+	if [ -z "${MULTISUBDIR}" ]; then \
+	  set -e; for x in ${INSTALL_DATA_FILES_NONMULTI}; do\
+	    if [ -f $$x ]; then \
+	      ${INSTALL_DATA} $$x $(DESTDIR)${tooldir}/lib/$$x; \
+	    else \
+	      ${INSTALL_DATA} $(srcdir)/$$x $(DESTDIR)${tooldir}/lib/$$x; \
+	    fi; \
+	  done; \
+	  set -e; for x in ${INSTALL_PROGRAM_FILES}; do\
+	    if [ -f $$x ]; then \
+	      ${INSTALL_PROGRAM} $$x $(DESTDIR)${tooldir}/bin/$$x; \
+	    else \
+	      ${INSTALL_PROGRAM} $(srcdir)/$$x $(DESTDIR)${tooldir}/bin/$$x; \
+	    fi; \
+	  done; \
+	fi
 
 doc:
 info:
