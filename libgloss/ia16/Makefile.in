@@ -166,7 +166,7 @@ HELPER_SCRIPTS	= libastdio.a libfstdio.a
 
 # Various other hacks.  -- tkchia 20220213
 HELPER_SCRIPTS	+= libdosv1.a libck086.a libck186.a
-HELPER_SCRIPTS_NONMULTI =
+HELPER_SCRIPTS_NONMULTI = rt-specs/r-msdos.spec
 
 ALL_BSP		= $(ELKS_BSP) $(DOS_TINY_BSP) $(DOS_SMALL_BSP) \
 		  $(DOS_MEDIUM_BSP) \
@@ -225,7 +225,8 @@ INSTALL_PROGRAM_FILES = elf2dosx
 # it to link is a good test, so we ignore all the errors for now.
 #
 # all: ${MON_CRT0} ${MON_BSP}
-all: $(INSTALL_DATA_FILES) $(INSTALL_PROGRAM_FILES) libnosys.a
+all: $(INSTALL_DATA_FILES) $(INSTALL_DATA_FILES_NONMULTI) \
+     $(INSTALL_PROGRAM_FILES) libnosys.a
 #
 # Here's where we build the board support packages for each target.
 #
@@ -649,9 +650,9 @@ install:
 	if [ -z "${MULTISUBDIR}" ]; then \
 	  set -e; for x in ${INSTALL_DATA_FILES_NONMULTI}; do\
 	    if [ -f $$x ]; then \
-	      ${INSTALL_DATA} $$x $(DESTDIR)${tooldir}/lib/$$x; \
+	      ${INSTALL_DATA} -D $$x $(DESTDIR)${tooldir}/lib/$$x; \
 	    else \
-	      ${INSTALL_DATA} $(srcdir)/$$x $(DESTDIR)${tooldir}/lib/$$x; \
+	      ${INSTALL_DATA} -D $(srcdir)/$$x $(DESTDIR)${tooldir}/lib/$$x; \
 	    fi; \
 	  done; \
 	  set -e; for x in ${INSTALL_PROGRAM_FILES}; do\
