@@ -74,6 +74,7 @@ CMODEL_NOT_MEDIUM_P = $(if $(CMODEL_MEDIUM_P),,!)
 DOS_COMMON_OBJS += $(if $(PROTECTED_MODE_P), \
 			dx-abort.o dx-tb.o dx-dbcs-weaks.o, \
 			dos-dbcs-weaks.o)
+DOS_COMMON_OBJS += $(ELIX_3_OBJS)
 
 DOS_TINY_OBJS	= $(DOS_COMMON_OBJS)
 DOS_TINY_OBJS	+= $(if $(PROTECTED_MODE_P),,dos-mtabort.o) \
@@ -164,7 +165,11 @@ TSCANF_OBJS	= t-sscanf.o t-fscanf.o t-scanf.o t-vscanf.o t-vfscanf.o \
 TSCANF_BSP	= tscnf-fw.a
 HELPER_SCRIPTS	= libastdio.a libfstdio.a
 
-# Various other hacks.  -- tkchia 20220213
+# Various other hacks.  build-ia16 normally builds only the EL/IX Level 2
+# routines in the platform-independent portions of Newlib; explicitly add
+# some routines that are only present in EL/IX Level 3 & are relevant for
+# MS-DOS.  -- tkchia 20220529
+ELIX_3_OBJS	= putenv.o putenv_r.o setenv.o setenv_r.o
 HELPER_SCRIPTS	+= libdosv1.a libck086.a libck186.a
 HELPER_SCRIPTS_NONMULTI = rt-specs/r-msdos.spec
 
@@ -308,6 +313,10 @@ nano-svfprintf.o: $(srcroot)/newlib/libc/stdio/nano-vfprintf.c
 nano-svfscanf.o: $(srcroot)/newlib/libc/stdio/nano-vfscanf.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
 	  -D_NANO_FORMATTED_IO -DSTRING_ONLY $< -o $@
+
+$(ELIX_3_OBJS): %.o: $(srcroot)/newlib/libc/stdlib/%.c
+	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB \
+	  $< -o $@
 
 elks-isatty.o: $(srcroot)/newlib/libc/posix/_isatty.c
 	$(CC) $(CFLAGS_FOR_TARGET) -Os -c $(CFLAGS) -D_COMPILING_NEWLIB $< \
