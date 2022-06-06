@@ -18,10 +18,10 @@ set -e
 me="`basename "$0"`"
 
 verbose=false
-if [ x-v = x"$1" ]; then
+while [ x-v = x"$1" ]; do
   verbose=true
   shift
-fi
+done
 
 do_run () {
   if $verbose; then
