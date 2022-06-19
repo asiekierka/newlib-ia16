@@ -4,7 +4,7 @@
 #include <signal.h>
 
 int
-kill (int pid,
+kill (pid_t pid,
      int sig)
 {
   return _kill_r (_REENT, pid, sig);
