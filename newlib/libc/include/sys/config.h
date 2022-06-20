@@ -103,6 +103,10 @@
 #endif
 #endif
 
+#ifdef __ia16__
+#define _HAVE_SYSTYPES
+#endif
+
 #ifdef __mn10200__
 #define __SMALL_BITFIELDS
 #endif

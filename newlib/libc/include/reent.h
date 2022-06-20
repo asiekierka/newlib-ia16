@@ -141,9 +141,9 @@ extern int _execve_r (struct _reent *, const char *, char *const *, char *const 
 extern int _fcntl_r (struct _reent *, int, int, int);
 extern int _fork_r (struct _reent *);
 extern int _fstat_r (struct _reent *, int, struct stat *);
-extern int _getpid_r (struct _reent *);
+extern __pid_t _getpid_r (struct _reent *);
 extern int _isatty_r (struct _reent *, int);
-extern int _kill_r (struct _reent *, int, int);
+extern int _kill_r (struct _reent *, __pid_t, int);
 extern int _link_r (struct _reent *, const char *, const char *);
 extern _off_t _lseek_r (struct _reent *, int, _off_t, int);
 extern int _mkdir_r (struct _reent *, const char *, int);

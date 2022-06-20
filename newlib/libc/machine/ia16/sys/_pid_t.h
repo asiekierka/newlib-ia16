@@ -32,9 +32,9 @@
  * as process ids, make pid_t larger than 16 bits by default.
  */
 #ifndef __USE_PID16
-typedef __int32_t pid_t;
+typedef __int32_t __pid_t;
 #else
-typedef __int16_t pid_t;
+typedef __int16_t __pid_t;
 #endif
 
 #endif  /* _SYS__PID_T_H_ */

@@ -46,10 +46,14 @@ typedef __uint32_t __fsfilcnt_t;
 typedef long _off_t;
 #endif
 
+#ifndef __pid_t_defined
 #if defined(__XMK__)
 typedef signed char __pid_t;
+#elif defined(__ia16__)
+#include <sys/_pid_t.h>
 #else
 typedef int __pid_t;
+#endif
 #endif
 
 #ifndef __machine_dev_t_defined

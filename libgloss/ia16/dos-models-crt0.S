@@ -158,7 +158,7 @@ __stext_nokeep_to_copy:
 .Lcont_dosx:
 #endif
 #ifndef TINY
-	movw	%ds, %ss:.Lpsp
+	movw	%ds,	%bx
 #endif
 
 	# Find length of environment + progname
@@ -224,7 +224,7 @@ __stext_nokeep_to_copy:
 	movw	%si,	%di
 #else
 	movw	$.Largv, %di
-	movw	%ss:(.Lpsp-.Largv)(%di), %ds
+	movw	%bx,	%ds
 #endif
 	xchgw	%ax,	%cx
 	incw	%cx		# initialize argc in cx to 1 (from ax = 0)
@@ -426,8 +426,4 @@ __msdos_crt_exit:
 	# arguments out to the data segment, rather than modify them in
 	# place in DOS's PSP --- since the PSP is outside the data segment.
 	.lcomm	.Largv, 128
-
-	# We currently do not use the PSP segment value after startup, so we
-	# can overlap .Lpsp with .Largv.  This may change in the future.
-	.set	.Lpsp, .Largv
 #endif

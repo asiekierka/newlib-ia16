@@ -66,7 +66,7 @@ am_lib_a_OBJECTS = lib_a-abort.$(OBJEXT) lib_a-memccpy.$(OBJEXT) \
 	lib_a-stpncpy.$(OBJEXT) lib_a-strchr.$(OBJEXT) \
 	lib_a-strcmp.$(OBJEXT) lib_a-strcpy.$(OBJEXT) \
 	lib_a-strlen.$(OBJEXT) lib_a-strncmp.$(OBJEXT) \
-	lib_a-strncpy.$(OBJEXT)
+	lib_a-strncpy.$(OBJEXT) lib_a-sysgetpid.$(OBJEXT)
 lib_a_OBJECTS = $(am_lib_a_OBJECTS)
 DEFAULT_INCLUDES = -I. -I$(srcdir)
 depcomp =
@@ -214,7 +214,8 @@ lib_a_SOURCES = \
 	strcpy.S \
 	strlen.S \
 	strncmp.S \
-	strncpy.S
+	strncpy.S \
+	sysgetpid.S
 
 lib_a_CCASFLAGS = $(AM_CCASFLAGS)
 lib_a_CFLAGS = $(AM_CFLAGS)
@@ -396,6 +397,12 @@ lib_a-abort.o: abort.c
 
 lib_a-abort.obj: abort.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_a_CFLAGS) $(CFLAGS) -c -o lib_a-abort.obj `if test -f 'abort.c'; then $(CYGPATH_W) 'abort.c'; else $(CYGPATH_W) '$(srcdir)/abort.c'; fi`
+
+lib_a-sysgetpid.o: sysgetpid.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_a_CFLAGS) $(CFLAGS) -c -o lib_a-sysgetpid.o `test -f 'sysgetpid.c' || echo '$(srcdir)/'`sysgetpid.c
+
+lib_a-sysgetpid.obj: sysgetpid.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(lib_a_CFLAGS) $(CFLAGS) -c -o lib_a-sysgetpid.obj `if test -f 'sysgetpid.c'; then $(CYGPATH_W) 'sysgetpid.c'; else $(CYGPATH_W) '$(srcdir)/sysgetpid.c'; fi`
 uninstall-info-am:
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)

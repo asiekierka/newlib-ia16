@@ -27,7 +27,8 @@ lib_a_SOURCES = \
 	strcpy.S \
 	strlen.S \
 	strncmp.S \
-	strncpy.S
+	strncpy.S \
+	sysgetpid.S
 lib_a_CCASFLAGS=$(AM_CCASFLAGS)
 lib_a_CFLAGS=$(AM_CFLAGS)
 
