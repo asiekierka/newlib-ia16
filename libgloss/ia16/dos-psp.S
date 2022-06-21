@@ -14,13 +14,15 @@
 
 /*
  * If the variable _psp is used, define it, & store the Program Segment
- * Prefix (PSP) segment value there.
+ * Prefix (PSP) segment value there.  This code snippet must run after
+ * after the C startup code has cleared BSS, but before it has switched %ds
+ * to point to the program's data segment.
  */
 
 	.arch	i8086, nojumps
 	.code16
 
-	.section .msdos_init.psp, "ax"
+	.section .msdos_initB.psp, "ax"
 
 	movw	%ds,	%ss:_psp
 

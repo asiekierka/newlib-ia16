@@ -161,6 +161,8 @@ __stext_nokeep_to_copy:
 	movw	%ds,	%bx
 #endif
 
+	.section .startupE, "ax"
+
 	# Find length of environment + progname
 	movw	0x2c,	%es
 	xorw	%di,	%di
@@ -289,7 +291,7 @@ __stext_nokeep_to_copy:
 	pushw	%dx
 #endif
 
-	.section .startupE, "ax"
+	.section .startupF, "ax"
 
 #ifdef __IA16_CALLCVT_REGPARMCALL
 	popw	%ax		# argc

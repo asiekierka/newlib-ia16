@@ -143,9 +143,12 @@ cat <<'EPART2'
 		*(.startupC)
 		__stack_end_nokeep = . & -0x10;
 		*(.msdos_init) *(.msdos_init.*)
+		*(.msdos_initA) *(.msdos_initA.*)
 		*(.startupD)
-		*(.init)
+		*(.msdos_initB) *(.msdos_initB.*)
 		*(.startupE)
+		*(.init)
+		*(.startupF)
 		*(.text.startup) *(.text.startup.*)
 	}
 	/*
