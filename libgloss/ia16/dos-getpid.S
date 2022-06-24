@@ -12,13 +12,28 @@
  * they apply.
  */
 
-#include <sys/types.h>
-#include <stdlib.h>
-#include <unistd.h>
+#include "call-cvt.h"
 
-pid_t
-getpid (void)
-{
-  /* For a real mode task, return the Program Segment Prefix (PSP) segment. */
-  return (pid_t) _psp;
-}
+	.arch i8086,jumps
+	.code16
+	.att_syntax prefix
+
+/*
+ * Get the current process identifier.  For MS-DOS, use the Program Segment
+ * Prefix (PSP) segment as the PID, unless the system supports an actual
+ * `getpid' syscall, e.g. European MS-DOS 4.0.
+ *
+ * Note that pid_t may be a 32-bit type.
+ */
+
+	TEXT_ (dos_getpid.S.LIBGLOSS)
+	.global	getpid
+getpid:
+	movb	$0x87,	%ah
+	stc
+	int	$0x21
+	jnc	.eur_dos
+	movw	_psp,	%ax
+.eur_dos:
+	xorw	%dx,	%dx
+	RET_ (0)
