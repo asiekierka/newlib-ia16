@@ -40,7 +40,7 @@ sed -e "$cmd1" -e "$cmd2" -e "s;@crt0@;$crt0;g" \
    startup files, @withlibs@ default libraries, and @withdpmiable@ DPMI
    support.
 
-   Partly derived from elks-separate.ld .  Generated from @self@.  */
+	   Partly derived from elks-separate.ld .  Generated from @self@.  */
 
 OUTPUT_FORMAT(binary)
 ENTRY(_start)
@@ -177,7 +177,7 @@ SECTIONS
 		__etext_padded = .;
 
 		ASSERT(. <= 0x10000,
-		    "Error: too large for a small-model .exe file.");
+		    "Error: too large for a small or medium model .exe file.");
 
 	} >csegvma AT >bseglma
 	__ltext = __etext - __stext;
@@ -286,6 +286,7 @@ cat <<'EPART9'
 		__edata_padded = .;
 	} >dsegvma AT >bseglma
 
+    /* Uninitialized near data section. */
     .bss (NOLOAD) : {
 		 __sbss = .;
                 *(.bss) *(.bss.*)
@@ -297,6 +298,8 @@ cat <<'EPART9'
 
 		ASSERT(. <= 0xfd00,
 		    "Error: too large for a small-model .exe file.");
+		ASSERT(LOADADDR (.bss) + SIZEOF (.bss) <= 0xa0000,
+		    "Error: too large for a .exe file.");
 		ASSERT (ABSOLUTE (DEFINED ("main!") ? "main!" : 0) == 0,
 		    "Error: using non-segelf ld script with segelf program.");
 		ASSERT (ABSOLUTE (DEFINED ("environ!") ? "environ!" : 0) == 0,
@@ -314,6 +317,22 @@ cat <<'EPART9'
 	    LOADADDR (.data) / 16 - LOADADDR (.text) / 16 + 0x10
 	    + 0x1000 - ADDR (.data) / 16;
 
+    /* Any ancillary trailer payload (not part of .exe proper). */
+    .tail 0 : AT (LOADADDR (.data) + SIZEOF (.data)) {
+		KEEP (*(.tail))
+		KEEP (*(SORT (.tail.*)))
+		KEEP (*(.zip))
+		KEEP (*(SORT (.zip.*)))
+EPART9
+for x in '' 0 1 2 3 4 5 6 7; do
+    cat <<EPART10
+		KEEP (*(.ov$x))
+		KEEP (*(SORT (.ov$x.*)))
+EPART10
+done
+cat <<'EPART11'
+	}
+
     /DISCARD/ : { *(.*) }
   }
-EPART9
+EPART11

@@ -116,6 +116,25 @@ cat <<'EPART2'
        dos-models-crt0.S.  */
     __msdos_initial_alloc_paras = 0x1000;
 
+    /* Any ancillary trailer payload (not part of .com proper). */
+    .tail 0 : AT (LOADADDR (.data) + SIZEOF (.data)) {
+		KEEP (*(.tail))
+		KEEP (*(SORT (.tail.*)))
+		KEEP (*(.zip))
+		KEEP (*(SORT (.zip.*)))
+EPART2
+for x in '' 0 1 2 3 4 5 6 7; do
+    cat <<EPART3
+		KEEP (*(.ov$x))
+		KEEP (*(SORT (.ov$x.*)))
+EPART3
+done
+cat <<'EPART4'
+	}
+
+    ASSERT(LOADADDR (.tail) + SIZEOF (.tail) <= 0xfd00,
+	   "Error: too large for a .com file.")
+
     /DISCARD/ : { *(.*) }
   }
-EPART2
+EPART4
