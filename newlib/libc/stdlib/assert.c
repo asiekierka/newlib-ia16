@@ -51,8 +51,7 @@ Supporting OS subroutines required (only if enabled): <<close>>, <<fstat>>,
 
 #ifndef HAVE_ASSERT_FUNC
 static void
-_DEFUN (__puts_stderr, (str),
-	const char *str)
+__puts_stderr (const char *str)
 {
   write (STDERR_FILENO, str, strlen (str));
 }

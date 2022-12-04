@@ -16,12 +16,12 @@ extern "C" {
 
 #ifndef _REENT_ONLY
 #define errno (*__errno())
-extern int *__errno _PARAMS ((void));
+extern int *__errno (void);
 #endif
 
 /* Please don't use these variables directly.
    Use strerror instead. */
-extern _CONST char * _CONST _sys_errlist[];
+extern const char * const _sys_errlist[];
 extern int _sys_nerr;
 
 #define __errno_r(ptr) ((ptr)->_errno)
@@ -113,6 +113,7 @@ extern int _sys_nerr;
 #define ENOTCONN	0x139	/* Socket is not connected */
 #define EILSEQ		0x13a	/* Illegal byte sequence */
 #define EOVERFLOW	0x13b	/* Value too large for defined data type */
+#define ENOTSUP 	0x13c	/* Not supported */
 #define EWOULDBLOCK	EAGAIN	/* Operation would block */
 
 #ifdef __cplusplus
